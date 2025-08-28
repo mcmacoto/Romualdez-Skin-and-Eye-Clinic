@@ -1,11 +1,60 @@
 {% extends 'bookings/base.html' %}
+{% load static %}
+
 {% block title %}Services - Romualdez Skin & Eye Clinic{% endblock %}
+
+{% block extra_head %}
+<style>
+    .services-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 2rem;
+        padding: 2rem;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    .service-card {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        overflow: hidden;
+        transition: transform 0.2s;
+    }
+    .service-card:hover {
+        transform: translateY(-5px);
+    }
+    .service-card img {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+    }
+    .service-content {
+        padding: 1.5rem;
+    }
+    .service-content h3 {
+        color: #3d5c3d;
+        margin: 0 0 1rem 0;
+    }
+    .service-content p {
+        color: #666;
+        margin: 0;
+        line-height: 1.5;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<h1>Our Services</h1>
-<ul>
-    <li>Skin Consultation</li>
-    <li>Acne Treatment</li>
-    <li>Skin Whitening</li>
-    <li>Anti-Aging Treatments</li>
-</ul>
+<div class="services-grid">
+    {% for service in services %}
+    <div class="service-card">
+        {% if service.image %}
+            <img src="{% static 'images/'|add:service.image %}" alt="{{ service.name }}">
+        {% endif %}
+        <div class="service-content">
+            <h3>{{ service.name }}</h3>
+            <p>{{ service.description }}</p>
+        </div>
+    </div>
+    {% endfor %}
+</div>
 {% endblock %}

@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from .models import Appointment
+from .models import Appointment, Service
 from django.contrib import messages
 
 # Create your views here.
@@ -24,10 +24,13 @@ def booking_form(request):
 def booking_success(request):
     return render(request, 'bookings/success.html')
 
+def landing(request):
+    return render(request, 'bookings/landing.html')
+
 def home(request):
     return render(request, 'bookings/home.html')
 
-def booking(request):
+def booking(request):  # Remove @login_required
     if request.method == "POST":
         # TODO: Save booking database logic here
         messages.success(request, "Your appointment request has been submitted successfully!")
@@ -36,8 +39,9 @@ def booking(request):
     return render(request, 'bookings/booking.html')
 
 
-def about(request):
+def about(request):  # Remove @login_required
     return render(request, 'bookings/about.html')
 
-def services(request):
-    return render(request, 'bookings/services.html')
+def services(request):  # Remove @login_required
+    services = Service.objects.all()
+    return render(request, 'bookings/services.html', {'services': services})

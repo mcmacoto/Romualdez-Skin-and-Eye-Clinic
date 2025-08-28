@@ -1,9 +1,34 @@
-{% extends 'bookings/base.html' %}
+{% extends 'bookings/base.html' %}  
 {% block title %}Home - Romualdez Skin & Eye Clinic{% endblock %}
-{% block content %}
-<div class="text-center">
-    <h1>Welcome to Romualdez Skin & Eye Clinic</h1>
-    <p>Your trusted dermatology clinic for healthy and beautiful skin.</p>
-    <a href="{% url 'booking' %}" class="btn btn-primary">Book an Appointment</a>
-</div>
-{% endblock %}
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #edeae3; margin: 0; }
+        .navbar { background: #3d5c3d; color: #fff; padding: 16px; display: flex; align-items: center; }
+        .navbar .title { font-size: 1.5em; margin-right: 2em; }
+        .navbar .menu { margin-left: auto; }
+        .container { display: flex; margin-top: 24px; justify-content: center; }
+        .card { background: #fff; border-radius: 12px; padding: 32px 0; text-align: center; box-shadow: 0 2px 8px #0001; max-width: 600px; width: 100%; }
+        .card-title { font-size: 1.2em; font-weight: 500; }
+        .btn { background: #3d5c3d; color: #fff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-size: 1em; display: inline-block; margin-top: 18px; }
+        .btn:hover { background: #2e472e; }
+        .footer { background: #3d5c3d; color: #fff; text-align: center; padding: 18px 0; position: fixed; left: 0; bottom: 0; width: 100%; font-size: 1em; }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <span class="title">Romualdez Skin & Eye Clinic</span>
+    </div>
+    <div class="container">
+        {% block content %}
+        <div class="card">
+            <h1 style="color:#3d5c3d;">Welcome to Romualdez Skin & Eye Clinic</h1>
+            <p>Your trusted dermatology clinic for healthy and beautiful skin.</p>
+            <a href="{% url 'booking' %}" class="btn">Book an Appointment</a>
+        </div>
+        {% endblock %}
+    </div>
+    <div class="footer">
+        <!-- Add further information here -->
+        &copy; 2024 Romualdez Skin & Eye Clinic | Contact: info@romualdezclinic.com | Phone: (123) 456-7890
+    </div>
+</body>
+</html>

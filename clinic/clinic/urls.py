@@ -16,10 +16,17 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from django.contrib.auth.views import LoginView
 from bookings import views
+
+# Admin site customization
+admin.site.site_header = "Romualdez Skin and Eye Clinic Staff Portal"
+admin.site.site_title = "Clinic Portal"
+admin.site.index_title = "Dashboard"
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('login/', LoginView.as_view(template_name='bookings/login.html'), name='login'),
     path('', views.home, name='home'),
     path('booking/', views.booking, name='booking'),
     path('about/', views.about, name='about'),

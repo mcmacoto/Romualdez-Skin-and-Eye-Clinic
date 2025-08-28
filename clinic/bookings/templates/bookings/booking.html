@@ -1,42 +1,35 @@
 {% extends 'bookings/base.html' %}
 {% block title %}Booking - Romualdez Skin & Eye Clinic{% endblock %}
 {% block content %}
-<h1 class="mb-4">Book Your Appointment</h1>
-
-<form method="POST" action="">
-    {% csrf_token %}
-
-    <div class="row mb-3">
-        <div class="col-md-6">
-            <label for="name" class="form-label">Full Name</label>
-            <input type="text" id="name" name="name" class="form-control" placeholder="John Doe" required>
+<div class="card">
+    <h1 class="mb-4" style="color:#3d5c3d;">Book Your Appointment</h1>
+    <form method="POST" action="" style="max-width:400px;margin:0 auto;text-align:left;">
+        {% csrf_token %}
+        <div style="margin-bottom:18px;">
+            <label for="name">Full Name</label>
+            <input type="text" id="name" name="name" style="width:100%;padding:8px;border-radius:6px;border:1px solid #ccc;" required>
         </div>
-        <div class="col-md-6">
-            <label for="email" class="form-label">Email Address</label>
-            <input type="email" id="email" name="email" class="form-control" placeholder="you@example.com" required>
+        <div style="margin-bottom:18px;">
+            <label for="email">Email Address</label>
+            <input type="email" id="email" name="email" style="width:100%;padding:8px;border-radius:6px;border:1px solid #ccc;" required>
         </div>
-    </div>
-
-    <div class="row mb-3">
-        <div class="col-md-6">
-            <label for="phone" class="form-label">Phone Number</label>
-            <input type="text" id="phone" name="phone" class="form-control" placeholder="0917-123-4567" required>
+        <div style="margin-bottom:18px;">
+            <label for="phone">Phone Number</label>
+            <input type="text" id="phone" name="phone" style="width:100%;padding:8px;border-radius:6px;border:1px solid #ccc;" required>
         </div>
-        <div class="col-md-3">
-            <label for="date" class="form-label">Preferred Date</label>
-            <input type="date" id="date" name="date" class="form-control" required>
+        <div style="margin-bottom:18px;">
+            <label for="date">Preferred Date</label>
+            <input type="date" id="date" name="date" style="width:100%;padding:8px;border-radius:6px;border:1px solid #ccc;" required>
         </div>
-        <div class="col-md-3">
-            <label for="time" class="form-label">Preferred Time</label>
-            <input type="time" id="time" name="time" class="form-control" required>
+        <div style="margin-bottom:18px;">
+            <label for="time">Preferred Time</label>
+            <input type="time" id="time" name="time" style="width:100%;padding:8px;border-radius:6px;border:1px solid #ccc;" required>
         </div>
-    </div>
-
-    <div class="mb-3">
-        <label for="message" class="form-label">Additional Notes</label>
-        <textarea id="message" name="message" rows="4" class="form-control" placeholder="Any specific concerns or requests?"></textarea>
-    </div>
-
-    <button type="submit" class="btn btn-primary">Submit Booking</button>
-</form>
+        <div style="margin-bottom:18px;">
+            <label for="message">Additional Notes</label>
+            <textarea id="message" name="message" rows="4" style="width:100%;padding:8px;border-radius:6px;border:1px solid #ccc;"></textarea>
+        </div>
+        <button type="submit" class="btn">Submit Booking</button>
+    </form>
+</div>
 {% endblock %}

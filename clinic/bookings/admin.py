@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Appointment
+from .models import Appointment, Service
 
 # Register your models here.
 @admin.register(Appointment)
@@ -9,5 +9,6 @@ class AppointmentAdmin(admin.ModelAdmin):
     search_fields = ('name', 'email', 'phone')
     ordering = ('-created_at',)
     date_hierarchy = 'date'
-    
-    
+
+admin.site.register(Service)
+

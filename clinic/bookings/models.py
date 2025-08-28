@@ -20,3 +20,14 @@ class Appointment(models.Model):
     
     def __str__(self):
         return f"{self.name} - {self.date} {self.time}"
+
+class Service(models.Model):
+    name = models.CharField(max_length=100)
+    description = models.TextField()
+    image = models.CharField(max_length=100)  # Changed to CharField for static files
+    
+    def image_url(self):
+        return f'/static/images/{self.image}'
+    
+    def __str__(self):
+        return self.name
