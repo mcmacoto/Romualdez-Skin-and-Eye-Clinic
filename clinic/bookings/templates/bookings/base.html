@@ -139,27 +139,6 @@
         .modal-content .modal-btn:hover {
             background: #2e472e;
         }
-
-        /* Add page transition styles */
-        .container {
-            opacity: 0;
-            animation: fadeIn 0.3s ease-in forwards;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Smooth link transitions */
-        .nav-links a {
-            transition: all 0.3s ease;
-        }
-        
-        /* Smooth button transitions */
-        .btn, .login-btn, .logout-btn {
-            transition: all 0.3s ease;
-        }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     {% block extra_head %}{% endblock %}
@@ -167,7 +146,7 @@
 <body>
     <div class="navbar">
         <div class="logo">
-            <a href="{% if user.is_authenticated %}{% url 'home' %}{% else %}/{% endif %}">
+            <a href="{% url 'home' %}">
                 <img src="{% static 'images/logo.jpeg' %}" alt="Clinic Logo">
             </a>
             <span class="title">Romualdez Skin & Eye Clinic</span>
@@ -187,7 +166,7 @@
             {% if user.is_authenticated %}
                 <form method="post" action="/logout/" style="display:inline;">
                     {% csrf_token %}
-                    <button class="login-btn" type="submit">Log out</button>
+                    <button class="login-btn" type="submit">Patient Log out</button>
                 </form>
             {% else %}
                 <button class="login-btn" onclick="showLoginModal()">Patient Login</button>

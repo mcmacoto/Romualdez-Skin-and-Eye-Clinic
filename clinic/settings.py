@@ -7,9 +7,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-# Ensure the media directory exists
-os.makedirs(MEDIA_ROOT, exist_ok=True)
-
 # Required Django settings
 SECRET_KEY = 'your-secret-key'  # Replace with your actual secret key
 DEBUG = True
@@ -27,7 +24,7 @@ MIDDLEWARE = [
 # Static files settings
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'clinic', 'static'),  # Updated path
+    os.path.join(BASE_DIR, 'static'),
 ]
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
@@ -57,7 +54,3 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'bookings',
 ]
-
-# Authentication settings
-LOGIN_REDIRECT_URL = 'home'
-LOGOUT_REDIRECT_URL = 'landing'

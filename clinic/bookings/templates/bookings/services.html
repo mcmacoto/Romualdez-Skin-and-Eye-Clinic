@@ -48,7 +48,7 @@
     {% for service in services %}
     <div class="service-card">
         {% if service.image %}
-            <img src="{% static 'images/'|add:service.image %}" alt="{{ service.name }}">
+            <img src="{{ service.image.url }}" alt="{{ service.name }}">
         {% endif %}
         <div class="service-content">
             <h3>{{ service.name }}</h3>

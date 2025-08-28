@@ -24,10 +24,7 @@ class Appointment(models.Model):
 class Service(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField()
-    image = models.CharField(max_length=100)  # Changed to CharField for static files
-    
-    def image_url(self):
-        return f'/static/images/{self.image}'
+    image = models.ImageField(upload_to='services/')
     
     def __str__(self):
         return self.name
