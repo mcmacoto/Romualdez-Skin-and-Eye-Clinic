@@ -1,0 +1,237 @@
+{% extends "admin/index.html" %}
+{% load static %}
+
+{% block content %}
+<div id="content-main">
+    <!-- Permission Level Notice -->
+    {% if user.is_superuser %}
+        <div class="permission-notice superuser">
+            <i class="fas fa-crown"></i>
+            <strong>Superuser Access:</strong> You have full administrative privileges including staff management, service configuration, and all system settings.
+        </div>
+    {% elif user.is_staff %}
+        <div class="permission-notice staff">
+            <i class="fas fa-user-md"></i>
+            <strong>Staff Access:</strong> You can manage appointments and customer accounts. Staff account creation requires superuser privileges.
+        </div>
+    {% endif %}
+
+    <!-- Stats Cards -->
+    <div class="stats-container">
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-calendar-check"></i>
+            </div>
+            <div class="stat-number">{{ total_appointments }}</div>
+            <div class="stat-label">Total Appointments</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-clock"></i>
+            </div>
+            <div class="stat-number">{{ pending_appointments }}</div>
+            <div class="stat-label">Pending Appointments</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="stat-number">{{ confirmed_appointments }}</div>
+            <div class="stat-label">Confirmed Appointments</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-calendar-day"></i>
+            </div>
+            <div class="stat-number">{{ today_appointments }}</div>
+            <div class="stat-label">Today's Appointments</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-number">{{ total_patient_profiles }}</div>
+            <div class="stat-label">Patient Profiles</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-file-medical"></i>
+            </div>
+            <div class="stat-number">{{ total_medical_records }}</div>
+            <div class="stat-label">Medical Records</div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="quick-actions">
+        <h3><i class="fas fa-bolt"></i> Quick Actions</h3>
+        <div class="action-buttons">
+            <a href="{% url 'admin:bookings_appointment_add' %}" class="action-btn">
+                <i class="fas fa-plus"></i>
+                <span>New Appointment</span>
+            </a>
+            <a href="{% url 'admin:bookings_appointment_changelist' %}" class="action-btn">
+                <i class="fas fa-list"></i>
+                <span>View All Appointments</span>
+            </a>
+            <a href="{% url 'admin:bookings_service_changelist' %}" class="action-btn">
+                <i class="fas fa-cogs"></i>
+                <span>Manage Services</span>
+            </a>
+            <a href="{% url 'admin:auth_user_changelist' %}" class="action-btn">
+                <i class="fas fa-users"></i>
+                <span>Manage Users</span>
+            </a>
+            <a href="{% url 'admin:bookings_patient_add' %}" class="action-btn">
+                <i class="fas fa-user-plus"></i>
+                <span>New Patient Profile</span>
+            </a>
+            <a href="{% url 'admin:bookings_medicalrecord_add' %}" class="action-btn">
+                <i class="fas fa-file-medical-alt"></i>
+                <span>New Medical Record</span>
+            </a>
+            <a href="{% url 'admin:bookings_patient_changelist' %}" class="action-btn">
+                <i class="fas fa-clipboard-list"></i>
+                <span>View Patient Profiles</span>
+            </a>
+            <a href="{% url 'admin:bookings_medicalrecord_changelist' %}" class="action-btn">
+                <i class="fas fa-notes-medical"></i>
+                <span>View Medical Records</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Recent Appointments -->
+    <div class="module">
+        <h2><i class="fas fa-clock"></i> Recent Appointments</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Patient Name</th>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for appointment in recent_appointments %}
+                <tr>
+                    <td><strong>{{ appointment.name }}</strong></td>
+                    <td>{{ appointment.date|date:"M d, Y" }}</td>
+                    <td>{{ appointment.time|time:"g:i A" }}</td>
+                    <td>
+                        <span class="status-badge status-{{ appointment.status|lower }}">
+                            {{ appointment.status }}
+                        </span>
+                    </td>
+                    <td>
+                        <a href="{% url 'admin:bookings_appointment_change' appointment.id %}" class="mini-btn">
+                            <i class="fas fa-edit"></i> Edit
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" style="text-align: center; color: #666; padding: 20px;">
+                        No recent appointments found.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <div style="padding: 15px; text-align: center;">
+            <a href="{% url 'admin:bookings_appointment_changelist' %}" class="button">
+                View All Appointments
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+    .status-badge {
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 0.8em;
+        font-weight: bold;
+        text-transform: uppercase;
+    }
+
+    .status-pending {
+        background: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeaa7;
+    }
+
+    .status-confirmed {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+
+    .status-cancelled {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+
+    .mini-btn {
+        padding: 4px 8px;
+        background: var(--primary);
+        color: white !important;
+        border-radius: 4px;
+        text-decoration: none !important;
+        font-size: 0.8em;
+    }
+
+    .mini-btn:hover {
+        background: var(--secondary);
+    }
+
+    table th {
+        background: var(--light-bg);
+        font-weight: bold;
+        padding: 12px;
+        border-bottom: 2px solid var(--border);
+    }
+
+    table td {
+        padding: 12px;
+        border-bottom: 1px solid var(--border);
+    }
+
+    table tbody tr:hover {
+        background: var(--light-bg);
+    }
+
+    /* Permission Notice Styles */
+    .permission-notice {
+        background: #e8f4f8;
+        border: 1px solid #bee5eb;
+        border-radius: 5px;
+        padding: 15px;
+        margin: 0 0 20px 0;
+        color: #0c5460;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .permission-notice.staff {
+        background: #fff3cd;
+        border-color: #ffeaa7;
+        color: #856404;
+    }
+
+    .permission-notice.superuser {
+        background: #d1ecf1;
+        border-color: #b6d4da;
+        color: #0c5460;
+    }
+</style>
+{% endblock %}

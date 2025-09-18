@@ -16,19 +16,23 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from django.contrib.auth.views import LoginView
+from django.contrib.auth.views import LoginView, LogoutView
 from bookings import views
+from bookings.admin import clinic_admin_site
 
 # Admin site customization
-admin.site.site_header = "Romualdez Skin and Eye Clinic Staff Portal"
+admin.site.site_header = "Romualdez Skin Clinic Staff Portal"
 admin.site.site_title = "Clinic Portal"
 admin.site.index_title = "Dashboard"
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path('admin/', clinic_admin_site.urls),
     path('login/', LoginView.as_view(template_name='bookings/login.html'), name='login'),
+    path('logout/', LogoutView.as_view(next_page='landing'), name='logout'),
+    path('landing/', views.landing, name='landing'),
     path('', views.home, name='home'),
     path('booking/', views.booking, name='booking'),
     path('about/', views.about, name='about'),
     path('services/', views.services, name='services'),
+    path('contact/', views.contact, name='contact'),
 ]

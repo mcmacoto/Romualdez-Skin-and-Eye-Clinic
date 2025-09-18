@@ -1,8 +1,241 @@
 {% extends 'bookings/base.html' %}
-{% block title %}About Us - Romualdez Skin & Eye Clinic{% endblock %}
+{% block title %}About Us - Romualdez Skin Clinic{% endblock %}
+
+{% block extra_head %}
+<style>
+    .about-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .hero-section {
+        background: linear-gradient(135deg, #3d5c3d, #5a7c5a);
+        color: white;
+        border-radius: 12px;
+        padding: 3rem 2rem;
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+
+    .hero-section h1 {
+        font-size: 2.5em;
+        margin-bottom: 1rem;
+    }
+
+    .hero-section p {
+        font-size: 1.2em;
+        max-width: 600px;
+        margin: 0 auto;
+        line-height: 1.6;
+    }
+
+    .content-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 3rem;
+        margin-bottom: 3rem;
+    }
+
+    .content-card {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .content-card h2 {
+        color: #3d5c3d;
+        margin-bottom: 1.5rem;
+        font-size: 1.5em;
+    }
+
+    .content-card p {
+        line-height: 1.6;
+        color: #666;
+        margin-bottom: 1rem;
+    }
+
+    .staff-section {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        margin-bottom: 3rem;
+    }
+
+    .staff-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 2rem;
+        margin-top: 2rem;
+    }
+
+    .staff-card {
+        text-align: center;
+        padding: 1.5rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+    }
+
+    .staff-photo {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: #3d5c3d;
+        margin: 0 auto 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 2em;
+    }
+
+    .staff-card h3 {
+        color: #3d5c3d;
+        margin-bottom: 0.5rem;
+    }
+
+    .staff-card .title {
+        color: #666;
+        font-style: italic;
+        margin-bottom: 1rem;
+    }
+
+    .features-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 2rem;
+        margin-top: 2rem;
+    }
+
+    .feature-item {
+        text-align: center;
+        padding: 1.5rem;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .feature-icon {
+        font-size: 2.5em;
+        color: #3d5c3d;
+        margin-bottom: 1rem;
+    }
+
+    .feature-item h3 {
+        color: #3d5c3d;
+        margin-bottom: 0.5rem;
+    }
+
+    @media (max-width: 768px) {
+        .content-grid {
+            grid-template-columns: 1fr;
+            gap: 2rem;
+        }
+        
+        .hero-section h1 {
+            font-size: 2em;
+        }
+        
+        .about-container {
+            padding: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="card">
-    <h1>About Us</h1>
-    <p>Romualdez Skin & Eye Clinic has been serving our community since 2010. Our mission is to provide top-notch dermatology care for every patient.</p>
+<div class="about-container">
+    <div class="hero-section">
+        <h1>About Romualdez Skin Clinic</h1>
+        <p>Dedicated to providing exceptional dermatological care services to our community since 2010. Your health and beauty are our top priorities.</p>
+    </div>
+
+    <div class="content-grid">
+        <div class="content-card">
+            <h2><i class="fas fa-heart"></i> Our Mission</h2>
+            <p>To provide comprehensive, compassionate, and cutting-edge skin care services that enhance the quality of life for our patients. We are committed to excellence in patient care, education, and research.</p>
+            <p>Our mission extends beyond treatment to include prevention, education, and long-term wellness support for every patient who walks through our doors.</p>
+        </div>
+
+        <div class="content-card">
+            <h2><i class="fas fa-bullseye"></i> Our Vision</h2>
+            <p>To be the leading dermatology clinic in the region, recognized for our innovative treatments, exceptional patient care, and commitment to community health.</p>
+            <p>We envision a future where everyone has access to quality skin care, promoting overall health and confidence in our community.</p>
+        </div>
+    </div>
+
+    <div class="staff-section">
+        <h2 style="color: #3d5c3d; text-align: center; margin-bottom: 1rem;">Meet Our Expert Team</h2>
+        <p style="text-align: center; color: #666; margin-bottom: 2rem;">Our dedicated professionals are committed to providing you with the highest quality care.</p>
+        
+        <div class="staff-grid">
+            <div class="staff-card">
+                <div class="staff-photo">
+                    <i class="fas fa-user-md"></i>
+                </div>
+                <h3>Dr. Maria Elena Romualdez</h3>
+                <div class="title">Founder & Chief Dermatologist</div>
+                <p>Board-certified dermatologist with over 15 years of experience in medical and cosmetic dermatology.</p>
+            </div>
+
+            <div class="staff-card">
+                <div class="staff-photo">
+                    <i class="fas fa-microscope"></i>
+                </div>
+                <h3>Dr. Carlos Romualdez</h3>
+                <div class="title">Dermatopathologist</div>
+                <p>Specialized in skin cancer diagnosis, mole mapping, and histopathological analysis with 12 years of practice.</p>
+            </div>
+
+            <div class="staff-card">
+                <div class="staff-photo">
+                    <i class="fas fa-user-nurse"></i>
+                </div>
+                <h3>Nurse Sarah Martinez</h3>
+                <div class="title">Head Nurse & Patient Care Coordinator</div>
+                <p>Experienced healthcare professional ensuring quality patient care and clinic operations.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="content-card">
+        <h2 style="text-align: center; margin-bottom: 2rem;"><i class="fas fa-star"></i> Why Choose Us?</h2>
+        
+        <div class="features-grid">
+            <div class="feature-item">
+                <div class="feature-icon">
+                    <i class="fas fa-award"></i>
+                </div>
+                <h3>Expert Care</h3>
+                <p>Board-certified specialists with years of experience</p>
+            </div>
+
+            <div class="feature-item">
+                <div class="feature-icon">
+                    <i class="fas fa-microscope"></i>
+                </div>
+                <h3>Advanced Technology</h3>
+                <p>State-of-the-art equipment and latest treatment methods</p>
+            </div>
+
+            <div class="feature-item">
+                <div class="feature-icon">
+                    <i class="fas fa-hands-helping"></i>
+                </div>
+                <h3>Personalized Care</h3>
+                <p>Tailored treatment plans for each patient's unique needs</p>
+            </div>
+
+            <div class="feature-item">
+                <div class="feature-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <h3>Convenient Hours</h3>
+                <p>Extended hours and weekend availability</p>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}

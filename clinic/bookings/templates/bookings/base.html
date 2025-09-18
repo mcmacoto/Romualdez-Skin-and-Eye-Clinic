@@ -4,213 +4,266 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Romualdez Skin & Eye Clinic{% endblock %}</title>
-    <style>
-        body { font-family: 'Segoe UI', Arial, sans-serif; background: #edeae3; margin: 0; }
-        .navbar {
-            background: #3d5c3d;
-            color: #fff;
-            padding: 16px 30px;
-            display: flex;
-            align-items: center;
-        }
-        .navbar .logo {
-            display: flex;
-            align-items: center;
-            margin-right: 32px;
-        }
-        .navbar .logo img {
-            height: 40px;
-            margin-right: 12px;
-        }
-        .navbar .nav-links {
-            display: flex;
-            align-items: center;
-        }
-        .navbar .nav-links ul {
-            list-style: none;
-            margin: 0;
-            padding: 0;
-            display: flex;
-        }
-        .navbar .nav-links li {
-            margin-left: 24px;
-        }
-        .navbar .nav-links a {
-            color: #fff;
-            text-decoration: none;
-            font-size: 1.2em; 
-        }
-        .navbar .nav-links a:hover {
-            text-decoration: underline;
-        }
-        .navbar .user-section {
-            margin-left: auto;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .navbar .user-message {
-            background: rgba(255,255,255,0.1);
-            border-radius: 4px;
-            padding: 8px 16px;
-            font-size: 1em;
-        }
-        .navbar .login-btn, .navbar .logout-btn {
-            background: #fff;
-            color: #3d5c3d;
-            border: none;
-            border-radius: 4px;
-            padding: 6px 18px;
-            font-size: 1em;
-            cursor: pointer;
-            margin-left: 4px;
-            transition: background 0.2s;
-        }
-        .navbar .login-btn:hover, .navbar .logout-btn:hover {
-            background: #e0e0e0;
-        }
-        .navbar .logo .title {
-            font-size: 1.7em;
-            font-weight: bold;
-        }
-        .container { display: flex; margin-top: 24px; justify-content: center; }
-        .card { background: #fff; border-radius: 12px; padding: 32px 0; text-align: center; box-shadow: 0 2px 8px #0001; max-width: 600px; width: 100%; margin: 0 auto; }
-        .card-title { font-size: 1.2em; font-weight: 500; }
-        .btn { background: #3d5c3d; color: #fff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-size: 1em; display: inline-block; margin-top: 18px; }
-        .btn:hover { background: #2e472e; }
-        .footer { background: #3d5c3d; color: #fff; text-align: center; padding: 18px 0; position: fixed; left: 0; bottom: 0; width: 100%; font-size: 1em; }
-        /* Modal styles */
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0; top: 0; width: 100vw; height: 100vh;
-            background: rgba(0,0,0,0.4);
-            justify-content: center;
-            align-items: center;
-        }
-        .modal-overlay.active {
-            display: flex;
-        }
-        .modal-content {
-            background: #fff;
-            padding: 32px 24px;
-            border-radius: 12px;
-            box-shadow: 0 2px 16px #0002;
-            min-width: 320px;
-            max-width: 90vw;
-        }
-        .modal-content h2 {
-            margin-top: 0;
-            color: #3d5c3d;
-            margin-bottom: 18px;
-        }
-        .modal-content label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-            padding-left: 2px;
-        }
-        .modal-content input[type="text"],
-        .modal-content input[type="password"] {
-            width: 100%;
-            padding: 10px 12px; /* Make padding equal for both fields */
-            margin-bottom: 18px;
-            border-radius: 4px;
-            border: 1px solid #ccc;
-            font-size: 1em;
-            box-sizing: border-box;
-        }
-        .modal-content .modal-actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: 12px;
-        }
-        .modal-content .modal-btn {
-            background: #3d5c3d;
-            color: #fff;
-            border: none;
-            border-radius: 4px;
-            padding: 8px 20px;
-            font-size: 1em;
-            cursor: pointer;
-        }
-        .modal-content .modal-btn:hover {
-            background: #2e472e;
-        }
-    </style>
+    <meta name="description" content="{% block meta_description %}Professional skin care services at Romualdez Clinic. Expert dermatologists providing comprehensive dermatological healthcare.{% endblock %}">
+    <meta name="keywords" content="{% block meta_keywords %}dermatology, skin clinic, cosmetic treatments, acne treatment, skin cancer screening{% endblock %}">
+    
+    <title>{% block title %}Romualdez Skin Clinic{% endblock %}</title>
+    
+    <!-- CSS Files -->
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{% static 'images/favicon.ico' %}">
+    
     {% block extra_head %}{% endblock %}
 </head>
 <body>
-    <div class="navbar">
-        <div class="logo">
-            <a href="{% url 'home' %}">
-                <img src="{% static 'images/logo.jpeg' %}" alt="Clinic Logo">
+    <!-- Skip to content for accessibility -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    
+    <!-- Navigation -->
+    <nav class="navbar" role="navigation" aria-label="Main navigation">
+        <div class="navbar-container">
+            <a href="{% url 'home' %}" class="logo" aria-label="Romualdez Skin Clinic Home">
+                <img src="{% static 'images/logo.jpeg' %}" alt="Clinic Logo" onerror="this.style.display='none';">
+                <span class="title">Romualdez Skin Clinic</span>
             </a>
-            <span class="title">Romualdez Skin & Eye Clinic</span>
+            
+            <button class="mobile-menu-toggle" aria-label="Toggle mobile menu" onclick="toggleMobileMenu()">
+                <i class="fas fa-bars"></i>
+            </button>
+            
+            <div class="nav-links" id="navLinks">
+                <ul role="menubar">
+                    <li role="none">
+                        <a href="{% url 'home' %}" role="menuitem" class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
+                            <i class="fas fa-home" aria-hidden="true"></i> Home
+                        </a>
+                    </li>
+                    <li role="none">
+                        <a href="{% url 'booking' %}" role="menuitem" class="nav-link {% if request.resolver_match.url_name == 'booking' %}active{% endif %}">
+                            <i class="fas fa-calendar-plus" aria-hidden="true"></i> Booking
+                        </a>
+                    </li>
+                    <li role="none">
+                        <a href="{% url 'about' %}" role="menuitem" class="nav-link {% if request.resolver_match.url_name == 'about' %}active{% endif %}">
+                            <i class="fas fa-info-circle" aria-hidden="true"></i> About Us
+                        </a>
+                    </li>
+                    <li role="none">
+                        <a href="{% url 'services' %}" role="menuitem" class="nav-link {% if request.resolver_match.url_name == 'services' %}active{% endif %}">
+                            <i class="fas fa-stethoscope" aria-hidden="true"></i> Services
+                        </a>
+                    </li>
+                    <li role="none">
+                        <a href="{% url 'contact' %}" role="menuitem" class="nav-link {% if request.resolver_match.url_name == 'contact' %}active{% endif %}">
+                            <i class="fas fa-phone" aria-hidden="true"></i> Contact
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="user-section">
+                <span class="user-message" role="status" aria-live="polite">
+                    Hello, {% if user.is_authenticated %}{{ user.username }}{% else %}Guest{% endif %}!
+                </span>
+                {% if user.is_authenticated %}
+                    <form method="post" action="{% url 'logout' %}" style="display:inline;">
+                        {% csrf_token %}
+                        <button class="login-btn" type="submit" aria-label="Log out patient account">
+                            <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
+                            Patient Logout
+                        </button>
+                    </form>
+                {% else %}
+                    <button class="login-btn" onclick="showLoginModal()" aria-label="Open patient login">
+                        <i class="fas fa-sign-in-alt" aria-hidden="true"></i>
+                        Patient Login
+                    </button>
+                {% endif %}
+                <a href="/admin/login/" class="logout-btn" aria-label="Staff login portal">
+                    <i class="fas fa-user-md" aria-hidden="true"></i>
+                    Staff Login
+                </a>
+            </div>
         </div>
-        <div class="nav-links">
-            <ul>
-                <li><a href="{% url 'home' %}">Home</a></li>
-                <li><a href="{% url 'booking' %}">Booking</a></li>
-                <li><a href="{% url 'about' %}">About Us</a></li>
-                <li><a href="{% url 'services' %}">Services</a></li>
-            </ul>
+    </nav>
+
+    <!-- Messages -->
+    {% if messages %}
+        <div class="messages-container" role="alert" aria-live="assertive">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags|default:'info' }} fade-in">
+                    <i class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-circle{% elif message.tags == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %}" aria-hidden="true"></i>
+                    {{ message }}
+                </div>
+            {% endfor %}
         </div>
-        <div class="user-section">
-            <span class="user-message">
-                Hello, {% if user.is_authenticated %}{{ user.username }}{% else %}Guest{% endif %}!
-            </span>
-            {% if user.is_authenticated %}
-                <form method="post" action="/logout/" style="display:inline;">
-                    {% csrf_token %}
-                    <button class="login-btn" type="submit">Patient Log out</button>
-                </form>
-            {% else %}
-                <button class="login-btn" onclick="showLoginModal()">Patient Login</button>
-            {% endif %}
-            <button class="logout-btn" onclick="window.location.href='/admin/login/'">Staff Login</button>
-        </div>
-    </div>
-    <main class="container">
+    {% endif %}
+
+    <!-- Main Content -->
+    <main id="main-content" class="main-content" role="main">
         {% block content %}{% endblock %}
     </main>
-    <div class="footer">
-        &copy; 2025 Romualdez Skin & Eye Clinic | All rights reserved
-    </div>
+
+    <!-- Footer -->
+    <footer class="footer" role="contentinfo">
+        <div class="footer-content">
+            <p>&copy; 2025 Romualdez Skin Clinic | All rights reserved</p>
+            <p>
+                <a href="tel:+63-2-8123-4567" style="color: white; text-decoration: none;">
+                    <i class="fas fa-phone" aria-hidden="true"></i> (02) 8123-4567
+                </a>
+                |
+                <a href="mailto:info@romualdezclinic.com" style="color: white; text-decoration: none;">
+                    <i class="fas fa-envelope" aria-hidden="true"></i> info@romualdezclinic.com
+                </a>
+            </p>
+        </div>
+    </footer>
 
     <!-- Login Modal -->
-    <div id="loginModal" class="modal-overlay">
+    <div id="loginModal" class="modal-overlay" role="dialog" aria-labelledby="modal-title" aria-hidden="true">
         <div class="modal-content">
-            <h2>Patient Login</h2>
-            <form method="post" action="{% url 'login' %}">
+            <div class="modal-header">
+                <h2 id="modal-title" class="modal-title">Patient Login</h2>
+            </div>
+            <form method="post" action="{% url 'login' %}" id="loginForm">
                 {% csrf_token %}
-                <input type="hidden" name="next" value="/" />
-                <label for="username">Username</label>
-                <input type="text" name="username" id="username" required>
-                <label for="password">Password</label>
-                <input type="password" name="password" id="password" required>
+                <input type="hidden" name="next" value="{{ request.get_full_path }}" />
+                
+                <div class="form-group">
+                    <label for="username" class="form-label">Username</label>
+                    <input type="text" name="username" id="username" class="form-control" required aria-describedby="username-help">
+                    <div id="username-help" class="form-text">Enter your registered username</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="password" class="form-label">Password</label>
+                    <input type="password" name="password" id="password" class="form-control" required aria-describedby="password-help">
+                    <div id="password-help" class="form-text">Enter your password</div>
+                </div>
+
                 <div class="modal-actions">
-                    <button type="button" class="modal-btn" onclick="hideLoginModal()">Cancel</button>
-                    <button type="submit" class="modal-btn">Login</button>
+                    <button type="button" class="btn btn-secondary" onclick="hideLoginModal()">
+                        <i class="fas fa-times" aria-hidden="true"></i>
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-sign-in-alt" aria-hidden="true"></i>
+                        Login
+                    </button>
                 </div>
             </form>
         </div>
     </div>
 
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="modal-overlay" style="background: rgba(255,255,255,0.8);">
+        <div style="text-align: center; color: var(--primary-color);">
+            <i class="fas fa-spinner fa-spin fa-3x" aria-hidden="true"></i>
+            <p style="margin-top: 1rem; font-weight: 500;">Loading...</p>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
     <script>
+        // Mobile menu toggle
+        function toggleMobileMenu() {
+            const navLinks = document.getElementById('navLinks');
+            const toggleBtn = document.querySelector('.mobile-menu-toggle i');
+            
+            navLinks.classList.toggle('active');
+            toggleBtn.classList.toggle('fa-bars');
+            toggleBtn.classList.toggle('fa-times');
+        }
+
+        // Modal functions
         function showLoginModal() {
-            document.getElementById('loginModal').classList.add('active');
+            const modal = document.getElementById('loginModal');
+            modal.classList.add('active');
+            modal.setAttribute('aria-hidden', 'false');
+            document.getElementById('username').focus();
+            document.body.style.overflow = 'hidden';
         }
+
         function hideLoginModal() {
-            document.getElementById('loginModal').classList.remove('active');
+            const modal = document.getElementById('loginModal');
+            modal.classList.remove('active');
+            modal.setAttribute('aria-hidden', 'true');
+            document.body.style.overflow = '';
         }
-        // Optional: Close modal on ESC key
+
+        // Loading functions
+        function showLoading() {
+            document.getElementById('loadingOverlay').classList.add('active');
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingOverlay').classList.remove('active');
+        }
+
+        // Form submission with loading
+        document.addEventListener('DOMContentLoaded', function() {
+            // Auto-hide messages after 5 seconds
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                setTimeout(() => {
+                    alert.style.opacity = '0';
+                    alert.style.transform = 'translateY(-10px)';
+                    setTimeout(() => alert.remove(), 300);
+                }, 5000);
+            });
+
+            // Add loading to form submissions
+            const forms = document.querySelectorAll('form:not(#loginForm)');
+            forms.forEach(form => {
+                form.addEventListener('submit', function() {
+                    showLoading();
+                });
+            });
+
+            // Login form handling
+            const loginForm = document.getElementById('loginForm');
+            if (loginForm) {
+                loginForm.addEventListener('submit', function(e) {
+                    showLoading();
+                    hideLoginModal();
+                });
+            }
+        });
+
+        // Keyboard navigation
         document.addEventListener('keydown', function(e) {
-            if (e.key === "Escape") hideLoginModal();
+            if (e.key === 'Escape') {
+                hideLoginModal();
+            }
+        });
+
+        // Click outside modal to close
+        document.getElementById('loginModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                hideLoginModal();
+            }
+        });
+
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
         });
     </script>
+
+    {% block extra_scripts %}{% endblock %}
 </body>
+</html>
 </html>
