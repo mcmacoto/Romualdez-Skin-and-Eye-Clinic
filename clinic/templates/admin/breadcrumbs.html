@@ -1,0 +1,18 @@
+{% load i18n %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% translate 'Home' %}</a>
+    {% if cl or opts %}
+        {% with object_opts=cl.opts|default:opts %}
+            › <a href="{% url 'admin:'|add:object_opts.app_label|add:'_'|add:object_opts.model_name|add:'_changelist' %}">{{ object_opts.verbose_name_plural|capfirst }}</a>
+        {% endwith %}
+    {% endif %}
+    {% if add %}
+        › {% blocktranslate with name=opts.verbose_name %}Add {{ name }}{% endblocktranslate %}
+    {% endif %}
+    {% if change %}
+        › {{ original|truncatewords:"18" }}
+    {% endif %}
+    {% if delete %}
+        › {% translate 'Delete' %}
+    {% endif %}
+</div>

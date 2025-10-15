@@ -7,7 +7,7 @@
 <style>
     .services-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
         gap: 2rem;
         padding: 2rem;
         max-width: 1200px;
@@ -18,10 +18,12 @@
         border-radius: 10px;
         box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         overflow: hidden;
-        transition: transform 0.2s;
+        transition: transform 0.2s, box-shadow 0.2s;
+        position: relative;
     }
     .service-card:hover {
         transform: translateY(-5px);
+        box-shadow: 0 4px 16px rgba(0,0,0,0.2);
     }
     .service-card img {
         width: 100%;
@@ -33,27 +35,81 @@
     }
     .service-content h3 {
         color: #3d5c3d;
-        margin: 0 0 1rem 0;
+        margin: 0 0 0.5rem 0;
+        font-size: 1.3em;
+    }
+    .service-price {
+        display: inline-block;
+        background: linear-gradient(135deg, #3d5c3d 0%, #2e472e 100%);
+        color: white;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 1.1em;
+        margin-bottom: 1rem;
+        box-shadow: 0 2px 4px rgba(61, 92, 61, 0.3);
     }
     .service-content p {
         color: #666;
         margin: 0;
-        line-height: 1.5;
+        line-height: 1.6;
+    }
+    .price-badge {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background: rgba(61, 92, 61, 0.95);
+        color: white;
+        padding: 10px 15px;
+        border-radius: 25px;
+        font-weight: bold;
+        font-size: 1em;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        backdrop-filter: blur(5px);
+    }
+    .services-header {
+        text-align: center;
+        padding: 2rem;
+        margin-bottom: 1rem;
+    }
+    .services-header h1 {
+        color: #3d5c3d;
+        font-size: 2.5em;
+        margin-bottom: 0.5rem;
+    }
+    .services-header p {
+        color: #666;
+        font-size: 1.1em;
     }
 </style>
 {% endblock %}
 
 {% block content %}
+<div class="services-header">
+    <h1><i class="fas fa-stethoscope"></i> Our Services</h1>
+    <p>Professional skin care and dermatology treatments</p>
+</div>
+
 <div class="services-grid">
     {% for service in services %}
     <div class="service-card">
         {% if service.image %}
             <img src="{{ service.image.url }}" alt="{{ service.name }}">
+            <div class="price-badge">₱{{ service.price|floatformat:2 }}</div>
         {% endif %}
         <div class="service-content">
             <h3>{{ service.name }}</h3>
+            <div class="service-price">
+                <i class="fas fa-tag"></i> ₱{{ service.price|floatformat:2 }}
+            </div>
             <p>{{ service.description }}</p>
         </div>
+    </div>
+    {% empty %}
+    <div style="text-align: center; padding: 3rem; grid-column: 1/-1; color: #666;">
+        <i class="fas fa-info-circle" style="font-size: 3em; margin-bottom: 1rem; color: #ddd;"></i>
+        <h3>No Services Available</h3>
+        <p>Our services are being updated. Please check back soon.</p>
     </div>
     {% endfor %}
 </div>
