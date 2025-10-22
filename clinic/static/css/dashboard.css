@@ -1,0 +1,201 @@
+/* Styles for the custom admin dashboard */
+.dashboard-wrapper {
+    padding: 20px;
+    background-color: #f4f7fa;
+}
+
+.permission-notice {
+    padding: 15px 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    font-size: 0.95em;
+    border: 1px solid;
+}
+
+.permission-notice .fas {
+    font-size: 1.5em;
+    margin-right: 15px;
+}
+
+.permission-notice.superuser {
+    background-color: #fff3cd;
+    border-color: #ffeeba;
+    color: #856404;
+}
+
+.permission-notice.staff {
+    background-color: #d1ecf1;
+    border-color: #bee5eb;
+    color: #0c5460;
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 20px;
+}
+
+.section-title {
+    font-size: 1.2em;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 15px;
+    border-bottom: 2px solid #dee2e6;
+    padding-bottom: 10px;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 15px;
+}
+
+.stat-card {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    display: flex;
+    align-items: center;
+}
+
+.stat-icon {
+    font-size: 2em;
+    margin-right: 15px;
+    color: #007bff;
+}
+
+.stat-content .stat-number {
+    font-size: 1.8em;
+    font-weight: 700;
+}
+
+.stat-content .stat-label {
+    font-size: 0.9em;
+    color: #666;
+}
+
+.financial-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.financial-card {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    display: flex;
+    align-items: center;
+}
+
+.financial-icon {
+    font-size: 2em;
+    margin-right: 15px;
+}
+
+.revenue-card .financial-icon { color: #28a745; }
+.balance-card .financial-icon { color: #dc3545; }
+.billed-card .financial-icon { color: #17a2b8; }
+
+.financial-content .financial-label {
+    font-size: 0.9em;
+    color: #666;
+}
+
+.financial-content .financial-value {
+    font-size: 1.5em;
+    font-weight: 600;
+}
+
+.quick-actions-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.quick-action-btn {
+    background-color: #007bff;
+    color: white;
+    padding: 12px;
+    border-radius: 5px;
+    text-align: center;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: background-color 0.2s;
+}
+
+.quick-action-btn:hover {
+    background-color: #0056b3;
+}
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 1050;
+    display: none;
+}
+
+.modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    border-radius: 8px;
+    z-index: 1060;
+    width: 90%;
+    max-width: 1200px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    display: none;
+}
+
+.modal.active, .modal-overlay.active {
+    display: block;
+}
+
+.modal-header {
+    padding: 15px 20px;
+    border-bottom: 1px solid #dee2e6;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-body {
+    padding: 20px;
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+}
+
+.loading-spinner {
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #3498db;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    animation: spin 1s linear infinite;
+    display: inline-block;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}

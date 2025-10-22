@@ -1,5 +1,4141 @@
 {% extends "admin/index.html" %}
 {% load static %}
 
-{# This file is intentionally kept minimal to use the default Django admin index functionality. #}
-{# The previous complex dashboard was moved to index.html.bak as it was identified as a source of major redundancy. #}
+{% block content %}
+<div id="content-main" class="dashboard-wrapper">
+    <!-- Permission Level Notice -->
+    {% if user.is_superuser %}
+        <div class="permission-notice superuser">
+            <i class="fas fa-crown"></i>
+            <strong>Superuser Access:</strong> You have full administrative privileges including staff management, service configuration, and all system settings.
+        </div>
+    {% elif user.is_staff %}
+        <div class="permission-notice staff">
+            <i class="fas fa-user-md"></i>
+            <strong>Staff Access:</strong> You can manage appointments and customer accounts. Staff account creation requires superuser privileges.
+        </div>
+    {% endif %}
+
+    <!-- Dashboard Grid Layout -->
+    <div class="dashboard-grid">
+        <!-- LEFT COLUMN: Statistics (n x 3 grid) -->
+        <div class="dashboard-left">
+            <h3 class="section-title"><i class="fas fa-chart-bar"></i> Clinic Statistics</h3>
+            <div class="stats-grid">
+                <!-- Row 1 -->
+                <div class="stat-card" style="cursor: pointer;" onclick="openAllAppointmentsModal()">
+                    <div class="stat-icon">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-number">{{ total_appointments }}</div>
+                        <div class="stat-label">Total Appointments</div>
+                        <div style="font-size: 0.75em; color: #666; margin-top: 5px;">
+                            <i class="fas fa-hand-pointer"></i> Click to view all
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="stat-card" id="pending-bookings-card" style="cursor: pointer;" onclick="openPendingBookingsModal()">
+                    <div class="stat-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-number" id="pending-count">{{ pending_bookings }}</div>
+                        <div class="stat-label">Pending Bookings</div>
+                        <div style="font-size: 0.75em; color: #666; margin-top: 5px;">
+                            <i class="fas fa-hand-pointer"></i> Click to manage
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Row 2 -->
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-calendar-day"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-number">{{ today_appointments }}</div>
+                        <div class="stat-label">Today's Appointments</div>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-number">{{ total_bookings }}</div>
+                        <div class="stat-label">Total Bookings</div>
+                    </div>
+                </div>
+                
+                <!-- Row 3 -->
+                <div class="stat-card stat-warning" id="unpaid-bills-card" style="cursor: pointer;" onclick="openUnpaidBillsModal()">
+                    <div class="stat-icon">
+                        <i class="fas fa-hourglass-half"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-number">{{ unpaid_bills }}</div>
+                        <div class="stat-label">Unpaid Bills</div>
+                        <div style="font-size: 0.75em; color: #666; margin-top: 5px;">
+                            <i class="fas fa-hand-pointer"></i> Click to view
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Row 4 -->
+                <div class="stat-card" id="patients-card" style="cursor: pointer;" onclick="openPatientsModal()">
+                    <div class="stat-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-number">{{ total_patient_profiles }}</div>
+                        <div class="stat-label">Patient Profiles</div>
+                        <div style="font-size: 0.75em; color: #666; margin-top: 5px;">
+                            <i class="fas fa-hand-pointer"></i> Click to view
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Row 4 -->
+                <div class="stat-card" id="medical-records-card" style="cursor: pointer;" onclick="openMedicalRecordsModal()">
+                    <div class="stat-icon">
+                        <i class="fas fa-file-medical"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-number">{{ total_medical_records }}</div>
+                        <div class="stat-label">Medical Records</div>
+                        <div style="font-size: 0.75em; color: #666; margin-top: 5px;">
+                            <i class="fas fa-hand-pointer"></i> Click to view
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="stat-card" id="inventory-card" style="cursor: pointer;" onclick="openInventoryModal()">
+                    <div class="stat-icon">
+                        <i class="fas fa-boxes"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-number">{{ total_inventory_items }}</div>
+                        <div class="stat-label">Inventory Items</div>
+                        <div style="font-size: 0.75em; color: #666; margin-top: 5px;">
+                            <i class="fas fa-hand-pointer"></i> Click to view
+                        </div>
+                    </div>
+                </div>
+                
+                {% if low_stock_items > 0 %}
+                <div class="stat-card stat-warning">
+                    <div class="stat-icon">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-number">{{ low_stock_items }}</div>
+                        <div class="stat-label">Low Stock Items</div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if out_of_stock_items > 0 %}
+                <div class="stat-card stat-danger">
+                    <div class="stat-icon">
+                        <i class="fas fa-times-circle"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-number">{{ out_of_stock_items }}</div>
+                        <div class="stat-label">Out of Stock</div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- MIDDLE COLUMN: Financial Overview -->
+        <div class="dashboard-middle">
+            <!-- Financial Summary Section -->
+            <div class="financial-summary-section">
+                <h3 class="section-title"><i class="fas fa-chart-line"></i> Financial Overview</h3>
+                <div class="financial-cards">
+                    <!-- Total Revenue Card -->
+                    <div class="financial-card revenue-card">
+                        <div class="financial-icon">
+                            <i class="fas fa-coins"></i>
+                        </div>
+                        <div class="financial-content">
+                            <div class="financial-label">Total Revenue (Paid)</div>
+                            <div class="financial-value">₱{{ total_revenue|floatformat:2 }}</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Outstanding Balance Card -->
+                    <div class="financial-card balance-card">
+                        <div class="financial-icon">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="financial-content">
+                            <div class="financial-label">Outstanding Balance</div>
+                            <div class="financial-value balance-amount">₱{{ total_balance_outstanding|floatformat:2 }}</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Total Billed Card -->
+                    <div class="financial-card billed-card">
+                        <div class="financial-icon">
+                            <i class="fas fa-file-invoice-dollar"></i>
+                        </div>
+                        <div class="financial-content">
+                            <div class="financial-label">Total Billed</div>
+                            <div class="financial-value">₱{{ total_amount_billed|floatformat:2 }}</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Transaction Summary -->
+                <div class="transaction-summary">
+                    <h4 style="margin: 1rem 0 0.75rem 0; color: #333; font-size: 1rem;">
+                        <i class="fas fa-chart-bar"></i> Transaction Summary
+                    </h4>
+                    <div class="summary-grid">
+                        <div class="summary-item clickable" onclick="openFullyPaidModal()" style="cursor: pointer;" title="Click to view fully paid bills">
+                            <div class="summary-icon paid">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <div class="summary-details">
+                                <div class="summary-count" id="paid-bills-count">{{ paid_bills }}</div>
+                                <div class="summary-label">Fully Paid</div>
+                            </div>
+                        </div>
+                        <div class="summary-item clickable" onclick="openUnpaidBillsTransactionModal()" style="cursor: pointer;" title="Click to view unpaid bills">
+                            <div class="summary-icon unpaid">
+                                <i class="fas fa-times-circle"></i>
+                            </div>
+                            <div class="summary-details">
+                                <div class="summary-count" id="unpaid-bills-count">{{ unpaid_bills }}</div>
+                                <div class="summary-label">Unpaid</div>
+                            </div>
+                        </div>
+                        <div class="summary-item clickable" onclick="openAllBillsModal()" style="cursor: pointer;" title="Click to view all bills">
+                            <div class="summary-icon total">
+                                <i class="fas fa-list"></i>
+                            </div>
+                            <div class="summary-details">
+                                <div class="summary-count" id="total-bills-count">{{ total_billings }}</div>
+                                <div class="summary-label">Total Bills</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="view-all-link">
+                        <a href="{% url 'admin:bookings_billing_changelist' %}" class="action-link">
+                            <i class="fas fa-external-link-alt"></i> View All Billings
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT COLUMN: Quick Actions -->
+        <div class="dashboard-right">
+            <h3 class="section-title"><i class="fas fa-bolt"></i> Quick Actions</h3>
+            <div class="quick-actions-grid">
+                <a href="{% url 'admin:bookings_appointment_add' %}" class="quick-action-btn">
+                    <i class="fas fa-plus"></i>
+                    <span>New Appointment</span>
+                </a>
+                <a href="{% url 'admin:bookings_booking_add' %}" class="quick-action-btn action-btn-booking">
+                    <i class="fas fa-calendar-plus"></i>
+                    <span>New Booking</span>
+                </a>
+                <a href="{% url 'admin:bookings_patient_add' %}" class="quick-action-btn">
+                    <i class="fas fa-user-plus"></i>
+                    <span>New Patient</span>
+                </a>
+                <a href="{% url 'admin:bookings_medicalrecord_add' %}" class="quick-action-btn">
+                    <i class="fas fa-file-medical-alt"></i>
+                    <span>New Medical Record</span>
+                </a>
+                <a href="{% url 'admin:bookings_payment_add' %}" class="quick-action-btn action-btn-payment">
+                    <i class="fas fa-money-bill-wave"></i>
+                    <span>Record Payment</span>
+                </a>
+                <a href="{% url 'admin:bookings_possale_add' %}" class="quick-action-btn action-btn-pos">
+                    <i class="fas fa-cash-register"></i>
+                    <span>New POS Sale</span>
+                </a>
+                <a href="{% url 'admin:bookings_inventory_add' %}" class="quick-action-btn">
+                    <i class="fas fa-box"></i>
+                    <span>Add Inventory</span>
+                </a>
+                <a href="{% url 'admin:bookings_appointment_changelist' %}" class="quick-action-btn">
+                    <i class="fas fa-list"></i>
+                    <span>All Appointments</span>
+                </a>
+                <a href="{% url 'admin:bookings_booking_changelist' %}" class="quick-action-btn action-btn-booking">
+                    <i class="fas fa-calendar-check"></i>
+                    <span>All Bookings</span>
+                </a>
+                <a href="{% url 'admin:bookings_billing_changelist' %}" class="quick-action-btn action-btn-billing">
+                    <i class="fas fa-file-invoice-dollar"></i>
+                    <span>All Bills</span>
+                </a>
+                <a href="{% url 'admin:bookings_patient_changelist' %}" class="quick-action-btn">
+                    <i class="fas fa-clipboard-list"></i>
+                    <span>Patient Profiles</span>
+                </a>
+                <a href="{% url 'admin:bookings_medicalrecord_changelist' %}" class="quick-action-btn">
+                    <i class="fas fa-notes-medical"></i>
+                    <span>Medical Records</span>
+                </a>
+                <a href="{% url 'admin:bookings_inventory_changelist' %}" class="quick-action-btn">
+                    <i class="fas fa-boxes"></i>
+                    <span>View Inventory</span>
+                </a>
+                <a href="{% url 'admin:bookings_possale_changelist' %}" class="quick-action-btn action-btn-pos">
+                    <i class="fas fa-receipt"></i>
+                    <span>View POS Sales</span>
+                </a>
+                <a href="{% url 'admin:bookings_service_changelist' %}" class="quick-action-btn">
+                    <i class="fas fa-cogs"></i>
+                    <span>Manage Services</span>
+                </a>
+                <a href="{% url 'admin:auth_user_changelist' %}" class="quick-action-btn">
+                    <i class="fas fa-users"></i>
+                    <span>Manage Users</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+<!-- Pending Bookings Modal -->
+<div class="modal-overlay" id="modalOverlay" onclick="closePendingBookingsModal()"></div>
+<div class="modal" id="pendingBookingsModal">
+    <div class="modal-header">
+        <h2>
+            <i class="fas fa-clock"></i>
+            Pending Bookings (<span id="modal-pending-count">0</span>)
+        </h2>
+        <button class="modal-close" onclick="closePendingBookingsModal()">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+    <div class="modal-body" id="modalBody">
+        <div class="loading-container" style="text-align: center; padding: 40px;">
+            <div class="loading-spinner" style="width: 40px; height: 40px; margin: 0 auto;"></div>
+            <p style="margin-top: 15px; color: #666;">Loading pending bookings...</p>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Notification -->
+<div class="toast" id="toast">
+    <div id="toastMessage"></div>
+</div>
+
+<!-- Patients Modal -->
+<div class="modal" id="patientsModal">
+    <div class="modal-header">
+        <h2>
+            <i class="fas fa-users"></i>
+            Patient Profiles (<span id="patients-modal-count">0</span>)
+        </h2>
+        <button class="modal-close" onclick="closePatientsModal()">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+    <div class="modal-body" id="patientsModalBody">
+        <div class="loading-container" style="text-align: center; padding: 40px;">
+            <div class="loading-spinner" style="width: 40px; height: 40px; margin: 0 auto;"></div>
+            <p style="margin-top: 15px; color: #666;">Loading patients...</p>
+        </div>
+    </div>
+</div>
+
+<!-- Medical Records Modal -->
+<div class="modal" id="medicalRecordsModal">
+    <div class="modal-header">
+        <h2>
+            <i class="fas fa-file-medical"></i>
+            Medical Records (<span id="records-modal-count">0</span>)
+        </h2>
+        <button class="modal-close" onclick="closeMedicalRecordsModal()">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+    <div class="modal-body" id="medicalRecordsModalBody">
+        <div class="loading-container" style="text-align: center; padding: 40px;">
+            <div class="loading-spinner" style="width: 40px; height: 40px; margin: 0 auto;"></div>
+            <p style="margin-top: 15px; color: #666;">Loading medical records...</p>
+        </div>
+    </div>
+</div>
+
+<!-- Inventory Modal -->
+<div class="modal" id="inventoryModal">
+    <div class="modal-header">
+        <h2>
+            <i class="fas fa-boxes"></i>
+            Inventory Items (<span id="inventory-modal-count">0</span>)
+        </h2>
+        <button class="modal-close" onclick="closeInventoryModal()">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+    <div class="modal-body" id="inventoryModalBody">
+        <div class="loading-container" style="text-align: center; padding: 40px;">
+            <div class="loading-spinner" style="width: 40px; height: 40px; margin: 0 auto;"></div>
+            <p style="margin-top: 15px; color: #666;">Loading inventory...</p>
+        </div>
+    </div>
+</div>
+
+<!-- POS Revenue Modal -->
+<div class="modal" id="posRevenueModal">
+    <div class="modal-header" style="background: linear-gradient(135deg, #28a745 0%, #34ce57 100%);">
+        <h2 style="color: white;">
+            <i class="fas fa-cash-register"></i>
+            POS Transactions (<span id="pos-modal-count">0</span>)
+        </h2>
+        <button class="modal-close" onclick="closePOSRevenueModal()" style="color: white;">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+    <div class="modal-body" id="posRevenueModalBody">
+        <div class="loading-container" style="text-align: center; padding: 40px;">
+            <div class="loading-spinner" style="width: 40px; height: 40px; margin: 0 auto;"></div>
+            <p style="margin-top: 15px; color: #666;">Loading POS transactions...</p>
+        </div>
+    </div>
+</div>
+
+<script>
+// Get CSRF token for POST requests
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+const csrftoken = getCookie('csrftoken');
+
+// Show toast notification
+function showToast(message, type = 'success') {
+    const toast = document.getElementById('toast');
+    const toastMessage = document.getElementById('toastMessage');
+    
+    toastMessage.textContent = message;
+    toast.className = `toast ${type} active`;
+    
+    setTimeout(() => {
+        toast.classList.remove('active');
+    }, 4000);
+}
+
+// Open pending bookings modal
+async function openPendingBookingsModal() {
+    const modal = document.getElementById('pendingBookingsModal');
+    const overlay = document.getElementById('modalOverlay');
+    const modalBody = document.getElementById('modalBody');
+    
+    // Show modal with loading state
+    modal.classList.add('active');
+    overlay.classList.add('active');
+    
+    // Fetch pending bookings
+    try {
+        const response = await fetch('/api/pending-bookings/');
+        const data = await response.json();
+        
+        if (data.success) {
+            renderBookings(data.bookings);
+            document.getElementById('modal-pending-count').textContent = data.count;
+        } else {
+            modalBody.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <h3>Error Loading Bookings</h3>
+                    <p>${data.error}</p>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('Error fetching bookings:', error);
+        modalBody.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-exclamation-circle"></i>
+                <h3>Error Loading Bookings</h3>
+                <p>Failed to fetch pending bookings. Please try again.</p>
+            </div>
+        `;
+    }
+}
+
+// Close modal
+function closePendingBookingsModal() {
+    document.getElementById('pendingBookingsModal').classList.remove('active');
+    document.getElementById('modalOverlay').classList.remove('active');
+}
+
+// Render bookings table
+function renderBookings(bookings) {
+    const modalBody = document.getElementById('modalBody');
+    
+    if (bookings.length === 0) {
+        modalBody.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-check-circle"></i>
+                <h3>No Pending Bookings</h3>
+                <p>All bookings have been processed.</p>
+            </div>
+        `;
+        return;
+    }
+    
+    const tableHTML = `
+        <table class="modal-table">
+            <thead>
+                <tr>
+                    <th>Patient Name</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Service</th>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th>Notes</th>
+                    <th style="text-align: center;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${bookings.map(booking => `
+                    <tr id="booking-row-${booking.id}">
+                        <td><strong>${booking.patient_name}</strong></td>
+                        <td>${booking.patient_email}</td>
+                        <td>${booking.patient_phone}</td>
+                        <td>${booking.service}</td>
+                        <td>${formatDate(booking.date)}</td>
+                        <td>${booking.time}</td>
+                        <td style="max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${booking.notes || 'No notes'}">${booking.notes || '-'}</td>
+                        <td style="text-align: center;">
+                            <div class="action-buttons" style="justify-content: center;">
+                                <button class="btn-accept" onclick="acceptBooking(${booking.id})" id="accept-${booking.id}">
+                                    <i class="fas fa-check"></i> Accept
+                                </button>
+                                <button class="btn-decline" onclick="declineBooking(${booking.id})" id="decline-${booking.id}">
+                                    <i class="fas fa-times"></i> Decline
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    `;
+    
+    modalBody.innerHTML = tableHTML;
+}
+
+// Format date
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+}
+
+// Accept booking
+async function acceptBooking(bookingId) {
+    const acceptBtn = document.getElementById(`accept-${bookingId}`);
+    const declineBtn = document.getElementById(`decline-${bookingId}`);
+    
+    // Disable buttons and show loading
+    acceptBtn.disabled = true;
+    declineBtn.disabled = true;
+    acceptBtn.innerHTML = '<span class="loading-spinner"></span> Processing...';
+    
+    try {
+        const response = await fetch(`/api/bookings/${bookingId}/accept/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrftoken,
+                'Content-Type': 'application/json',
+            },
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showToast(data.message, 'success');
+            
+            // Remove row with animation
+            const row = document.getElementById(`booking-row-${bookingId}`);
+            row.style.transition = 'all 0.3s ease';
+            row.style.opacity = '0';
+            row.style.transform = 'translateX(-20px)';
+            
+            setTimeout(() => {
+                row.remove();
+                
+                // Update dashboard statistics from API response
+                if (data.stats) {
+                    // Update pending bookings count
+                    const pendingEl = document.getElementById('pending-count');
+                    if (pendingEl) {
+                        pendingEl.textContent = data.stats.pending_bookings;
+                    }
+                    
+                    // Update total appointments count
+                    const totalAppointmentsEls = document.querySelectorAll('.stat-card .stat-number');
+                    if (totalAppointmentsEls[0] && data.stats.total_appointments !== undefined) {
+                        totalAppointmentsEls[0].textContent = data.stats.total_appointments;
+                    }
+                    
+                    // Update confirmed appointments count (if exists)
+                    const confirmedEl = document.querySelectorAll('.stat-card .stat-number')[2];
+                    if (confirmedEl && data.stats.confirmed_appointments !== undefined) {
+                        confirmedEl.textContent = data.stats.confirmed_appointments;
+                    }
+                }
+                
+                // Update pending count
+                updatePendingCount();
+                
+                // Check if table is empty
+                const tbody = document.querySelector('.modal-table tbody');
+                if (tbody && tbody.children.length === 0) {
+                    document.getElementById('modalBody').innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-check-circle"></i>
+                            <h3>No Pending Bookings</h3>
+                            <p>All bookings have been processed.</p>
+                        </div>
+                    `;
+                    document.getElementById('modal-pending-count').textContent = '0';
+                }
+            }, 300);
+            
+        } else {
+            showToast(data.error, 'error');
+            acceptBtn.disabled = false;
+            declineBtn.disabled = false;
+            acceptBtn.innerHTML = '<i class="fas fa-check"></i> Accept';
+        }
+    } catch (error) {
+        console.error('Error accepting booking:', error);
+        showToast('Failed to accept booking. Please try again.', 'error');
+        acceptBtn.disabled = false;
+        declineBtn.disabled = false;
+        acceptBtn.innerHTML = '<i class="fas fa-check"></i> Accept';
+    }
+}
+
+// Decline booking
+async function declineBooking(bookingId) {
+    if (!confirm('Are you sure you want to decline this booking?')) {
+        return;
+    }
+    
+    const acceptBtn = document.getElementById(`accept-${bookingId}`);
+    const declineBtn = document.getElementById(`decline-${bookingId}`);
+    
+    // Disable buttons and show loading
+    acceptBtn.disabled = true;
+    declineBtn.disabled = true;
+    declineBtn.innerHTML = '<span class="loading-spinner"></span> Processing...';
+    
+    try {
+        const response = await fetch(`/api/bookings/${bookingId}/decline/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrftoken,
+                'Content-Type': 'application/json',
+            },
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showToast(data.message, 'success');
+            
+            // Remove row with animation
+            const row = document.getElementById(`booking-row-${bookingId}`);
+            row.style.transition = 'all 0.3s ease';
+            row.style.opacity = '0';
+            row.style.transform = 'translateX(20px)';
+            
+            setTimeout(() => {
+                row.remove();
+                
+                // Update pending count
+                updatePendingCount();
+                
+                // Check if table is empty
+                const tbody = document.querySelector('.modal-table tbody');
+                if (tbody && tbody.children.length === 0) {
+                    document.getElementById('modalBody').innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-check-circle"></i>
+                            <h3>No Pending Bookings</h3>
+                            <p>All bookings have been processed.</p>
+                        </div>
+                    `;
+                    document.getElementById('modal-pending-count').textContent = '0';
+                }
+            }, 300);
+            
+        } else {
+            showToast(data.error, 'error');
+            acceptBtn.disabled = false;
+            declineBtn.disabled = false;
+            declineBtn.innerHTML = '<i class="fas fa-times"></i> Decline';
+        }
+    } catch (error) {
+        console.error('Error declining booking:', error);
+        showToast('Failed to decline booking. Please try again.', 'error');
+        acceptBtn.disabled = false;
+        declineBtn.disabled = false;
+        declineBtn.innerHTML = '<i class="fas fa-times"></i> Decline';
+    }
+}
+
+// Update pending count on dashboard
+async function updatePendingCount() {
+    try {
+        const response = await fetch('/api/pending-bookings/');
+        const data = await response.json();
+        
+        if (data.success) {
+            const pendingCountElement = document.getElementById('pending-count');
+            if (pendingCountElement) {
+                pendingCountElement.textContent = data.count;
+            }
+            
+            // Update modal count
+            document.getElementById('modal-pending-count').textContent = data.count;
+        }
+    } catch (error) {
+        console.error('Error updating pending count:', error);
+    }
+}
+
+// Close modal on Escape key
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        closePendingBookingsModal();
+        closePatientsModal();
+        closeMedicalRecordsModal();
+        closeInventoryModal();
+    }
+});
+
+// ===== PATIENTS MODAL =====
+async function openPatientsModal() {
+    const modal = document.getElementById('patientsModal');
+    const overlay = document.getElementById('modalOverlay');
+    const modalBody = document.getElementById('patientsModalBody');
+    
+    modal.classList.add('active');
+    overlay.classList.add('active');
+    
+    try {
+        const response = await fetch('/api/patients/');
+        const data = await response.json();
+        
+        if (data.success) {
+            renderPatients(data.patients);
+            document.getElementById('patients-modal-count').textContent = data.count;
+        } else {
+            modalBody.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <h3>Error Loading Patients</h3>
+                    <p>${data.error}</p>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('Error fetching patients:', error);
+        modalBody.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-exclamation-circle"></i>
+                <h3>Error Loading Patients</h3>
+                <p>Failed to fetch patient data. Please try again.</p>
+            </div>
+        `;
+    }
+}
+
+function closePatientsModal() {
+    document.getElementById('patientsModal').classList.remove('active');
+    document.getElementById('modalOverlay').classList.remove('active');
+}
+
+function renderPatients(patients) {
+    const modalBody = document.getElementById('patientsModalBody');
+    
+    if (patients.length === 0) {
+        modalBody.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-user-slash"></i>
+                <h3>No Patients Found</h3>
+                <p>No patient profiles have been created yet.</p>
+            </div>
+        `;
+        return;
+    }
+    
+    const tableHTML = `
+        <div style="margin-bottom: 1rem;">
+            <input type="text" id="patientSearchInput" placeholder="🔍 Search patients by name, email, or phone..." 
+                   style="width: 100%; padding: 0.75rem; border: 2px solid #dee2e6; border-radius: 8px; font-size: 0.95rem;"
+                   onkeyup="filterPatientsTable()">
+        </div>
+        <table class="modal-table" id="patientsTable">
+            <thead>
+                <tr>
+                    <th>Patient Name</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Gender</th>
+                    <th>Date of Birth</th>
+                    <th>Medical Records</th>
+                    <th>Address</th>
+                    <th>Emergency Contact</th>
+                    <th>Created At</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${patients.map(patient => `
+                    <tr data-search="${patient.name.toLowerCase()} ${patient.email.toLowerCase()} ${patient.phone}">
+                        <td><strong>${patient.name}</strong></td>
+                        <td>${patient.email}</td>
+                        <td>${patient.phone}</td>
+                        <td>${patient.gender}</td>
+                        <td>${patient.date_of_birth}</td>
+                        <td style="text-align: center;">
+                            <span class="badge badge-info clickable" onclick="viewPatientRecords(${patient.id}, '${patient.name}')" style="cursor: pointer;" title="Click to view medical records">${patient.medical_records_count} record(s)</span>
+                        </td>
+                        <td style="max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${patient.address}">${patient.address}</td>
+                        <td>${patient.emergency_contact}</td>
+                        <td>${patient.created_at}</td>
+                        <td style="text-align: center;">
+                            <button class="action-btn view-btn" onclick="viewPatientProfile(${patient.id})" title="View Profile">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    `;
+    
+    modalBody.innerHTML = tableHTML;
+}
+
+// ===== MEDICAL RECORDS MODAL =====
+async function openMedicalRecordsModal() {
+    const modal = document.getElementById('medicalRecordsModal');
+    const overlay = document.getElementById('modalOverlay');
+    const modalBody = document.getElementById('medicalRecordsModalBody');
+    
+    modal.classList.add('active');
+    overlay.classList.add('active');
+    
+    try {
+        const response = await fetch('/api/medical-records/');
+        const data = await response.json();
+        
+        if (data.success) {
+            renderMedicalRecords(data.records);
+            document.getElementById('records-modal-count').textContent = data.count;
+        } else {
+            modalBody.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <h3>Error Loading Records</h3>
+                    <p>${data.error}</p>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('Error fetching medical records:', error);
+        modalBody.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-exclamation-circle"></i>
+                <h3>Error Loading Records</h3>
+                <p>Failed to fetch medical records. Please try again.</p>
+            </div>
+        `;
+    }
+}
+
+function closeMedicalRecordsModal() {
+    document.getElementById('medicalRecordsModal').classList.remove('active');
+    document.getElementById('modalOverlay').classList.remove('active');
+}
+
+function renderMedicalRecords(records) {
+    const modalBody = document.getElementById('medicalRecordsModalBody');
+    
+    if (records.length === 0) {
+        modalBody.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-file-medical"></i>
+                <h3>No Medical Records Found</h3>
+                <p>No medical records have been created yet.</p>
+            </div>
+        `;
+        return;
+    }
+    
+    const tableHTML = `
+        <div style="margin-bottom: 1rem;">
+            <input type="text" id="medicalRecordsSearchInput" placeholder="🔍 Search medical records by patient name or diagnosis..." 
+                   style="width: 100%; padding: 0.75rem; border: 2px solid #dee2e6; border-radius: 8px; font-size: 0.95rem;"
+                   onkeyup="filterMedicalRecordsTable()">
+        </div>
+        <table class="modal-table" id="medicalRecordsTable">
+            <thead>
+                <tr>
+                    <th>Patient Name</th>
+                    <th>Visit Date</th>
+                    <th>Chief Complaint</th>
+                    <th>Symptoms</th>
+                    <th>Diagnosis</th>
+                    <th>Treatment Plan</th>
+                    <th>Prescriptions</th>
+                    <th>Images</th>
+                    <th>Notes</th>
+                    <th>Created By</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${records.map(record => `
+                    <tr data-search="${record.patient_name.toLowerCase()} ${record.diagnosis.toLowerCase()} ${record.chief_complaint.toLowerCase()}">
+                        <td><strong>${record.patient_name}</strong><br><small>${record.patient_email}</small></td>
+                        <td>${record.visit_date}</td>
+                        <td style="max-width: 150px;" title="${record.chief_complaint}">${truncate(record.chief_complaint, 30)}</td>
+                        <td style="max-width: 150px;" title="${record.symptoms}">${truncate(record.symptoms, 30)}</td>
+                        <td>${record.diagnosis}</td>
+                        <td style="max-width: 150px;" title="${record.treatment_plan}">${truncate(record.treatment_plan, 30)}</td>
+                        <td style="text-align: center;">
+                            <span class="badge badge-success">${record.prescriptions_count} item(s)</span>
+                        </td>
+                        <td style="text-align: center;">
+                            ${record.images_count > 0 ? 
+                                `<span class="badge badge-info" style="cursor: pointer;" onclick="showMedicalImages(${record.id}, '${record.patient_name}', ${JSON.stringify(record.images).replace(/"/g, '&quot;')})">
+                                    <i class="fas fa-images"></i> ${record.images_count} image(s)
+                                </span>` 
+                                : '<span style="color: #999;">No images</span>'
+                            }
+                        </td>
+                        <td style="max-width: 150px;" title="${record.notes}">${truncate(record.notes, 30)}</td>
+                        <td>${record.created_by}</td>
+                        <td>
+                            <a href="/admin/bookings/medicalrecord/${record.id}/change/" class="btn-action" title="View Details">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    `;
+    
+    modalBody.innerHTML = tableHTML;
+}
+
+// Show medical images in a lightbox
+function showMedicalImages(recordId, patientName, images) {
+    const modal = document.createElement('div');
+    modal.className = 'image-lightbox';
+    modal.innerHTML = `
+        <div class="lightbox-content">
+            <div class="lightbox-header">
+                <h3><i class="fas fa-images"></i> Medical Images - ${patientName}</h3>
+                <button onclick="this.closest('.image-lightbox').remove()" class="lightbox-close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="lightbox-body">
+                <div class="images-grid">
+                    ${images.map(img => `
+                        <div class="image-card">
+                            <img src="${img.url}" alt="${img.title}" onclick="window.open('${img.url}', '_blank')">
+                            <div class="image-info">
+                                <strong>${img.title}</strong>
+                                <small>${img.image_type} - ${img.uploaded_at}</small>
+                                ${img.description ? `<p>${img.description}</p>` : ''}
+                                <small>Uploaded by: ${img.uploaded_by}</small>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    setTimeout(() => modal.classList.add('active'), 10);
+}
+
+// ===== INVENTORY MODAL =====
+async function openInventoryModal() {
+    const modal = document.getElementById('inventoryModal');
+    const overlay = document.getElementById('modalOverlay');
+    const modalBody = document.getElementById('inventoryModalBody');
+    
+    modal.classList.add('active');
+    overlay.classList.add('active');
+    
+    try {
+        const response = await fetch('/api/inventory/');
+        const data = await response.json();
+        
+        if (data.success) {
+            renderInventory(data.inventory);
+            document.getElementById('inventory-modal-count').textContent = data.count;
+        } else {
+            modalBody.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <h3>Error Loading Inventory</h3>
+                    <p>${data.error}</p>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('Error fetching inventory:', error);
+        modalBody.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-exclamation-circle"></i>
+                <h3>Error Loading Inventory</h3>
+                <p>Failed to fetch inventory data. Please try again.</p>
+            </div>
+        `;
+    }
+}
+
+function closeInventoryModal() {
+    document.getElementById('inventoryModal').classList.remove('active');
+    document.getElementById('modalOverlay').classList.remove('active');
+}
+
+// ===== POS REVENUE MODAL =====
+async function openPOSRevenueModal() {
+    const modal = document.getElementById('posRevenueModal');
+    const overlay = document.getElementById('modalOverlay');
+    const modalBody = document.getElementById('posRevenueModalBody');
+    
+    modal.classList.add('active');
+    overlay.classList.add('active');
+    
+    // Show loading state
+    modalBody.innerHTML = `
+        <div class="loading-container" style="text-align: center; padding: 40px;">
+            <div class="loading-spinner" style="width: 40px; height: 40px; margin: 0 auto;"></div>
+            <p style="margin-top: 15px; color: #666;">Loading POS transactions...</p>
+        </div>
+    `;
+    
+    try {
+        const response = await fetch('/api/pos-sales/');
+        if (!response.ok) throw new Error('Failed to load POS sales');
+        
+        const data = await response.json();
+        document.getElementById('pos-modal-count').textContent = data.length;
+        renderPOSSales(data);
+    } catch (error) {
+        console.error('Error loading POS sales:', error);
+        modalBody.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-exclamation-triangle"></i>
+                <h3>Error Loading Data</h3>
+                <p>${error.message}</p>
+            </div>
+        `;
+    }
+}
+
+function closePOSRevenueModal() {
+    document.getElementById('posRevenueModal').classList.remove('active');
+    document.getElementById('modalOverlay').classList.remove('active');
+}
+
+function renderPOSSales(sales) {
+    const modalBody = document.getElementById('posRevenueModalBody');
+    
+    if (sales.length === 0) {
+        modalBody.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-cash-register"></i>
+                <h3>No POS Transactions Found</h3>
+                <p>No POS sales have been recorded yet.</p>
+                <button onclick="window.location.href='{% url 'admin:bookings_possale_add' %}'" style="margin-top: 20px; padding: 10px 20px; background: #28a745; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px;">
+                    <i class="fas fa-plus"></i> Create First Sale
+                </button>
+            </div>
+        `;
+        return;
+    }
+    
+    // Calculate summary statistics
+    const completedSales = sales.filter(s => s.status === 'Completed');
+    const totalRevenue = completedSales.reduce((sum, s) => sum + parseFloat(s.total_amount), 0);
+    const todaySales = completedSales.filter(s => {
+        const saleDate = new Date(s.sale_date);
+        const today = new Date();
+        return saleDate.toDateString() === today.toDateString();
+    });
+    const todayRevenue = todaySales.reduce((sum, s) => sum + parseFloat(s.total_amount), 0);
+    
+    const summaryHTML = `
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 25px;">
+            <div style="background: linear-gradient(135deg, #28a745 0%, #34ce57 100%); padding: 20px; border-radius: 8px; color: white; text-align: center;">
+                <div style="font-size: 24px; font-weight: bold;">₱${totalRevenue.toLocaleString('en-PH', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                <div style="font-size: 12px; opacity: 0.9; margin-top: 5px;">Total Revenue</div>
+            </div>
+            <div style="background: linear-gradient(135deg, #17a2b8 0%, #1fc8db 100%); padding: 20px; border-radius: 8px; color: white; text-align: center;">
+                <div style="font-size: 24px; font-weight: bold;">₱${todayRevenue.toLocaleString('en-PH', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                <div style="font-size: 12px; opacity: 0.9; margin-top: 5px;">Today's Revenue</div>
+            </div>
+            <div style="background: linear-gradient(135deg, #ffc107 0%, #ffcd38 100%); padding: 20px; border-radius: 8px; color: white; text-align: center;">
+                <div style="font-size: 24px; font-weight: bold;">${completedSales.length}</div>
+                <div style="font-size: 12px; opacity: 0.9; margin-top: 5px;">Completed Sales</div>
+            </div>
+            <div style="background: linear-gradient(135deg, #6f42c1 0%, #8456d4 100%); padding: 20px; border-radius: 8px; color: white; text-align: center;">
+                <div style="font-size: 24px; font-weight: bold;">${sales.length}</div>
+                <div style="font-size: 12px; opacity: 0.9; margin-top: 5px;">Total Transactions</div>
+            </div>
+        </div>
+    `;
+    
+    const tableHTML = `
+        <table class="modal-table">
+            <thead>
+                <tr>
+                    <th>Receipt #</th>
+                    <th>Date & Time</th>
+                    <th>Customer</th>
+                    <th>Type</th>
+                    <th>Payment Method</th>
+                    <th>Total Amount</th>
+                    <th>Status</th>
+                    <th>Cashier</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${sales.map(sale => {
+                    const saleDate = new Date(sale.sale_date);
+                    const statusColors = {
+                        'Pending': '#ffc107',
+                        'Completed': '#28a745',
+                        'Cancelled': '#dc3545',
+                        'Refunded': '#6c757d'
+                    };
+                    return `
+                        <tr>
+                            <td><strong>${sale.receipt_number}</strong></td>
+                            <td>
+                                <div>${saleDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</div>
+                                <div style="font-size: 0.85em; color: #666;">${saleDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</div>
+                            </td>
+                            <td>
+                                ${sale.customer_name || sale.patient_name || '<em style="color: #999;">Walk-in</em>'}
+                            </td>
+                            <td>
+                                <span class="badge" style="background: ${sale.sale_type === 'Patient' ? '#007bff' : '#6c757d'};">
+                                    ${sale.sale_type}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge badge-info">${sale.payment_method}</span>
+                            </td>
+                            <td style="text-align: right;">
+                                <strong style="color: #28a745;">₱${parseFloat(sale.total_amount).toLocaleString('en-PH', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</strong>
+                            </td>
+                            <td>
+                                <span class="badge" style="background: ${statusColors[sale.status] || '#6c757d'};">
+                                    ${sale.status}
+                                </span>
+                            </td>
+                            <td style="font-size: 0.9em;">${sale.created_by || '-'}</td>
+                            <td>
+                                <a href="/admin/bookings/possale/${sale.id}/change/" class="btn-action" title="View Details">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    `;
+                }).join('')}
+            </tbody>
+        </table>
+    `;
+    
+    modalBody.innerHTML = summaryHTML + tableHTML;
+}
+
+function renderInventory(inventory) {
+    const modalBody = document.getElementById('inventoryModalBody');
+    
+    if (inventory.length === 0) {
+        modalBody.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-box-open"></i>
+                <h3>No Inventory Items Found</h3>
+                <p>No inventory items have been added yet.</p>
+            </div>
+        `;
+        return;
+    }
+    
+    const tableHTML = `
+        <table class="modal-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Item Name</th>
+                    <th>Category</th>
+                    <th>Quantity</th>
+                    <th>Min Stock</th>
+                    <th>Price (₱)</th>
+                    <th>Status</th>
+                    <th>Expiry Date</th>
+                    <th>Stock In Date</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${inventory.map(item => `
+                    <tr>
+                        <td><strong>#${item.id}</strong></td>
+                        <td><strong>${item.name}</strong></td>
+                        <td>
+                            <span class="badge badge-info">${item.category}</span>
+                        </td>
+                        <td style="text-align: center;">
+                            <strong>${item.quantity}</strong>
+                        </td>
+                        <td style="text-align: center;">${item.stock}</td>
+                        <td style="text-align: right;"><strong>${item.price.toFixed(2)}</strong></td>
+                        <td>
+                            <span class="badge badge-${item.status_color}">${item.status}</span>
+                        </td>
+                        <td>${item.expiry_date}</td>
+                        <td>${item.date_stock_in}</td>
+                        <td style="max-width: 250px;" title="${item.description}">${truncate(item.description, 50)}</td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    `;
+    
+    modalBody.innerHTML = tableHTML;
+}
+
+// Utility function to truncate text
+function truncate(text, maxLength) {
+    if (!text) return 'N/A';
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength) + '...';
+}
+</script>
+
+<style>
+    /* Override Django Admin default container constraints */
+    #content-main {
+        max-width: 100% !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        min-height: 0 !important;
+        height: auto !important;
+    }
+    
+    /* Dashboard Wrapper - Full Width */
+    .dashboard-wrapper {
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 1.5rem !important;
+        box-sizing: border-box;
+        margin: 0 !important;
+        min-height: 0 !important;
+        height: auto !important;
+        display: flex !important;
+        flex-direction: column !important;
+    }
+
+    /* Main Dashboard Grid Layout */
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: 2fr 1.2fr 1fr;
+        grid-auto-rows: min-content;
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+        width: 100%;
+        align-items: start;
+        flex-shrink: 0;
+    }
+
+    /* Section Titles */
+    .section-title {
+        color: #314F2E;
+        font-size: 1.3em;
+        margin: 0 0 15px 0;
+        padding-bottom: 10px;
+        border-bottom: 3px solid #314F2E;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    /* LEFT COLUMN: Statistics Grid (n x 3) */
+    .dashboard-left {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        width: 100%;
+        height: fit-content;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 15px;
+        width: 100%;
+    }
+
+    .stat-card {
+        background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 15px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        transition: all 0.3s ease;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        animation: fadeIn 0.5s ease-out;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+    }
+
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: #314F2E;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5em;
+        flex-shrink: 0;
+    }
+
+    .stat-content {
+        flex: 1;
+    }
+
+    .stat-number {
+        font-size: 1.8em;
+        font-weight: bold;
+        color: #314F2E;
+        line-height: 1;
+        margin-bottom: 5px;
+    }
+
+    .stat-label {
+        font-size: 0.85em;
+        color: #666;
+        font-weight: 500;
+    }
+
+    /* Stat Card Variants */
+    .stat-card.stat-info {
+        background: linear-gradient(135deg, #d1ecf1 0%, #e8f5f7 100%);
+        border-left: 4px solid #17a2b8;
+    }
+
+    .stat-card.stat-info .stat-icon {
+        background: #17a2b8;
+    }
+
+    .stat-card.stat-success {
+        background: linear-gradient(135deg, #d4edda 0%, #e8f5e9 100%);
+        border-left: 4px solid #28a745;
+    }
+
+    .stat-card.stat-success .stat-icon {
+        background: #28a745;
+    }
+
+    .stat-card.stat-warning {
+        background: linear-gradient(135deg, #fff3cd 0%, #fffaf0 100%);
+        border-left: 4px solid #ffc107;
+    }
+
+    .stat-card.stat-warning .stat-icon {
+        background: #ffc107;
+    }
+
+    .stat-card.stat-danger {
+        background: linear-gradient(135deg, #f8d7da 0%, #fdeaea 100%);
+        border-left: 4px solid #dc3545;
+    }
+
+    .stat-card.stat-danger .stat-icon {
+        background: #dc3545;
+    }
+
+    /* RIGHT COLUMN: Quick Actions */
+    /* RIGHT COLUMN: Financial Overview + Quick Actions */
+    .dashboard-middle {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        width: 100%;
+        height: fit-content;
+    }
+
+    .dashboard-right {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        width: 100%;
+        height: fit-content;
+    }
+
+    .quick-actions-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+        width: 100%;
+    }
+
+    .quick-action-btn {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 15px;
+        background: white;
+        border: 2px solid #314F2E;
+        border-radius: 6px;
+        color: #314F2E !important;
+        text-decoration: none !important;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+
+    .quick-action-btn:hover {
+        background: #314F2E;
+        color: white !important;
+        transform: translateX(5px);
+    }
+
+    .quick-action-btn i {
+        font-size: 1.2em;
+        width: 24px;
+        text-align: center;
+    }
+
+    .quick-action-btn.action-btn-booking {
+        border-color: #17a2b8;
+        color: #17a2b8 !important;
+    }
+
+    .quick-action-btn.action-btn-booking:hover {
+        background: #17a2b8;
+        color: white !important;
+    }
+
+    .quick-action-btn.action-btn-billing {
+        border-color: #28a745;
+        color: #28a745 !important;
+    }
+
+    .quick-action-btn.action-btn-billing:hover {
+        background: #28a745;
+        color: white !important;
+    }
+
+    .quick-action-btn.action-btn-payment {
+        border-color: #ffc107;
+        color: #856404 !important;
+    }
+
+    .quick-action-btn.action-btn-payment:hover {
+        background: #ffc107;
+        color: #856404 !important;
+    }
+
+    .quick-action-btn.action-btn-pos {
+        border-color: #6f42c1;
+        color: #6f42c1 !important;
+    }
+
+    .quick-action-btn.action-btn-pos:hover {
+        background: #6f42c1;
+        color: white !important;
+    }
+
+    /* Permission Notice Styles */
+    .permission-notice {
+        background: #e8f4f8;
+        border: 2px solid #bee5eb;
+        border-radius: 8px;
+        padding: 15px 20px;
+        margin: 0 0 20px 0;
+        color: #0c5460;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 0.95em;
+        flex-shrink: 0;
+    }
+
+    .permission-notice i {
+        font-size: 1.5em;
+    }
+
+    .permission-notice.staff {
+        background: #fff3cd;
+        border-color: #ffeaa7;
+        color: #856404;
+    }
+
+    .permission-notice.superuser {
+        background: #d1ecf1;
+        border-color: #b6d4da;
+        color: #0c5460;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 1400px) {
+        .dashboard-wrapper {
+            padding: 1.5rem 1rem !important;
+        }
+        
+        .dashboard-grid {
+            grid-template-columns: 1.5fr 1fr;
+            gap: 1.25rem;
+        }
+        
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 1024px) {
+        .dashboard-wrapper {
+            padding: 1rem !important;
+        }
+        
+        .dashboard-grid {
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+        
+        .stats-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+
+    @media (max-width: 768px) {
+        .dashboard-wrapper {
+            padding: 0.75rem !important;
+        }
+        
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+        }
+        
+        .stat-card {
+            padding: 12px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+    
+    /* Pending Bookings Card - Clickable Style */
+    #pending-bookings-card,
+    #patients-card,
+    #medical-records-card,
+    #inventory-card {
+        position: relative;
+        transition: all 0.3s ease;
+    }
+    
+    #pending-bookings-card:hover,
+    #patients-card:hover,
+    #medical-records-card:hover,
+    #inventory-card:hover {
+        transform: translateY(-5px) scale(1.02);
+        box-shadow: 0 6px 20px rgba(49, 79, 46, 0.2);
+        border: 2px solid #314F2E;
+    }
+    
+    #pending-bookings-card:active,
+    #patients-card:active,
+    #medical-records-card:active,
+    #inventory-card:active {
+        transform: translateY(-3px) scale(1.01);
+    }
+    
+    /* Badge Styles */
+    .badge {
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 0.75em;
+        font-weight: bold;
+        text-transform: uppercase;
+        display: inline-block;
+        white-space: nowrap;
+    }
+    
+    .badge-info {
+        background: #d1ecf1;
+        color: #0c5460;
+        border: 1px solid #bee5eb;
+    }
+    
+    .badge-success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+    
+    .badge-warning {
+        background: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeaa7;
+    }
+    
+    .badge-danger {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+    
+    /* Modal Styles */
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 9998;
+        animation: fadeIn 0.3s ease;
+    }
+    
+    .modal-overlay.active {
+        display: block;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    .modal {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 10px 50px rgba(0, 0, 0, 0.3);
+        z-index: 9999;
+        max-width: 90%;
+        width: 80%;
+        max-height: 80vh;
+        overflow: hidden;
+        animation: slideDown 0.3s ease;
+    }
+    
+    /* Medical Records Modal - Larger Size */
+    #medicalRecordsModal {
+        width: 85%;
+        max-width: 95%;
+        max-height: 90vh;
+    }
+    
+    #medicalRecordsModal .modal-body {
+        max-height: calc(90vh - 140px);
+        overflow-y: auto;
+        overflow-x: auto;
+    }
+    
+    .modal.active {
+        display: block;
+    }
+    
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translate(-50%, -60%);
+        }
+        to {
+            opacity: 1;
+            transform: translate(-50%, -50%);
+        }
+    }
+    
+    @keyframes pulse {
+        0%, 100% {
+            transform: scale(1);
+            opacity: 1;
+        }
+        50% {
+            transform: scale(1.2);
+            opacity: 0.8;
+        }
+    }
+    
+    .modal-header {
+        background: #314F2E;
+        color: white;
+        padding: 20px 25px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .modal-header h2 {
+        margin: 0;
+        font-size: 1.5em;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .modal-close {
+        background: none;
+        border: none;
+        color: white;
+        font-size: 1.5em;
+        cursor: pointer;
+        padding: 5px 10px;
+        transition: transform 0.2s ease;
+    }
+    
+    .modal-close:hover {
+        transform: scale(1.2);
+    }
+    
+    .modal-body {
+        padding: 0;
+        max-height: calc(80vh - 140px);
+        overflow-y: auto;
+    }
+    
+    .modal-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .modal-table thead {
+        background: #f8f9fa;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+    
+    .modal-table th {
+        padding: 15px;
+        text-align: left;
+        font-weight: bold;
+        color: #314F2E;
+        border-bottom: 2px solid #dee2e6;
+    }
+    
+    .modal-table td {
+        padding: 15px;
+        border-bottom: 1px solid #dee2e6;
+    }
+    
+    .modal-table tbody tr:hover {
+        background: #f8f9fa;
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 8px;
+    }
+    
+    .btn-accept,
+    .btn-decline {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
+    
+    .btn-accept {
+        background: #28a745;
+        color: white;
+    }
+    
+    .btn-accept:hover {
+        background: #218838;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+    }
+    
+    .btn-decline {
+        background: #dc3545;
+        color: white;
+    }
+    
+    .btn-decline:hover {
+        background: #c82333;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+    }
+    
+    .btn-accept:disabled,
+    .btn-decline:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+    }
+    
+    .loading-spinner {
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-top-color: white;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+    }
+    
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #666;
+    }
+    
+    .empty-state i {
+        font-size: 4em;
+        color: #dee2e6;
+        margin-bottom: 20px;
+    }
+    
+    .empty-state h3 {
+        color: #333;
+        margin-bottom: 10px;
+    }
+    
+    .modal-footer {
+        padding: 15px 25px;
+        background: #f8f9fa;
+        border-top: 1px solid #dee2e6;
+        text-align: right;
+    }
+    
+    .toast {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: white;
+        padding: 15px 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        z-index: 10000;
+        display: none;
+        animation: slideInRight 0.3s ease;
+    }
+    
+    @keyframes slideInRight {
+        from {
+            opacity: 0;
+            transform: translateX(100%);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+    
+    .toast.active {
+        display: block;
+    }
+    
+    .toast.success {
+        border-left: 4px solid #28a745;
+    }
+    
+    .toast.error {
+        border-left: 4px solid #dc3545;
+    }
+    
+    /* ===== IMAGE LIGHTBOX ===== */
+    .image-lightbox {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.9);
+        z-index: 10000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    
+    .image-lightbox.active {
+        opacity: 1;
+    }
+    
+    .lightbox-content {
+        background: white;
+        border-radius: 12px;
+        max-width: 90%;
+        max-height: 90%;
+        overflow: auto;
+        box-shadow: 0 10px 50px rgba(0, 0, 0, 0.5);
+    }
+    
+    .lightbox-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px 25px;
+        background: linear-gradient(135deg, #3d5c3d 0%, #2e472e 100%);
+        color: white;
+        border-radius: 12px 12px 0 0;
+    }
+    
+    .lightbox-header h3 {
+        margin: 0;
+        font-size: 1.3em;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .lightbox-close {
+        background: none;
+        border: none;
+        color: white;
+        font-size: 1.5em;
+        cursor: pointer;
+        padding: 5px 10px;
+        transition: transform 0.2s;
+    }
+    
+    .lightbox-close:hover {
+        transform: rotate(90deg);
+    }
+    
+    .lightbox-body {
+        padding: 25px;
+    }
+    
+    .images-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+    }
+    
+    .image-card {
+        background: #f8f9fa;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s;
+    }
+    
+    .image-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    }
+    
+    .image-card img {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+        cursor: pointer;
+        transition: opacity 0.2s;
+    }
+    
+    .image-card img:hover {
+        opacity: 0.9;
+    }
+    
+    .image-info {
+        padding: 15px;
+    }
+    
+    .image-info strong {
+        display: block;
+        color: #3d5c3d;
+        margin-bottom: 5px;
+        font-size: 1.05em;
+    }
+    
+    .image-info small {
+        display: block;
+        color: #666;
+        margin-bottom: 8px;
+    }
+    
+    .image-info p {
+        margin: 10px 0;
+        color: #444;
+        font-size: 0.95em;
+    }
+    
+    /* ===== FINANCIAL SUMMARY SECTION ===== */
+    .financial-summary-section {
+        background: #fff;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        margin-bottom: 2rem;
+    }
+    
+    .financial-cards {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .financial-card {
+        background: linear-gradient(135deg, #f8f9fa 0%, #fff 100%);
+        border-radius: 10px;
+        padding: 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        border: 2px solid #e9ecef;
+        transition: all 0.3s ease;
+        min-width: 0;
+        width: 100%;
+    }
+    
+    .financial-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+    }
+    
+    .revenue-card {
+        border-color: #28a745;
+        background: linear-gradient(135deg, #e8f5e9 0%, #fff 100%);
+    }
+    
+    .balance-card {
+        border-color: #dc3545;
+        background: linear-gradient(135deg, #ffebee 0%, #fff 100%);
+    }
+    
+    .billed-card {
+        border-color: #17a2b8;
+        background: linear-gradient(135deg, #e0f7fa 0%, #fff 100%);
+    }
+    
+    .collection-card {
+        border-color: #ffc107;
+        background: linear-gradient(135deg, #fff8e1 0%, #fff 100%);
+    }
+    
+    .financial-icon {
+        width: 50px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        font-size: 1.5rem;
+    }
+    
+    .revenue-card .financial-icon {
+        background: rgba(40, 167, 69, 0.1);
+        color: #28a745;
+    }
+    
+    .balance-card .financial-icon {
+        background: rgba(220, 53, 69, 0.1);
+        color: #dc3545;
+    }
+    
+    .billed-card .financial-icon {
+        background: rgba(23, 162, 184, 0.1);
+        color: #17a2b8;
+    }
+    
+    .collection-card .financial-icon {
+        background: rgba(255, 193, 7, 0.1);
+        color: #ffc107;
+    }
+    
+    .financial-content {
+        flex: 1;
+    }
+    
+    .financial-label {
+        font-size: 0.75rem;
+        color: #6c757d;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.25rem;
+    }
+    
+    .financial-value {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #212529;
+    }
+    
+    .balance-amount {
+        color: #dc3545;
+    }
+    
+    .transaction-summary {
+        margin-top: 1.5rem;
+        padding-top: 1.5rem;
+        border-top: 2px solid #e9ecef;
+    }
+    
+    .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+        margin-top: 0.75rem;
+    }
+    
+    .summary-item {
+        background: #fff;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        padding: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        transition: all 0.2s ease;
+    }
+    
+    .summary-item.clickable {
+        cursor: pointer;
+    }
+    
+    .summary-item.clickable:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        transform: translateY(-2px);
+        border-color: #3d5c3d;
+    }
+    
+    .summary-item:hover {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+    
+    .summary-icon {
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        font-size: 1.25rem;
+    }
+    
+    .summary-icon.paid {
+        background: rgba(40, 167, 69, 0.1);
+        color: #28a745;
+    }
+    
+    .summary-icon.partial {
+        background: rgba(255, 193, 7, 0.1);
+        color: #ffc107;
+    }
+    
+    .summary-icon.unpaid {
+        background: rgba(220, 53, 69, 0.1);
+        color: #dc3545;
+    }
+    
+    .summary-icon.total {
+        background: rgba(108, 117, 125, 0.1);
+        color: #6c757d;
+    }
+    
+    .summary-details {
+        flex: 1;
+    }
+    
+    .summary-count {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #212529;
+        line-height: 1;
+    }
+    
+    .summary-label {
+        font-size: 0.75rem;
+        color: #6c757d;
+        margin-top: 0.25rem;
+    }
+    
+    .view-all-link {
+        margin-top: 1rem;
+        text-align: center;
+    }
+    
+    .action-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        background: #2e472e;
+        color: white !important;
+        text-decoration: none;
+        border-radius: 6px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+    
+    .action-link:hover {
+        background: #1f311f;
+        color: white !important;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+    
+    .action-link:visited {
+        color: white !important;
+    }
+    
+    .action-link:active {
+        color: white !important;
+    }
+    
+    @media (max-width: 1400px) {
+        .financial-cards {
+            grid-template-columns: 1fr;
+        }
+        
+        .summary-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+    
+    /* Clickable Card Hover Effect */
+    .financial-card.clickable:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+    }
+    
+    /* Unpaid Patients Modal */
+    .unpaid-modal {
+        display: none;
+        position: fixed;
+        z-index: 10000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.6);
+        overflow: auto;
+    }
+    
+    .unpaid-modal.active {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .unpaid-modal-content {
+        background-color: #fefefe;
+        padding: 2rem;
+        border-radius: 12px;
+        width: 90%;
+        max-width: 900px;
+        max-height: 80vh;
+        overflow-y: auto;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        animation: slideDown 0.3s ease;
+    }
+    
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-50px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .unpaid-modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #e0e0e0;
+    }
+    
+    .unpaid-modal-header h2 {
+        color: #3d5c3d;
+        margin: 0;
+        font-size: 1.75rem;
+    }
+    
+    .close-modal-btn {
+        background: none;
+        border: none;
+        font-size: 2rem;
+        cursor: pointer;
+        color: white;
+        font-weight: 300;
+        line-height: 1;
+        opacity: 0.9;
+    }
+    
+    .close-modal-btn:hover {
+        color: white;
+        opacity: 1;
+    }
+    
+    .unpaid-patients-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .unpaid-patient-item {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        display: grid;
+        grid-template-columns: 2fr 1.5fr 1fr auto;
+        gap: 1rem;
+        align-items: center;
+        transition: all 0.2s;
+    }
+    
+    .unpaid-patient-item:hover {
+        background: #e9ecef;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    .patient-info {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .patient-name {
+        font-weight: 600;
+        color: #333;
+        font-size: 1.1rem;
+    }
+    
+    .patient-email {
+        color: #666;
+        font-size: 0.9rem;
+    }
+    
+    .booking-date {
+        color: #555;
+    }
+    
+    .balance-amount {
+        font-weight: 700;
+        color: #dc3545;
+        font-size: 1.2rem;
+    }
+    
+    .mark-paid-btn {
+        background: #28a745;
+        color: white;
+        border: none;
+        padding: 0.6rem 1.2rem;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .mark-paid-btn:hover {
+        background: #218838;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+    }
+    
+    .mark-paid-btn:disabled {
+        background: #6c757d;
+        cursor: not-allowed;
+        transform: none;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: #666;
+    }
+    
+    .empty-state i {
+        font-size: 4rem;
+        color: #28a745;
+        margin-bottom: 1rem;
+    }
+    
+    @media (max-width: 768px) {
+        .unpaid-patient-item {
+            grid-template-columns: 1fr;
+            gap: 0.5rem;
+        }
+        
+        .mark-paid-btn {
+            justify-self: start;
+        }
+    }
+    
+    /* Appointments Modal Styles */
+    .filter-btn {
+        background: #f8f9fa;
+        border: 2px solid #dee2e6;
+        padding: 0.6rem 1.2rem;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .filter-btn:hover {
+        background: #e9ecef;
+        transform: translateY(-2px);
+    }
+    
+    .filter-btn.active {
+        background: #3d5c3d;
+        color: white;
+        border-color: #3d5c3d;
+    }
+    
+    /* Appointments Table Styles */
+    .appointments-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    .appointments-table thead {
+        background: linear-gradient(135deg, #3d5c3d 0%, #5a8a5a 100%);
+        color: white;
+    }
+    
+    .appointments-table th {
+        padding: 1rem;
+        font-weight: 600;
+        font-size: 0.95rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .appointments-table td {
+        padding: 1rem;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .appointments-table tbody tr {
+        transition: all 0.2s;
+    }
+    
+    .appointments-table tbody tr:hover {
+        background: #f8f9fa;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+    
+    .appointments-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+    
+    /* Status Dropdown */
+    .status-dropdown {
+        padding: 0.6rem 0.75rem;
+        border: 2px solid #dee2e6;
+        border-radius: 6px;
+        background-color: white;
+        font-size: 0.95rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        width: 100%;
+        max-width: 160px;
+        color: #212529 !important;
+        min-height: 38px;
+        line-height: 1.5;
+    }
+    
+    .status-dropdown:hover {
+        border-color: #3d5c3d;
+        background-color: #f8f9fa;
+    }
+    
+    .status-dropdown:focus {
+        outline: none;
+        border-color: #3d5c3d;
+        box-shadow: 0 0 0 3px rgba(61, 92, 61, 0.1);
+        background-color: white;
+    }
+    
+    .status-dropdown option {
+        background: white !important;
+        color: #212529 !important;
+        padding: 0.5rem;
+        font-weight: 600;
+    }
+    
+    .status-dropdown option[value="Ongoing"] {
+        background: #fff3cd;
+        color: #856404;
+    }
+    
+    /* Done Action Button */
+    .done-action-btn {
+        background: #28a745;
+        color: white;
+        border: none;
+        padding: 0.6rem 1.5rem;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        white-space: nowrap;
+    }
+    
+    .done-action-btn:hover {
+        background: #218838;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+    }
+    
+    .done-action-btn:active {
+        transform: translateY(0);
+    }
+    
+    .done-action-btn:disabled {
+        background: #6c757d;
+        cursor: not-allowed;
+        transform: none;
+        opacity: 0.6;
+    }
+    
+    .cancel-action-btn {
+        background: #dc3545;
+        color: white;
+        border: none;
+        padding: 0.6rem 1.5rem;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        white-space: nowrap;
+        margin-left: 0.5rem;
+    }
+    
+    .cancel-action-btn:hover {
+        background: #c82333;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+    }
+    
+    .cancel-action-btn:active {
+        transform: translateY(0);
+    }
+    
+    .cancel-action-btn:disabled {
+        background: #6c757d;
+        cursor: not-allowed;
+        transform: none;
+        opacity: 0.6;
+    }
+    
+    /* Action Buttons */
+    .action-btn {
+        border: none;
+        padding: 0.4rem 0.6rem;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.85rem;
+        transition: all 0.2s;
+        margin: 0 0.15rem;
+        background: #f8f9fa;
+        color: #495057;
+    }
+    
+    .action-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+    
+    .view-btn:hover {
+        background: #007bff;
+        color: white;
+    }
+    
+    .edit-btn:hover {
+        background: #ffc107;
+        color: white;
+    }
+    
+    .delete-btn:hover {
+        background: #dc3545;
+        color: white;
+    }
+    
+    .record-btn:hover {
+        background: #17a2b8;
+        color: white;
+    }
+    
+    .badge.clickable:hover {
+        background: #138496 !important;
+        transform: scale(1.05);
+    }
+    
+    /* Responsive table */
+    @media (max-width: 1200px) {
+        .appointments-table {
+            font-size: 0.9rem;
+        }
+        
+        .appointments-table th,
+        .appointments-table td {
+            padding: 0.75rem;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .appointments-table {
+            display: block;
+            overflow-x: auto;
+        }
+        
+        .appointments-table thead {
+            display: none;
+        }
+        
+        .appointments-table tbody tr {
+            display: block;
+            margin-bottom: 1rem;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 1rem;
+        }
+        
+        .appointments-table td {
+            display: block;
+            text-align: left !important;
+            padding: 0.5rem 0;
+            border: none;
+        }
+        
+        .appointments-table td:before {
+            content: attr(data-label);
+            font-weight: 600;
+            display: block;
+            margin-bottom: 0.25rem;
+            color: #666;
+        }
+    }
+</style>
+
+<!-- Unpaid Patients Modal -->
+<div id="unpaidPatientsModal" class="unpaid-modal">
+    <div class="unpaid-modal-content">
+        <div class="unpaid-modal-header">
+            <h2><i class="fas fa-exclamation-triangle"></i> Unpaid Patients</h2>
+            <button class="close-modal-btn" onclick="closeUnpaidPatientsModal()">&times;</button>
+        </div>
+        <div id="unpaidPatientsContainer">
+            <div style="text-align: center; padding: 2rem;">
+                <i class="fas fa-spinner fa-spin" style="font-size: 3rem; color: #3d5c3d;"></i>
+                <p style="margin-top: 1rem; color: #666;">Loading unpaid patients...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- All Appointments Modal -->
+<div id="allAppointmentsModal" class="unpaid-modal">
+    <div class="unpaid-modal-content" style="max-width: 1400px;">
+        <div class="unpaid-modal-header">
+            <h2><i class="fas fa-calendar-check"></i> All Appointments</h2>
+            <button class="close-modal-btn" onclick="closeAllAppointmentsModal()">&times;</button>
+        </div>
+        <div id="allAppointmentsContainer">
+            <div style="text-align: center; padding: 2rem;">
+                <i class="fas fa-spinner fa-spin" style="font-size: 3rem; color: #3d5c3d;"></i>
+                <p style="margin-top: 1rem; color: #666;">Loading appointments...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Patient Medical Records Modal -->
+<div id="patientRecordsModal" class="unpaid-modal">
+    <div class="unpaid-modal-content" style="max-width: 1200px;">
+        <div class="unpaid-modal-header">
+            <h2><i class="fas fa-file-medical"></i> Medical Records - <span id="recordsPatientName"></span></h2>
+            <button class="close-modal-btn" onclick="closePatientRecordsModal()">&times;</button>
+        </div>
+        <div id="patientRecordsContainer">
+            <div style="text-align: center; padding: 2rem;">
+                <i class="fas fa-spinner fa-spin" style="font-size: 3rem; color: #3d5c3d;"></i>
+                <p style="margin-top: 1rem; color: #666;">Loading medical records...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Unpaid Bills Modal (from Clinic Statistics) -->
+<div id="unpaidBillsModal" class="unpaid-modal">
+    <div class="unpaid-modal-content" style="max-width: 900px;">
+        <div class="unpaid-modal-header">
+            <h2><i class="fas fa-exclamation-triangle"></i> Unpaid Bills (<span id="unpaidBillsCount">0</span>)</h2>
+            <button class="close-modal-btn" onclick="closeUnpaidBillsModal()">&times;</button>
+        </div>
+        <div id="unpaidBillsContainer">
+            <div style="text-align: center; padding: 2rem;">
+                <i class="fas fa-spinner fa-spin" style="font-size: 3rem; color: #3d5c3d;"></i>
+                <p style="margin-top: 1rem; color: #666;">Loading unpaid bills...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Fully Paid Bills Modal (from Transaction Summary) -->
+<div id="fullyPaidModal" class="unpaid-modal">
+    <div class="unpaid-modal-content" style="max-width: 1000px;">
+        <div class="unpaid-modal-header" style="background: linear-gradient(135deg, #28a745 0%, #34ce57 100%); justify-content: center; position: relative; padding: 20px 60px;">
+            <h2 style="margin: 0; text-align: center; color: white;"><i class="fas fa-check-circle" style="margin-right: 10px;"></i> Fully Paid Bills (<span id="fullyPaidCount">0</span>)</h2>
+            <button class="modal-close" onclick="closeFullyPaidModal()" style="position: absolute; right: 25px; top: 50%; transform: translateY(-50%); color: white;">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div id="fullyPaidContainer">
+            <div style="text-align: center; padding: 2rem;">
+                <i class="fas fa-spinner fa-spin" style="font-size: 3rem; color: #28a745;"></i>
+                <p style="margin-top: 1rem; color: #666;">Loading fully paid bills...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Unpaid Bills Modal (from Transaction Summary) -->
+<div id="unpaidBillsTransactionModal" class="unpaid-modal">
+    <div class="unpaid-modal-content" style="max-width: 1000px;">
+        <div class="unpaid-modal-header" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); justify-content: center; position: relative; padding: 20px 60px;">
+            <h2 style="margin: 0; text-align: center; color: white;"><i class="fas fa-times-circle" style="margin-right: 10px;"></i> Unpaid Bills (<span id="unpaidTransactionCount">0</span>)</h2>
+            <button class="modal-close" onclick="closeUnpaidBillsTransactionModal()" style="position: absolute; right: 25px; top: 50%; transform: translateY(-50%); color: white;">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div id="unpaidTransactionContainer">
+            <div style="text-align: center; padding: 2rem;">
+                <i class="fas fa-spinner fa-spin" style="font-size: 3rem; color: #dc3545;"></i>
+                <p style="margin-top: 1rem; color: #666;">Loading unpaid bills...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- All Bills Modal (from Transaction Summary) -->
+<div id="allBillsModal" class="unpaid-modal">
+    <div class="unpaid-modal-content" style="max-width: 1000px;">
+        <div class="unpaid-modal-header" style="background: linear-gradient(135deg, #17a2b8 0%, #138496 100%); justify-content: center; position: relative; padding: 20px 60px;">
+            <h2 style="margin: 0; text-align: center; color: white;"><i class="fas fa-list" style="margin-right: 10px;"></i> All Bills (<span id="allBillsCount">0</span>)</h2>
+            <button class="modal-close" onclick="closeAllBillsModal()" style="position: absolute; right: 25px; top: 50%; transform: translateY(-50%); color: white;">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div id="allBillsContainer">
+            <div style="text-align: center; padding: 2rem;">
+                <i class="fas fa-spinner fa-spin" style="font-size: 3rem; color: #6c757d;"></i>
+                <p style="margin-top: 1rem; color: #666;">Loading all bills...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function openUnpaidPatientsModal() {
+    const modal = document.getElementById('unpaidPatientsModal');
+    modal.classList.add('active');
+    fetchUnpaidPatients();
+}
+
+function closeUnpaidPatientsModal() {
+    const modal = document.getElementById('unpaidPatientsModal');
+    modal.classList.remove('active');
+}
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+    const modal = document.getElementById('unpaidPatientsModal');
+    if (event.target == modal) {
+        closeUnpaidPatientsModal();
+    }
+}
+
+function fetchUnpaidPatients() {
+    fetch('/api/unpaid-patients/')
+        .then(response => response.json())
+        .then(data => {
+            displayUnpaidPatients(data);
+        })
+        .catch(error => {
+            console.error('Error fetching unpaid patients:', error);
+            document.getElementById('unpaidPatientsContainer').innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <h3>Error Loading Data</h3>
+                    <p>Unable to fetch unpaid patients. Please try again.</p>
+                </div>
+            `;
+        });
+}
+
+function displayUnpaidPatients(patients) {
+    const container = document.getElementById('unpaidPatientsContainer');
+    
+    if (patients.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-check-circle"></i>
+                <h3>All Clear!</h3>
+                <p>There are no unpaid patients at the moment.</p>
+            </div>
+        `;
+        return;
+    }
+    
+    const listHTML = `
+        <ul class="unpaid-patients-list">
+            ${patients.map(patient => `
+                <li class="unpaid-patient-item" id="patient-billing-${patient.billing_id}">
+                    <div class="patient-info">
+                        <span class="patient-name">
+                            <i class="fas fa-user"></i> ${patient.patient_name}
+                        </span>
+                        <span class="patient-email">
+                            <i class="fas fa-envelope"></i> ${patient.patient_email}
+                        </span>
+                    </div>
+                    <div class="booking-date">
+                        <i class="fas fa-calendar"></i> ${patient.booking_date}
+                    </div>
+                    <div class="balance-amount">
+                        ₱${parseFloat(patient.balance).toFixed(2)}
+                    </div>
+                    <button class="mark-paid-btn" onclick="markAsPaid(${patient.billing_id}, '${patient.patient_name}')">
+                        <i class="fas fa-check"></i> PAID
+                    </button>
+                </li>
+            `).join('')}
+        </ul>
+    `;
+    
+    container.innerHTML = listHTML;
+}
+
+function markAsPaid(billingId, patientName) {
+    if (!confirm(`Mark billing for ${patientName} as PAID?`)) {
+        return;
+    }
+    
+    const button = event.target.closest('.mark-paid-btn');
+    const originalHTML = button.innerHTML;
+    button.disabled = true;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+    
+    fetch(`/api/billing/${billingId}/mark-paid/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Remove item from list
+            const item = document.getElementById(`patient-billing-${billingId}`);
+            item.style.transition = 'all 0.3s ease';
+            item.style.opacity = '0';
+            item.style.transform = 'translateX(100px)';
+            
+            setTimeout(() => {
+                item.remove();
+                
+                // Check if list is empty
+                const list = document.querySelector('.unpaid-patients-list');
+                if (list && list.children.length === 0) {
+                    displayUnpaidPatients([]);
+                }
+                
+                // Update outstanding balance card
+                updateOutstandingBalance(data.new_outstanding_balance);
+            }, 300);
+            
+            // Show success message
+            showNotification('Payment marked successfully!', 'success');
+        } else {
+            button.disabled = false;
+            button.innerHTML = originalHTML;
+            showNotification(data.error || 'Failed to mark as paid', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error marking as paid:', error);
+        button.disabled = false;
+        button.innerHTML = originalHTML;
+        showNotification('An error occurred. Please try again.', 'error');
+    });
+}
+
+function updateOutstandingBalance(newBalance) {
+    const balanceElement = document.querySelector('.balance-amount');
+    if (balanceElement) {
+        balanceElement.textContent = `₱${parseFloat(newBalance).toFixed(2)}`;
+    }
+}
+
+function showNotification(message, type) {
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 1rem 1.5rem;
+        background: ${type === 'success' ? '#28a745' : '#dc3545'};
+        color: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        z-index: 10001;
+        animation: slideIn 0.3s ease;
+    `;
+    notification.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i> ${message}`;
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// All Appointments Modal Functions
+let allAppointmentsData = [];
+let currentFilter = 'all';
+
+function openAllAppointmentsModal() {
+    const modal = document.getElementById('allAppointmentsModal');
+    modal.classList.add('active');
+    fetchAllAppointments();
+}
+
+function closeAllAppointmentsModal() {
+    const modal = document.getElementById('allAppointmentsModal');
+    modal.classList.remove('active');
+}
+
+function fetchAllAppointments() {
+    fetch('/api/all-appointments/')
+        .then(response => response.json())
+        .then(data => {
+            displayAppointmentsTable(data);
+        })
+        .catch(error => {
+            console.error('Error fetching appointments:', error);
+            document.getElementById('allAppointmentsContainer').innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <h3>Error Loading Data</h3>
+                    <p>Unable to fetch appointments. Please try again.</p>
+                </div>
+            `;
+        });
+}
+
+function displayAppointmentsTable(appointments) {
+    const container = document.getElementById('allAppointmentsContainer');
+    
+    if (appointments.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-calendar-check" style="font-size: 3rem; color: #28a745;"></i>
+                <h3>No Appointments</h3>
+                <p>All appointments have been completed or there are no confirmed bookings yet.</p>
+            </div>
+        `;
+        return;
+    }
+    
+    const tableHTML = `
+        <div style="padding: 1.5rem; overflow-x: auto;">
+            <table class="appointments-table">
+                <thead>
+                    <tr>
+                        <th style="text-align: left; width: 25%;">
+                            <i class="fas fa-user"></i> Patient Name
+                        </th>
+                        <th style="text-align: left; width: 20%;">
+                            <i class="fas fa-calendar"></i> Date
+                        </th>
+                        <th style="text-align: left; width: 15%;">
+                            <i class="fas fa-clock"></i> Time
+                        </th>
+                        <th style="text-align: center; width: 20%;">
+                            <i class="fas fa-tasks"></i> Action
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${appointments.map(apt => `
+                        <tr id="appointment-row-${apt.booking_id}" style="transition: all 0.3s ease;">
+                            <td>
+                                <div style="font-weight: 600; color: #333; margin-bottom: 3px;">
+                                    ${apt.patient_name}
+                                </div>
+                                <div style="font-size: 0.85em; color: #666;">
+                                    <i class="fas fa-envelope"></i> ${apt.patient_email}
+                                </div>
+                            </td>
+                            <td>
+                                <div style="font-weight: 500;">
+                                    ${apt.booking_date}
+                                </div>
+                                <div style="font-size: 0.85em; color: #666;">
+                                    ${apt.service}
+                                </div>
+                            </td>
+                            <td style="font-weight: 500;">
+                                ${apt.booking_time}
+                            </td>
+                            <td style="text-align: center;">
+                                <button class="done-action-btn" onclick="markConsultationDone(${apt.booking_id}, '${apt.patient_name.replace(/'/g, "\\'")}')">
+                                    <i class="fas fa-check"></i> Done
+                                </button>
+                                <button class="cancel-action-btn" onclick="cancelAppointment(${apt.booking_id}, '${apt.patient_name.replace(/'/g, "\\'")}')">
+                                    <i class="fas fa-times"></i> Cancel
+                                </button>
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        </div>
+    `;
+    
+    container.innerHTML = tableHTML;
+}
+
+function updateConsultationStatus(bookingId, newStatus, selectElement) {
+    // Update the data-status attribute immediately for visual feedback
+    if (selectElement) {
+        selectElement.setAttribute('data-status', newStatus);
+    }
+    
+    fetch(`/api/booking/${bookingId}/update-status/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({ status: newStatus })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(`✓ Status updated to ${newStatus}`, 'success');
+        } else {
+            showNotification(data.error || 'Failed to update status', 'error');
+            // Reload to revert dropdown on error
+            fetchAllAppointments();
+        }
+    })
+    .catch(error => {
+        console.error('Error updating status:', error);
+        showNotification('An error occurred. Please try again.', 'error');
+        fetchAllAppointments();
+    });
+}
+
+function markConsultationDone(bookingId, patientName) {
+    if (!confirm(`Mark consultation as DONE for ${patientName}?\n\nThis will:\n✓ Create patient profile (if not exists)\n✓ Create medical record\n✓ Add ₱500 consultation fee to billing\n✓ Remove from appointments list`)) {
+        return;
+    }
+    
+    const row = document.getElementById(`appointment-row-${bookingId}`);
+    const button = event.target.closest('.done-action-btn');
+    const originalHTML = button.innerHTML;
+    button.disabled = true;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+    
+    fetch(`/api/booking/${bookingId}/mark-done/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Animate row removal
+            row.style.opacity = '0';
+            row.style.transform = 'translateX(50px)';
+            
+            setTimeout(() => {
+                row.remove();
+                
+                // Update total appointments count on dashboard
+                if (data.new_total_appointments !== undefined) {
+                    // Find the Total Appointments stat card by its label
+                    const statCards = document.querySelectorAll('.stat-card');
+                    statCards.forEach(card => {
+                        const label = card.querySelector('.stat-label');
+                        if (label && label.textContent.trim() === 'Total Appointments') {
+                            const numberEl = card.querySelector('.stat-number');
+                            if (numberEl) {
+                                numberEl.textContent = data.new_total_appointments;
+                            }
+                        }
+                    });
+                }
+                
+                // Update financial statistics
+                if (data.financial_stats) {
+                    const stats = data.financial_stats;
+                    
+                    // Update Total Paid
+                    const totalPaidEl = document.querySelector('.financial-card.paid-card .financial-value');
+                    if (totalPaidEl) totalPaidEl.textContent = `₱${stats.total_paid.toFixed(2)}`;
+                    
+                    // Update Outstanding Balance
+                    const outstandingEl = document.querySelector('.financial-card.balance-card .balance-amount');
+                    if (outstandingEl) outstandingEl.textContent = `₱${stats.outstanding_balance.toFixed(2)}`;
+                    
+                    // Update Total Billed
+                    const totalBilledEl = document.querySelector('.financial-card.billed-card .financial-value');
+                    if (totalBilledEl) totalBilledEl.textContent = `₱${stats.total_billed.toFixed(2)}`;
+                    
+                    // Update transaction summary counts using new IDs
+                    const paidCountEl = document.getElementById('paid-bills-count');
+                    if (paidCountEl) paidCountEl.textContent = stats.paid_bills;
+                    
+                    const unpaidCountEl = document.getElementById('unpaid-bills-count');
+                    if (unpaidCountEl) unpaidCountEl.textContent = stats.unpaid_bills;
+                    
+                    const totalBillsEl = document.getElementById('total-bills-count');
+                    if (totalBillsEl) totalBillsEl.textContent = stats.total_bills;
+                    
+                    // Update Unpaid Bills stat card in Clinic Statistics
+                    const statCards = document.querySelectorAll('.stat-card');
+                    statCards.forEach(card => {
+                        const label = card.querySelector('.stat-label');
+                        if (label && label.textContent.trim() === 'Unpaid Bills') {
+                            const numberEl = card.querySelector('.stat-number');
+                            if (numberEl) {
+                                numberEl.textContent = stats.unpaid_bills;
+                            }
+                        }
+                    });
+                }
+                
+                // Update clinic statistics
+                if (data.clinic_stats) {
+                    const clinicStats = data.clinic_stats;
+                    
+                    // Update Patient Profiles count
+                    const patientsCountEls = document.querySelectorAll('.stat-card .stat-number');
+                    patientsCountEls.forEach(el => {
+                        if (el.parentElement.querySelector('.stat-label')?.textContent.includes('Patient Profiles')) {
+                            el.textContent = clinicStats.total_patients;
+                        }
+                    });
+                    
+                    // Update Medical Records count
+                    patientsCountEls.forEach(el => {
+                        if (el.parentElement.querySelector('.stat-label')?.textContent.includes('Medical Records')) {
+                            el.textContent = clinicStats.total_medical_records;
+                        }
+                    });
+                }
+                
+                // Check if table is now empty
+                const tbody = document.querySelector('.appointments-table tbody');
+                if (tbody && tbody.children.length === 0) {
+                    fetchAllAppointments(); // Refresh to show empty state
+                }
+            }, 300);
+            
+            showNotification('✓ Consultation completed! Patient records and billing created.', 'success');
+        } else {
+            button.disabled = false;
+            button.innerHTML = originalHTML;
+            showNotification(data.error || 'Failed to mark as done', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error marking consultation done:', error);
+        button.disabled = false;
+        button.innerHTML = originalHTML;
+        showNotification('An error occurred. Please try again.', 'error');
+    });
+}
+
+function cancelAppointment(bookingId, patientName) {
+    if (!confirm(`Cancel appointment for ${patientName}?\n\nThis will permanently delete this appointment.`)) {
+        return;
+    }
+    
+    const row = document.getElementById(`appointment-row-${bookingId}`);
+    const button = event.target.closest('.cancel-action-btn');
+    const originalHTML = button.innerHTML;
+    button.disabled = true;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Cancelling...';
+    
+    fetch(`/api/booking/${bookingId}/delete/`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Animate row removal
+            row.style.opacity = '0';
+            row.style.transform = 'translateX(-50px)';
+            
+            setTimeout(() => {
+                row.remove();
+                
+                // Update total appointments count on dashboard
+                if (data.new_total_appointments !== undefined) {
+                    const statCards = document.querySelectorAll('.stat-card');
+                    statCards.forEach(card => {
+                        const label = card.querySelector('.stat-label');
+                        if (label && label.textContent.trim() === 'Total Appointments') {
+                            const numberEl = card.querySelector('.stat-number');
+                            if (numberEl) {
+                                numberEl.textContent = data.new_total_appointments;
+                            }
+                        }
+                    });
+                }
+                
+                // Check if table is now empty
+                const tbody = document.querySelector('.appointments-table tbody');
+                if (tbody && tbody.children.length === 0) {
+                    fetchAllAppointments(); // Refresh to show empty state
+                }
+            }, 300);
+            
+            showNotification('✓ Appointment cancelled successfully.', 'success');
+        } else {
+            button.disabled = false;
+            button.innerHTML = originalHTML;
+            showNotification(data.error || 'Failed to cancel appointment', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error cancelling appointment:', error);
+        button.disabled = false;
+        button.innerHTML = originalHTML;
+        showNotification('An error occurred. Please try again.', 'error');
+    });
+}
+
+// ===== PATIENT MEDICAL RECORDS MODAL =====
+function viewPatientRecords(patientId, patientName) {
+    const modal = document.getElementById('patientRecordsModal');
+    const nameSpan = document.getElementById('recordsPatientName');
+    const container = document.getElementById('patientRecordsContainer');
+    
+    nameSpan.textContent = patientName;
+    modal.classList.add('active');
+    
+    // Show loading
+    container.innerHTML = `
+        <div style="text-align: center; padding: 2rem;">
+            <i class="fas fa-spinner fa-spin" style="font-size: 3rem; color: #3d5c3d;"></i>
+            <p style="margin-top: 1rem; color: #666;">Loading medical records...</p>
+        </div>
+    `;
+    
+    // Fetch medical records for this patient
+    fetch(`/api/patient/${patientId}/medical-records/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                displayPatientRecords(data.records);
+            } else {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <h3>Error Loading Records</h3>
+                        <p>${data.error || 'Failed to fetch medical records.'}</p>
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching medical records:', error);
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <h3>Error Loading Records</h3>
+                    <p>Failed to fetch medical records. Please try again.</p>
+                </div>
+            `;
+        });
+}
+
+function displayPatientRecords(records) {
+    const container = document.getElementById('patientRecordsContainer');
+    
+    if (records.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-file-medical"></i>
+                <h3>No Medical Records</h3>
+                <p>This patient has no medical records yet.</p>
+            </div>
+        `;
+        return;
+    }
+    
+    const tableHTML = `
+        <table class="modal-table">
+            <thead>
+                <tr>
+                    <th>Visit Date</th>
+                    <th>Chief Complaint</th>
+                    <th>Diagnosis</th>
+                    <th>Treatment Plan</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${records.map(record => `
+                    <tr style="cursor: pointer;" onclick="editMedicalRecord(${record.id})" title="Click to edit this medical record">
+                        <td style="white-space: nowrap;">${record.visit_date}</td>
+                        <td>${record.chief_complaint}</td>
+                        <td>${record.diagnosis}</td>
+                        <td>${record.treatment_plan}</td>
+                        <td>
+                            <button class="action-btn view-btn" onclick="event.stopPropagation(); editMedicalRecord(${record.id})" title="Edit Record">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    `;
+    
+    container.innerHTML = tableHTML;
+}
+
+function editMedicalRecord(recordId) {
+    // Navigate to the medical record edit page
+    window.location.href = `/admin/bookings/medicalrecord/${recordId}/change/`;
+}
+
+function closePatientRecordsModal() {
+    const modal = document.getElementById('patientRecordsModal');
+    modal.classList.remove('active');
+}
+
+// ===== UNPAID BILLS MODAL (FROM CLINIC STATISTICS) =====
+function openUnpaidBillsModal() {
+    const modal = document.getElementById('unpaidBillsModal');
+    const container = document.getElementById('unpaidBillsContainer');
+    
+    modal.classList.add('active');
+    
+    // Show loading
+    container.innerHTML = `
+        <div style="text-align: center; padding: 2rem;">
+            <i class="fas fa-spinner fa-spin" style="font-size: 3rem; color: #3d5c3d;"></i>
+            <p style="margin-top: 1rem; color: #666;">Loading unpaid bills...</p>
+        </div>
+    `;
+    
+    // Fetch unpaid patients data
+    fetch('/api/unpaid-patients/')
+        .then(response => response.json())
+        .then(data => {
+            displayUnpaidBillsTable(data);
+        })
+        .catch(error => {
+            console.error('Error fetching unpaid bills:', error);
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <h3>Error Loading Data</h3>
+                    <p>Failed to fetch unpaid bills. Please try again.</p>
+                </div>
+            `;
+        });
+}
+
+function displayUnpaidBillsTable(patients) {
+    const container = document.getElementById('unpaidBillsContainer');
+    const countEl = document.getElementById('unpaidBillsCount');
+    
+    if (countEl) {
+        countEl.textContent = patients.length;
+    }
+    
+    if (patients.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-check-circle" style="color: #28a745;"></i>
+                <h3>All Paid!</h3>
+                <p>There are no unpaid bills at the moment.</p>
+            </div>
+        `;
+        return;
+    }
+    
+    const tableHTML = `
+        <table class="modal-table">
+            <thead>
+                <tr>
+                    <th>Patient Name</th>
+                    <th>Email</th>
+                    <th>Booking Date</th>
+                    <th>Amount Due</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${patients.map(patient => `
+                    <tr id="unpaid-billing-${patient.billing_id}">
+                        <td><strong>${patient.patient_name}</strong></td>
+                        <td>${patient.patient_email}</td>
+                        <td>${patient.booking_date}</td>
+                        <td>
+                            <strong style="color: #dc3545; font-size: 1.1rem;">₱${parseFloat(patient.balance).toFixed(2)}</strong>
+                        </td>
+                        <td>
+                            <button class="action-btn" onclick="markBillingPaid(${patient.billing_id}, '${patient.patient_name}')" 
+                                    style="background: #28a745; color: white; padding: 0.5rem 1rem;" title="Mark as Paid">
+                                <i class="fas fa-check"></i> Mark Paid
+                            </button>
+                        </td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    `;
+    
+    container.innerHTML = tableHTML;
+}
+
+function updateBillingAmount(billingId, patientName) {
+    const input = document.getElementById(`amount-${billingId}`);
+    const newAmount = parseFloat(input.value);
+    
+    // Validate amount
+    if (isNaN(newAmount) || newAmount < 0) {
+        showNotification('Please enter a valid amount', 'error');
+        return;
+    }
+    
+    // Visual feedback
+    input.style.borderColor = '#ffc107';
+    input.disabled = true;
+    
+    fetch(`/api/billing/${billingId}/update-amount/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({
+            new_amount: newAmount
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Success feedback
+            input.style.borderColor = '#28a745';
+            setTimeout(() => {
+                input.style.borderColor = '#dee2e6';
+            }, 2000);
+            
+            // Update financial statistics if provided
+            if (data.financial_stats) {
+                const stats = data.financial_stats;
+                
+                // Update Outstanding Balance
+                const outstandingEl = document.querySelector('.financial-card.balance-card .balance-amount');
+                if (outstandingEl) {
+                    outstandingEl.textContent = `₱${stats.outstanding_balance.toFixed(2)}`;
+                }
+                
+                // Update Total Billed
+                const totalBilledEl = document.querySelector('.financial-card.billed-card .financial-value');
+                if (totalBilledEl) {
+                    totalBilledEl.textContent = `₱${stats.total_billed.toFixed(2)}`;
+                }
+            }
+            
+            showNotification(`✓ Amount updated for ${patientName}`, 'success');
+        } else {
+            // Error feedback
+            input.style.borderColor = '#dc3545';
+            showNotification(data.error || 'Failed to update amount', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error updating billing amount:', error);
+        input.style.borderColor = '#dc3545';
+        showNotification('An error occurred. Please try again.', 'error');
+    })
+    .finally(() => {
+        input.disabled = false;
+    });
+}
+
+// Update billing fees (service fee and medicine fee)
+function updateBillingFees(billingId, patientName) {
+    const serviceFeeInput = document.getElementById(`service-fee-${billingId}`);
+    const medicineFeeInput = document.getElementById(`medicine-fee-${billingId}`);
+    const totalDueElement = document.getElementById(`total-due-${billingId}`);
+    
+    const serviceFee = parseFloat(serviceFeeInput.value);
+    const medicineFee = parseFloat(medicineFeeInput.value);
+    
+    // Validate inputs
+    if (isNaN(serviceFee) || serviceFee < 0) {
+        showNotification('Service fee must be a valid positive number', 'error');
+        serviceFeeInput.style.borderColor = '#dc3545';
+        setTimeout(() => serviceFeeInput.style.borderColor = '#dee2e6', 2000);
+        return;
+    }
+    
+    if (isNaN(medicineFee) || medicineFee < 0) {
+        showNotification('Medicine fee must be a valid positive number', 'error');
+        medicineFeeInput.style.borderColor = '#dc3545';
+        setTimeout(() => medicineFeeInput.style.borderColor = '#dee2e6', 2000);
+        return;
+    }
+    
+    // Visual feedback - processing
+    serviceFeeInput.style.borderColor = '#ffc107';
+    medicineFeeInput.style.borderColor = '#ffc107';
+    serviceFeeInput.disabled = true;
+    medicineFeeInput.disabled = true;
+    
+    fetch(`/api/billing/${billingId}/update-fees/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({
+            service_fee: serviceFee,
+            medicine_fee: medicineFee
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Success feedback
+            serviceFeeInput.style.borderColor = '#28a745';
+            medicineFeeInput.style.borderColor = '#28a745';
+            
+            // Update total due
+            totalDueElement.textContent = `₱${parseFloat(data.new_balance).toFixed(2)}`;
+            
+            // Update financial statistics
+            if (data.financial_stats) {
+                const totalBilledEl = document.getElementById('total-billed');
+                if (totalBilledEl) {
+                    totalBilledEl.textContent = `₱${parseFloat(data.financial_stats.total_billed).toFixed(2)}`;
+                }
+                
+                const outstandingEl = document.getElementById('outstanding-balance');
+                if (outstandingEl) {
+                    outstandingEl.textContent = `₱${parseFloat(data.financial_stats.outstanding_balance).toFixed(2)}`;
+                }
+            }
+            
+            showNotification(`Billing fees updated for ${patientName}`, 'success');
+            
+            // Reset border color after 2 seconds
+            setTimeout(() => {
+                serviceFeeInput.style.borderColor = '#dee2e6';
+                medicineFeeInput.style.borderColor = '#dee2e6';
+            }, 2000);
+        } else {
+            // Error feedback
+            serviceFeeInput.style.borderColor = '#dc3545';
+            medicineFeeInput.style.borderColor = '#dc3545';
+            showNotification(data.error || 'Failed to update fees', 'error');
+            setTimeout(() => {
+                serviceFeeInput.style.borderColor = '#dee2e6';
+                medicineFeeInput.style.borderColor = '#dee2e6';
+            }, 2000);
+        }
+    })
+    .catch(error => {
+        console.error('Error updating billing fees:', error);
+        serviceFeeInput.style.borderColor = '#dc3545';
+        medicineFeeInput.style.borderColor = '#dc3545';
+        showNotification('An error occurred. Please try again.', 'error');
+        setTimeout(() => {
+            serviceFeeInput.style.borderColor = '#dee2e6';
+            medicineFeeInput.style.borderColor = '#dee2e6';
+        }, 2000);
+    })
+    .finally(() => {
+        serviceFeeInput.disabled = false;
+        medicineFeeInput.disabled = false;
+    });
+}
+
+function markBillingPaid(billingId, patientName) {
+    if (!confirm(`Mark billing for ${patientName} as PAID?`)) {
+        return;
+    }
+    
+    const row = document.getElementById(`unpaid-billing-${billingId}`);
+    
+    fetch(`/api/billing/${billingId}/mark-paid/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Animate row removal
+            if (row) {
+                row.style.opacity = '0';
+                row.style.transform = 'translateX(50px)';
+            }
+            
+            setTimeout(() => {
+                if (row) {
+                    row.remove();
+                }
+                
+                // Update count
+                const countEl = document.getElementById('unpaidBillsCount');
+                const remainingRows = document.querySelectorAll('#unpaidBillsContainer tbody tr').length - 1;
+                if (countEl) {
+                    countEl.textContent = remainingRows;
+                }
+                
+                // Update dashboard unpaid bills count
+                const unpaidBillsCard = document.querySelector('#unpaid-bills-card .stat-number');
+                if (unpaidBillsCard) {
+                    unpaidBillsCard.textContent = remainingRows;
+                }
+                
+                // If no more unpaid bills, show empty state
+                if (remainingRows === 0) {
+                    displayUnpaidBillsTable([]);
+                }
+                
+                // *** UPDATE TRANSACTION SUMMARY COUNTERS ***
+                // Increment Fully Paid counter
+                const paidCountEl = document.getElementById('paid-bills-count');
+                if (paidCountEl) {
+                    const currentPaid = parseInt(paidCountEl.textContent) || 0;
+                    paidCountEl.textContent = currentPaid + 1;
+                }
+                
+                // Decrement Unpaid counter
+                const unpaidCountEl = document.getElementById('unpaid-bills-count');
+                if (unpaidCountEl) {
+                    const currentUnpaid = parseInt(unpaidCountEl.textContent) || 0;
+                    unpaidCountEl.textContent = Math.max(0, currentUnpaid - 1);
+                }
+                
+                // Total Bills count stays the same (no change needed)
+                
+                // Update financial stats if available
+                if (data.new_outstanding_balance !== undefined) {
+                    const outstandingEl = document.querySelector('.financial-card.balance-card .balance-amount');
+                    if (outstandingEl) {
+                        outstandingEl.textContent = `₱${data.new_outstanding_balance.toFixed(2)}`;
+                    }
+                }
+            }, 300);
+            
+            showNotification('✓ Payment marked successfully!', 'success');
+        } else {
+            showNotification(data.error || 'Failed to mark as paid', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error marking billing paid:', error);
+        showNotification('An error occurred. Please try again.', 'error');
+    });
+}
+
+function closeUnpaidBillsModal() {
+    const modal = document.getElementById('unpaidBillsModal');
+    modal.classList.remove('active');
+}
+
+// ===== TRANSACTION SUMMARY MODALS =====
+
+// Fully Paid Bills Modal
+function openFullyPaidModal() {
+    const modal = document.getElementById('fullyPaidModal');
+    modal.classList.add('active');
+    fetchFullyPaidBills();
+}
+
+function closeFullyPaidModal() {
+    const modal = document.getElementById('fullyPaidModal');
+    modal.classList.remove('active');
+}
+
+function fetchFullyPaidBills() {
+    const container = document.getElementById('fullyPaidContainer');
+    container.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
+    
+    fetch('/api/all-billings/')
+        .then(response => {
+            console.log('Response status:', response.status);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Received data:', data);
+            if (data.error) {
+                throw new Error(data.error);
+            }
+            // Filter for fully paid bills
+            const paidBills = data.billings.filter(billing => billing.is_paid);
+            console.log('Paid bills:', paidBills);
+            displayFullyPaidBills(paidBills);
+        })
+        .catch(error => {
+            console.error('Error fetching fully paid bills:', error);
+            container.innerHTML = `<div class="unpaid-patient-card"><p style="text-align: center; color: #dc3545;">Failed to load data: ${error.message}<br>Please check the console for details.</p></div>`;
+        });
+}
+
+function displayFullyPaidBills(bills) {
+    const container = document.getElementById('fullyPaidContainer');
+    const countSpan = document.getElementById('fullyPaidCount');
+    
+    countSpan.textContent = bills.length;
+    
+    if (bills.length === 0) {
+        container.innerHTML = '<div class="unpaid-patient-card"><p style="text-align: center; color: #6c757d;"><i class="fas fa-info-circle"></i> No fully paid bills found.</p></div>';
+        return;
+    }
+    
+    let tableHTML = `
+        <table class="unpaid-patient-card" style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background: #f8f9fa; border-bottom: 2px solid #28a745;">
+                    <th style="padding: 12px; text-align: left;">Patient Name</th>
+                    <th style="padding: 12px; text-align: left;">Service</th>
+                    <th style="padding: 12px; text-align: right;">Service Fee</th>
+                    <th style="padding: 12px; text-align: right;">Medicine Fee</th>
+                    <th style="padding: 12px; text-align: right;">Total Amount</th>
+                    <th style="padding: 12px; text-align: right;">Amount Paid</th>
+                    <th style="padding: 12px; text-align: center;">Date Paid</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+    
+    bills.forEach(billing => {
+        tableHTML += `
+            <tr style="border-bottom: 1px solid #dee2e6;">
+                <td style="padding: 12px;">${billing.patient_name || 'N/A'}</td>
+                <td style="padding: 12px;">${billing.service || 'General Consultation'}</td>
+                <td style="padding: 12px; text-align: right;">₱${billing.service_fee}</td>
+                <td style="padding: 12px; text-align: right;">₱${billing.medicine_fee}</td>
+                <td style="padding: 12px; text-align: right; font-weight: bold;">₱${billing.total_amount}</td>
+                <td style="padding: 12px; text-align: right; color: #28a745; font-weight: bold;">₱${billing.amount_paid}</td>
+                <td style="padding: 12px; text-align: center;">${new Date(billing.date_updated).toLocaleDateString()}</td>
+            </tr>
+        `;
+    });
+    
+    tableHTML += '</tbody></table>';
+    container.innerHTML = tableHTML;
+}
+
+// Unpaid Bills Transaction Modal
+function openUnpaidBillsTransactionModal() {
+    const modal = document.getElementById('unpaidBillsTransactionModal');
+    modal.classList.add('active');
+    fetchUnpaidBillsTransaction();
+}
+
+function closeUnpaidBillsTransactionModal() {
+    const modal = document.getElementById('unpaidBillsTransactionModal');
+    modal.classList.remove('active');
+}
+
+function fetchUnpaidBillsTransaction() {
+    const container = document.getElementById('unpaidTransactionContainer');
+    container.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
+    
+    fetch('/api/all-billings/')
+        .then(response => {
+            console.log('Unpaid bills response status:', response.status);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Unpaid bills data:', data);
+            if (data.error) {
+                throw new Error(data.error);
+            }
+            // Filter for unpaid bills (amount_paid = 0)
+            const unpaidBills = data.billings.filter(billing => !billing.is_paid && parseFloat(billing.amount_paid) === 0);
+            console.log('Filtered unpaid bills:', unpaidBills);
+            displayUnpaidBillsTransaction(unpaidBills);
+        })
+        .catch(error => {
+            console.error('Error fetching unpaid bills:', error);
+            container.innerHTML = `<div class="unpaid-patient-card"><p style="text-align: center; color: #dc3545;">Failed to load data: ${error.message}<br>Please check the console for details.</p></div>`;
+        });
+}
+
+function displayUnpaidBillsTransaction(bills) {
+    const container = document.getElementById('unpaidTransactionContainer');
+    const countSpan = document.getElementById('unpaidTransactionCount');
+    
+    countSpan.textContent = bills.length;
+    
+    if (bills.length === 0) {
+        container.innerHTML = '<div class="unpaid-patient-card"><p style="text-align: center; color: #6c757d;"><i class="fas fa-info-circle"></i> No unpaid bills found.</p></div>';
+        return;
+    }
+    
+    let tableHTML = `
+        <table class="unpaid-patient-card" style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background: #f8f9fa; border-bottom: 2px solid #dc3545;">
+                    <th style="padding: 12px; text-align: left;">Patient Name</th>
+                    <th style="padding: 12px; text-align: left;">Service</th>
+                    <th style="padding: 12px; text-align: right;">Service Fee</th>
+                    <th style="padding: 12px; text-align: right;">Medicine Fee</th>
+                    <th style="padding: 12px; text-align: right;">Total Amount</th>
+                    <th style="padding: 12px; text-align: right;">Balance Due</th>
+                    <th style="padding: 12px; text-align: center;">Booking Date</th>
+                    <th style="padding: 12px; text-align: center;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+    
+    bills.forEach(billing => {
+        tableHTML += `
+            <tr style="border-bottom: 1px solid #dee2e6;">
+                <td style="padding: 12px;">${billing.patient_name || 'N/A'}</td>
+                <td style="padding: 12px;">${billing.service || 'General Consultation'}</td>
+                <td style="padding: 12px; text-align: right;">₱${billing.service_fee}</td>
+                <td style="padding: 12px; text-align: right;">₱${billing.medicine_fee}</td>
+                <td style="padding: 12px; text-align: right; font-weight: bold;">₱${billing.total_amount}</td>
+                <td style="padding: 12px; text-align: right; color: #dc3545; font-weight: bold;">₱${billing.balance}</td>
+                <td style="padding: 12px; text-align: center;">${new Date(billing.booking_date).toLocaleDateString()}</td>
+                <td style="padding: 12px; text-align: center;">
+                    <button onclick="markBillingPaid(${billing.id}, '${billing.patient_name}')" 
+                            style="padding: 6px 12px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9em;">
+                        <i class="fas fa-check"></i> Mark Paid
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
+    
+    tableHTML += '</tbody></table>';
+    container.innerHTML = tableHTML;
+}
+
+// All Bills Modal
+function openAllBillsModal() {
+    const modal = document.getElementById('allBillsModal');
+    modal.classList.add('active');
+    fetchAllBills();
+}
+
+function closeAllBillsModal() {
+    const modal = document.getElementById('allBillsModal');
+    modal.classList.remove('active');
+}
+
+function fetchAllBills() {
+    const container = document.getElementById('allBillsContainer');
+    container.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
+    
+    fetch('/api/all-billings/')
+        .then(response => {
+            console.log('All bills response status:', response.status);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('All bills data:', data);
+            if (data.error) {
+                throw new Error(data.error);
+            }
+            // Show all bills
+            displayAllBills(data.billings);
+        })
+        .catch(error => {
+            console.error('Error fetching all bills:', error);
+            container.innerHTML = `<div class="unpaid-patient-card"><p style="text-align: center; color: #dc3545;">Failed to load data: ${error.message}<br>Please check the console for details.</p></div>`;
+        });
+}
+
+function displayAllBills(bills) {
+    const container = document.getElementById('allBillsContainer');
+    const countSpan = document.getElementById('allBillsCount');
+    
+    countSpan.textContent = bills.length;
+    
+    if (bills.length === 0) {
+        container.innerHTML = '<div class="unpaid-patient-card"><p style="text-align: center; color: #6c757d;"><i class="fas fa-info-circle"></i> No bills found.</p></div>';
+        return;
+    }
+    
+    let tableHTML = `
+        <table class="unpaid-patient-card" style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background: #f8f9fa; border-bottom: 2px solid #6c757d;">
+                    <th style="padding: 12px; text-align: left;">Patient Name</th>
+                    <th style="padding: 12px; text-align: left;">Service</th>
+                    <th style="padding: 12px; text-align: right;">Service Fee</th>
+                    <th style="padding: 12px; text-align: right;">Medicine Fee</th>
+                    <th style="padding: 12px; text-align: right;">Total Amount</th>
+                    <th style="padding: 12px; text-align: right;">Amount Paid</th>
+                    <th style="padding: 12px; text-align: right;">Balance</th>
+                    <th style="padding: 12px; text-align: center;">Status</th>
+                    <th style="padding: 12px; text-align: center;">Date</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+    
+    bills.forEach(billing => {
+        const statusColor = billing.is_paid ? '#28a745' : '#dc3545';
+        const statusText = billing.is_paid ? 'Paid' : 'Unpaid';
+        const statusIcon = billing.is_paid ? 'fa-check-circle' : 'fa-exclamation-circle';
+        
+        tableHTML += `
+            <tr style="border-bottom: 1px solid #dee2e6;">
+                <td style="padding: 12px;">${billing.patient_name || 'N/A'}</td>
+                <td style="padding: 12px;">${billing.service || 'General Consultation'}</td>
+                <td style="padding: 12px; text-align: right;">₱${billing.service_fee}</td>
+                <td style="padding: 12px; text-align: right;">₱${billing.medicine_fee}</td>
+                <td style="padding: 12px; text-align: right; font-weight: bold;">₱${billing.total_amount}</td>
+                <td style="padding: 12px; text-align: right;">₱${billing.amount_paid}</td>
+                <td style="padding: 12px; text-align: right; font-weight: bold; color: ${statusColor};">₱${billing.balance}</td>
+                <td style="padding: 12px; text-align: center;">
+                    <span style="color: ${statusColor}; font-weight: bold;">
+                        <i class="fas ${statusIcon}"></i> ${statusText}
+                    </span>
+                </td>
+                <td style="padding: 12px; text-align: center;">${new Date(billing.date_updated).toLocaleDateString()}</td>
+            </tr>
+        `;
+    });
+    
+    tableHTML += '</tbody></table>';
+    container.innerHTML = tableHTML;
+}
+
+// ===== PATIENT ACTION BUTTONS =====
+function viewPatientProfile(patientId) {
+    // Redirect to patient detail page in admin
+    window.location.href = `/admin/bookings/patient/${patientId}/change/`;
+}
+
+function editPatient(patientId) {
+    // Same as view - redirect to edit page
+    window.location.href = `/admin/bookings/patient/${patientId}/change/`;
+}
+
+function deletePatient(patientId, patientName) {
+    if (!confirm(`Are you sure you want to delete patient profile for ${patientName}?\n\nThis action cannot be undone and will delete all associated medical records.`)) {
+        return;
+    }
+    
+    fetch(`/api/patient/${patientId}/delete/`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Patient deleted successfully!', 'success');
+            // Refresh the patients modal
+            fetchPatients();
+        } else {
+            showNotification(data.error || 'Failed to delete patient', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error deleting patient:', error);
+        showNotification('An error occurred. Please try again.', 'error');
+    });
+}
+
+// ===== SEARCH/FILTER FUNCTIONS =====
+function filterPatientsTable() {
+    const input = document.getElementById('patientSearchInput');
+    const filter = input.value.toLowerCase();
+    const table = document.getElementById('patientsTable');
+    const rows = table.getElementsByTagName('tr');
+    
+    let visibleCount = 0;
+    for (let i = 1; i < rows.length; i++) { // Start from 1 to skip header
+        const searchData = rows[i].getAttribute('data-search');
+        if (searchData && searchData.includes(filter)) {
+            rows[i].style.display = '';
+            visibleCount++;
+        } else {
+            rows[i].style.display = 'none';
+        }
+    }
+    
+    // Update count in modal header if needed
+    const countEl = document.getElementById('patients-modal-count');
+    if (countEl && filter) {
+        countEl.textContent = visibleCount;
+        countEl.style.color = '#ffc107'; // Highlight when filtering
+    } else if (countEl) {
+        countEl.textContent = rows.length - 1; // Total rows minus header
+        countEl.style.color = ''; // Reset color
+    }
+}
+
+function filterMedicalRecordsTable() {
+    const input = document.getElementById('medicalRecordsSearchInput');
+    const filter = input.value.toLowerCase();
+    const table = document.getElementById('medicalRecordsTable');
+    const rows = table.getElementsByTagName('tr');
+    
+    let visibleCount = 0;
+    for (let i = 1; i < rows.length; i++) { // Start from 1 to skip header
+        const searchData = rows[i].getAttribute('data-search');
+        if (searchData && searchData.includes(filter)) {
+            rows[i].style.display = '';
+            visibleCount++;
+        } else {
+            rows[i].style.display = 'none';
+        }
+    }
+    
+    // Update count in modal header if needed
+    const countEl = document.getElementById('records-modal-count');
+    if (countEl && filter) {
+        countEl.textContent = visibleCount;
+        countEl.style.color = '#ffc107'; // Highlight when filtering
+    } else if (countEl) {
+        countEl.textContent = rows.length - 1; // Total rows minus header
+        countEl.style.color = ''; // Reset color
+    }
+}
+</script>
+
+{% endblock %}
+
+{% block sidebar %}
+<!-- Remove the Recent Actions sidebar -->
+{% endblock %}
