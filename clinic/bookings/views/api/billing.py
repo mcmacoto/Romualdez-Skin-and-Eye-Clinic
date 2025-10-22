@@ -31,26 +31,25 @@ def api_get_unpaid_patients(request):
         unpaid_data = []
         for billing in unpaid_billings:
             unpaid_data.append({
-                'id': billing.id,
+                'billing_id': billing.id,  # Changed from 'id' to 'billing_id'
                 'patient_name': billing.booking.patient_name,
+                'patient_email': billing.booking.patient_email,  # Added patient_email
                 'service': billing.booking.service.name,
-                'booking_date': billing.booking.date.strftime('%Y-%m-%d'),
+                'booking_date': billing.booking.date.strftime('%B %d, %Y'),  # Changed format to match expected
+                'service_fee': float(billing.service_fee),  # Added service_fee
+                'medicine_fee': float(billing.medicine_fee),  # Added medicine_fee
                 'total_amount': float(billing.total_amount),
                 'amount_paid': float(billing.amount_paid),
                 'balance': float(billing.balance),
-                'issued_date': billing.issued_date.strftime('%Y-%m-%d'),
+                'issued_date': billing.issued_date.strftime('%B %d, %Y'),  # Changed format to match expected
                 'status': billing.get_status_text(),
             })
         
-        return JsonResponse({
-            'success': True,
-            'unpaid_billings': unpaid_data,
-            'count': len(unpaid_data)
-        })
+        # Return array directly (not wrapped in object) to match frontend expectations
+        return JsonResponse(unpaid_data, safe=False)
         
     except Exception as e:
         return JsonResponse({
-            'success': False,
             'error': str(e)
         }, status=500)
 
