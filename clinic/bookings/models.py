@@ -8,17 +8,17 @@ class Appointment(models.Model):
     name = models.CharField(max_length=100)
     email = models.EmailField()
     phone = models.CharField(max_length=15)
-    date = models.DateField()
+    date = models.DateField(db_index=True)
     time = models.TimeField()
     message =  models.TextField(blank=True, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     
     STATUS_CHOICES = [
         ('Pending', 'Pending'),
         ('Confirmed', 'Confirmed'),
         ('Cancelled', 'Cancelled'),
     ]
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='Pending')
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='Pending', db_index=True)
     
     CONSULTATION_STATUS_CHOICES = [
         ('Not Yet', 'Not Yet'),
@@ -81,7 +81,7 @@ class Patient(models.Model):
     medical_history = models.TextField(blank=True, help_text="Previous medical conditions and surgeries")
     
     # System fields
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     updated_at = models.DateTimeField(auto_now=True)
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='created_patients')
     
@@ -96,7 +96,7 @@ class MedicalRecord(models.Model):
     patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name='medical_records')
     
     # Visit Information
-    visit_date = models.DateTimeField()
+    visit_date = models.DateTimeField(db_index=True)
     chief_complaint = models.TextField(help_text="Patient's main concern or reason for visit")
     
     # Clinical Findings
@@ -183,9 +183,9 @@ class Inventory(models.Model):
     expiry_date = models.DateField(blank=True, null=True, help_text="Optional expiry date for medicines")
     date_stock_in = models.DateField(auto_now_add=True)
     stock = models.IntegerField(default=0, help_text="Minimum stock level threshold")
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='In Stock')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='In Stock', db_index=True)
     quantity = models.IntegerField(default=0, help_text="Current quantity in stock")
-    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES)
+    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, db_index=True)
     
     class Meta:
         ordering = ['-date_stock_in']
@@ -333,7 +333,7 @@ class Booking(models.Model):
     patient_phone = models.CharField(max_length=15, help_text="Contact number")
     
     # Booking Details
-    date = models.DateField(help_text="Appointment date")
+    date = models.DateField(help_text="Appointment date", db_index=True)
     time = models.TimeField(help_text="Appointment time")
     service = models.ForeignKey(
         Service, 
@@ -341,12 +341,13 @@ class Booking(models.Model):
         help_text="Service to be provided",
         related_name='bookings'
     )
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending', db_index=True)
     consultation_status = models.CharField(
         max_length=10, 
         choices=CONSULTATION_STATUS_CHOICES, 
         default='Not Yet',
-        help_text="Track consultation progress"
+        help_text="Track consultation progress",
+        db_index=True
     )
     notes = models.TextField(blank=True, help_text="Additional notes or special requests")
     
@@ -427,7 +428,8 @@ class Billing(models.Model):
     # Payment Status
     is_paid = models.BooleanField(
         default=False,
-        help_text="Automatically updated when payments cover total"
+        help_text="Automatically updated when payments cover total",
+        db_index=True
     )
     amount_paid = models.DecimalField(
         max_digits=10, 
@@ -712,7 +714,8 @@ class POSSale(models.Model):
     status = models.CharField(
         max_length=20,
         choices=STATUS_CHOICES,
-        default='Pending'
+        default='Pending',
+        db_index=True
     )
     
     # Notes

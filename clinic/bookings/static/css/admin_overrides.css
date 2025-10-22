@@ -33,6 +33,22 @@
 
 /* ===== GLOBAL LAYOUT STRUCTURE ===== */
 
+/* Ensure select dropdown text is visible */
+#changelist-form select,
+#changelist-form select:focus {
+    color: #333 !important;
+    background-color: #fff !important;
+    border: 1px solid #ccc !important;
+    padding: 5px !important;
+    height: auto !important;
+    line-height: normal !important;
+}
+
+select option {
+    color: #333 !important; /* Or any dark color */
+    background-color: var(--clinic-white) !important;
+}
+
 /* Main container - two-column layout */
 #container {
     display: flex !important;

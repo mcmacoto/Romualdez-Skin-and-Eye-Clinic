@@ -21,7 +21,7 @@ from .models import (
 
 # Custom Admin Site
 class ClinicAdminSite(AdminSite):
-    site_header = "Romualdez Skin Clinic Staff Portal"
+    site_header = "Romualdez Skin & Eye Clinic Staff Portal"
     site_title = "Clinic Portal"
     index_title = "Dashboard"
     

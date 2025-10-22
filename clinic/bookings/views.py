@@ -1,19 +1,23 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
-from .models import Appointment, Service, Booking, Patient, MedicalRecord, Billing, Inventory, Prescription, Payment
+from django.contrib.admin.views.decorators import staff_member_required
+from django.contrib.auth.models import User
 from django.contrib import messages
 from django.core.mail import send_mail
 from django.conf import settings
-from datetime import date
+from django.db import transaction
+from django.db.models import Sum, F, Q
 from django.http import JsonResponse
+from django.utils import timezone
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
-from django.contrib.admin.views.decorators import staff_member_required
-from django.db import transaction
-from django.db.models import Sum, F
-from django.utils import timezone
-from django.contrib.auth.models import User
+from datetime import date, datetime, timedelta
 import json
+
+from .models import (
+    Appointment, Service, Booking, Patient, MedicalRecord, 
+    Billing, Inventory, Prescription, Payment, POSSale
+)
 
 # Create your views here.
 def booking_form(request):
@@ -77,7 +81,6 @@ def booking(request):
                 return redirect('booking')
             
             # Date validation - must be at least 1 day ahead
-            from datetime import datetime, timedelta
             booking_date = datetime.strptime(date_str, '%Y-%m-%d').date()
             today = date.today()
             tomorrow = today + timedelta(days=1)
@@ -144,7 +147,6 @@ def booking(request):
             return redirect('booking')
         
     # GET request
-    from datetime import timedelta
     tomorrow = date.today() + timedelta(days=1)
     context = {
         'today': date.today(),
@@ -494,8 +496,6 @@ def api_pos_sales(request):
         }, status=403)
     
     try:
-        from .models import POSSale
-        
         # Get all POS sales, ordered by most recent first
         pos_sales = POSSale.objects.select_related('patient', 'created_by').all().order_by('-sale_date')
         
@@ -567,7 +567,6 @@ def api_get_patient_profile(request):
         }
         
         # Get billing information for this patient (using email match since Booking uses email)
-        from django.db.models import Sum, Q
         
         # Find all bookings associated with this patient's email
         patient_bookings = Booking.objects.filter(patient_email=patient.user.email)
@@ -965,7 +964,6 @@ def api_mark_consultation_done(request, booking_id):
         ).count()
         
         # Get updated financial statistics
-        from django.db.models import Sum, Q, F
         
         # Get all billings
         all_billings = Billing.objects.all()
