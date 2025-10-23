@@ -1,0 +1,195 @@
+<!-- HTMX Partial: Medical Record Edit Form -->
+<form hx-put="{% url 'bookings_v2:htmx_medical_record_update' record.id %}" 
+      hx-target="#medicalRecordsModalBody" 
+      hx-swap="innerHTML"
+      class="needs-validation" 
+      novalidate>
+    {% csrf_token %}
+    
+    <div class="modal-header-info mb-3">
+        <h6 class="text-primary mb-2">
+            <i class="fas fa-user me-2"></i>Patient: {{ record.patient.user.get_full_name }}
+        </h6>
+        <small class="text-muted">Record ID: #{{ record.id }}</small>
+    </div>
+
+    <div class="row">
+        <!-- Visit Date -->
+        <div class="col-md-6 mb-3">
+            <label for="visit_date" class="form-label">
+                <i class="fas fa-calendar me-1"></i>Visit Date <span class="text-danger">*</span>
+            </label>
+            <input 
+                type="date" 
+                class="form-control" 
+                id="visit_date" 
+                name="visit_date" 
+                value="{{ record.visit_date|date:'Y-m-d' }}"
+                required
+            >
+        </div>
+
+        <!-- Chief Complaint -->
+        <div class="col-md-6 mb-3">
+            <label for="chief_complaint" class="form-label">
+                <i class="fas fa-comment-medical me-1"></i>Chief Complaint <span class="text-danger">*</span>
+            </label>
+            <input 
+                type="text" 
+                class="form-control" 
+                id="chief_complaint" 
+                name="chief_complaint" 
+                value="{{ record.chief_complaint }}"
+                placeholder="e.g., Eye irritation, Skin rash"
+                required
+            >
+        </div>
+    </div>
+
+    <!-- Diagnosis -->
+    <div class="mb-3">
+        <label for="diagnosis" class="form-label">
+            <i class="fas fa-diagnoses me-1"></i>Diagnosis <span class="text-danger">*</span>
+        </label>
+        <textarea 
+            class="form-control" 
+            id="diagnosis" 
+            name="diagnosis" 
+            rows="3"
+            placeholder="Enter diagnosis details..."
+            required
+        >{{ record.diagnosis }}</textarea>
+    </div>
+
+    <!-- Treatment Plan -->
+    <div class="mb-3">
+        <label for="treatment_plan" class="form-label">
+            <i class="fas fa-procedures me-1"></i>Treatment Plan <span class="text-danger">*</span>
+        </label>
+        <textarea 
+            class="form-control" 
+            id="treatment_plan" 
+            name="treatment_plan" 
+            rows="3"
+            placeholder="Enter treatment plan..."
+            required
+        >{{ record.treatment_plan }}</textarea>
+    </div>
+
+    <div class="row">
+        <!-- Blood Pressure -->
+        <div class="col-md-4 mb-3">
+            <label for="blood_pressure" class="form-label">
+                <i class="fas fa-heartbeat me-1"></i>Blood Pressure
+            </label>
+            <input 
+                type="text" 
+                class="form-control" 
+                id="blood_pressure" 
+                name="blood_pressure" 
+                value="{{ record.blood_pressure|default:'' }}"
+                placeholder="e.g., 120/80"
+            >
+        </div>
+
+        <!-- Temperature -->
+        <div class="col-md-4 mb-3">
+            <label for="temperature" class="form-label">
+                <i class="fas fa-thermometer-half me-1"></i>Temperature (°C)
+            </label>
+            <input 
+                type="text" 
+                class="form-control" 
+                id="temperature" 
+                name="temperature" 
+                value="{{ record.temperature|default:'' }}"
+                placeholder="e.g., 36.5"
+            >
+        </div>
+
+        <!-- Weight -->
+        <div class="col-md-4 mb-3">
+            <label for="weight" class="form-label">
+                <i class="fas fa-weight me-1"></i>Weight (kg)
+            </label>
+            <input 
+                type="text" 
+                class="form-control" 
+                id="weight" 
+                name="weight" 
+                value="{{ record.weight|default:'' }}"
+                placeholder="e.g., 65"
+            >
+        </div>
+    </div>
+
+    <!-- Notes -->
+    <div class="mb-3">
+        <label for="notes" class="form-label">
+            <i class="fas fa-sticky-note me-1"></i>Additional Notes
+        </label>
+        <textarea 
+            class="form-control" 
+            id="notes" 
+            name="notes" 
+            rows="2"
+            placeholder="Enter any additional notes..."
+        >{{ record.notes|default:'' }}</textarea>
+    </div>
+
+    <!-- Follow-up Date -->
+    <div class="mb-3">
+        <label for="follow_up_date" class="form-label">
+            <i class="fas fa-calendar-check me-1"></i>Follow-up Date
+        </label>
+        <input 
+            type="date" 
+            class="form-control" 
+            id="follow_up_date" 
+            name="follow_up_date" 
+            value="{% if record.follow_up_date %}{{ record.follow_up_date|date:'Y-m-d' }}{% endif %}"
+        >
+    </div>
+
+    <!-- Existing Prescriptions Info -->
+    {% if record.prescriptions.count > 0 %}
+    <div class="alert alert-info">
+        <i class="fas fa-pills me-2"></i>
+        <strong>Prescriptions:</strong> This record has {{ record.prescriptions.count }} prescription(s). 
+        <small class="d-block mt-1">Note: Prescriptions are managed separately and won't be modified here.</small>
+    </div>
+    {% endif %}
+
+    <!-- Existing Images Info -->
+    {% if record.images.count > 0 %}
+    <div class="alert alert-info">
+        <i class="fas fa-images me-2"></i>
+        <strong>Medical Images:</strong> This record has {{ record.images.count }} image(s). 
+        <small class="d-block mt-1">Note: Images are managed separately and won't be modified here.</small>
+    </div>
+    {% endif %}
+
+    <!-- Form Actions -->
+    <div class="d-flex justify-content-between pt-3 border-top">
+        <button 
+            type="button" 
+            class="btn btn-secondary"
+            hx-get="{% url 'bookings_v2:htmx_medical_records_list' %}"
+            hx-target="#medicalRecordsModalBody"
+            hx-swap="innerHTML"
+        >
+            <i class="fas fa-arrow-left me-1"></i>Cancel
+        </button>
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save me-1"></i>Update Record
+        </button>
+    </div>
+</form>
+
+<style>
+    .modal-header-info {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        padding: 1rem;
+        border-radius: 8px;
+    }
+</style>

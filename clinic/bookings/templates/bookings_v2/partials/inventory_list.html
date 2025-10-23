@@ -1,4 +1,24 @@
 <!-- HTMX Partial: Inventory List -->
+<!-- Search Bar -->
+<div class="search-bar mb-3">
+    <div class="input-group">
+        <span class="input-group-text bg-white">
+            <i class="fas fa-search text-muted"></i>
+        </span>
+        <input 
+            type="text" 
+            class="form-control" 
+            placeholder="Search by item name, category, or description..." 
+            name="search"
+            hx-get="{% url 'bookings_v2:htmx_inventory_list' %}"
+            hx-trigger="keyup changed delay:500ms"
+            hx-target="#inventoryModalBody"
+            hx-swap="innerHTML"
+            hx-include="this"
+        >
+    </div>
+</div>
+
 {% if inventory_items %}
 <div class="table-responsive">
     <table class="table table-hover align-middle">

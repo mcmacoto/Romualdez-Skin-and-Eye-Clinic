@@ -58,6 +58,7 @@ urlpatterns = [
     
     # Patients HTMX endpoints
     path('htmx/patients/', views_v2.htmx_patients_list, name='htmx_patients_list'),
+    path('htmx/patient-detail/<int:patient_id>/', views_v2.htmx_patient_detail, name='htmx_patient_detail'),
     path('htmx/patient-records/<int:patient_id>/', views_v2.htmx_patient_records, name='htmx_patient_records'),
     path('htmx/delete-patient/<int:patient_id>/', views_v2.htmx_delete_patient, name='htmx_delete_patient'),
     path('htmx/patient/create-form/', views_v2.htmx_patient_create_form, name='htmx_patient_create_form'),
@@ -67,6 +68,8 @@ urlpatterns = [
     
     # Medical Records HTMX endpoints
     path('htmx/medical-records/', views_v2.htmx_medical_records_list, name='htmx_medical_records_list'),
+    path('htmx/medical-record/<int:record_id>/edit/', views_v2.htmx_medical_record_edit_form, name='htmx_medical_record_edit_form'),
+    path('htmx/medical-record/<int:record_id>/update/', views_v2.htmx_medical_record_update, name='htmx_medical_record_update'),
     path('htmx/medical-images/<int:record_id>/', views_v2.htmx_medical_images, name='htmx_medical_images'),
     
     # Billing & Payment HTMX endpoints

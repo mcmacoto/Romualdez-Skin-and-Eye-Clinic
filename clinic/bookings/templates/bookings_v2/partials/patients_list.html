@@ -1,4 +1,24 @@
 <!-- HTMX Partial: Patients List -->
+<!-- Search Bar -->
+<div class="search-bar mb-3">
+    <div class="input-group">
+        <span class="input-group-text bg-white">
+            <i class="fas fa-search text-muted"></i>
+        </span>
+        <input 
+            type="text" 
+            class="form-control" 
+            placeholder="Search by name, email, or phone..." 
+            name="search"
+            hx-get="{% url 'bookings_v2:htmx_patients_list' %}"
+            hx-trigger="keyup changed delay:500ms"
+            hx-target="#patientsModalBody"
+            hx-swap="innerHTML"
+            hx-include="this"
+        >
+    </div>
+</div>
+
 {% if patients %}
 <div class="table-responsive">
     <table class="table table-hover align-middle">
@@ -49,9 +69,10 @@
                     <button 
                         class="btn btn-sm btn-info"
                         hx-get="{% url 'bookings_v2:htmx_patient_records' patient.id %}"
-                        hx-target="#patient-records-modal-body"
+                        hx-target="#patientRecordsModalBody"
                         hx-swap="innerHTML"
-                        onclick="document.getElementById('patientRecordsModal').classList.add('show')"
+                        data-bs-toggle="modal"
+                        data-bs-target="#patientRecordsModal"
                         title="View Medical Records"
                     >
                         <i class="fas fa-file-medical"></i>
@@ -60,14 +81,15 @@
                 </td>
                 <td class="text-center">
                     <div class="btn-group" role="group">
-                        <a 
-                            href="/admin/bookings/patient/{{ patient.id }}/change/" 
+                        <button 
                             class="btn btn-sm btn-primary"
+                            hx-get="{% url 'bookings_v2:htmx_patient_detail' patient.id %}"
+                            hx-target="#patientsModalBody"
+                            hx-swap="innerHTML"
                             title="View Profile"
-                            target="_blank"
                         >
                             <i class="fas fa-eye"></i>
-                        </a>
+                        </button>
                         <button 
                             class="btn btn-sm btn-danger"
                             hx-delete="{% url 'bookings_v2:htmx_delete_patient' patient.id %}"

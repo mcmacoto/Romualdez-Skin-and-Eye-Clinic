@@ -1,0 +1,301 @@
+<!-- HTMX Partial: Patient Detail View -->
+<div class="patient-detail-container">
+    <!-- Patient Header -->
+    <div class="patient-header mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h4 class="mb-2">
+                    <i class="fas fa-user-circle text-primary me-2"></i>
+                    {{ patient.user.get_full_name|default:patient.user.username }}
+                </h4>
+                <p class="text-muted mb-0">
+                    <i class="fas fa-envelope me-2"></i>{{ patient.user.email }}
+                    <span class="mx-2">|</span>
+                    <i class="fas fa-phone me-2"></i>{{ patient.phone|default:"N/A" }}
+                </p>
+            </div>
+            <div class="col-md-4 text-end">
+                <button 
+                    class="btn btn-secondary btn-sm"
+                    hx-get="{% url 'bookings_v2:htmx_patients_list' %}"
+                    hx-target="#patientsModalBody"
+                    hx-swap="innerHTML"
+                >
+                    <i class="fas fa-arrow-left"></i> Back to List
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Patient Stats -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="stat-box text-center p-3 bg-light rounded">
+                <div class="stat-icon text-primary mb-2">
+                    <i class="fas fa-calendar-check fa-2x"></i>
+                </div>
+                <h3 class="mb-0">{{ stats.total_appointments }}</h3>
+                <small class="text-muted">Total Appointments</small>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-box text-center p-3 bg-light rounded">
+                <div class="stat-icon text-info mb-2">
+                    <i class="fas fa-file-medical fa-2x"></i>
+                </div>
+                <h3 class="mb-0">{{ stats.total_records }}</h3>
+                <small class="text-muted">Medical Records</small>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-box text-center p-3 bg-light rounded">
+                <div class="stat-icon text-warning mb-2">
+                    <i class="fas fa-money-bill-wave fa-2x"></i>
+                </div>
+                <h3 class="mb-0">₱{{ stats.total_outstanding|floatformat:2 }}</h3>
+                <small class="text-muted">Outstanding Balance</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Personal Information -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <i class="fas fa-info-circle me-2"></i>Personal Information
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <strong class="text-muted d-block">Date of Birth:</strong>
+                    {% if patient.date_of_birth %}
+                        {{ patient.date_of_birth|date:"F d, Y" }}
+                    {% else %}
+                        <span class="text-muted">Not provided</span>
+                    {% endif %}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <strong class="text-muted d-block">Gender:</strong>
+                    {% if patient.gender == 'Male' %}
+                        <i class="fas fa-mars text-primary"></i> Male
+                    {% elif patient.gender == 'Female' %}
+                        <i class="fas fa-venus text-danger"></i> Female
+                    {% else %}
+                        {{ patient.gender|default:"Not specified" }}
+                    {% endif %}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <strong class="text-muted d-block">Address:</strong>
+                    {{ patient.address|default:"Not provided" }}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <strong class="text-muted d-block">Emergency Contact:</strong>
+                    {{ patient.emergency_contact|default:"Not provided" }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Medical Information -->
+    {% if patient.allergies or patient.medical_history %}
+    <div class="card mb-4">
+        <div class="card-header bg-danger text-white">
+            <i class="fas fa-exclamation-triangle me-2"></i>Medical Information
+        </div>
+        <div class="card-body">
+            {% if patient.allergies %}
+            <div class="mb-3">
+                <strong class="text-muted d-block">Allergies:</strong>
+                <span class="badge bg-danger">{{ patient.allergies }}</span>
+            </div>
+            {% endif %}
+            {% if patient.medical_history %}
+            <div>
+                <strong class="text-muted d-block">Medical History:</strong>
+                <p class="mb-0">{{ patient.medical_history }}</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Recent Appointments -->
+    <div class="card mb-4">
+        <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+            <span><i class="fas fa-calendar-alt me-2"></i>Recent Appointments</span>
+            <span class="badge bg-white text-success">{{ recent_appointments.count }}</span>
+        </div>
+        <div class="card-body">
+            {% if recent_appointments %}
+            <div class="table-responsive">
+                <table class="table table-sm table-hover">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Time</th>
+                            <th>Service</th>
+                            <th>Status</th>
+                            <th>Consultation</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for appointment in recent_appointments %}
+                        <tr>
+                            <td>{{ appointment.date|date:"M d, Y" }}</td>
+                            <td>{{ appointment.time }}</td>
+                            <td>
+                                {% if appointment.service %}
+                                    {{ appointment.service.name }}
+                                {% else %}
+                                    <span class="text-muted">N/A</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if appointment.status == 'Confirmed' %}
+                                    <span class="badge bg-success">{{ appointment.status }}</span>
+                                {% elif appointment.status == 'Pending' %}
+                                    <span class="badge bg-warning">{{ appointment.status }}</span>
+                                {% elif appointment.status == 'Cancelled' %}
+                                    <span class="badge bg-danger">{{ appointment.status }}</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ appointment.status }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if appointment.consultation_status == 'Done' %}
+                                    <span class="badge bg-primary">Done</span>
+                                {% elif appointment.consultation_status == 'Ongoing' %}
+                                    <span class="badge bg-info">Ongoing</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Not Yet</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted mb-0">No appointments yet.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Recent Medical Records -->
+    <div class="card mb-4">
+        <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+            <span><i class="fas fa-file-medical me-2"></i>Recent Medical Records</span>
+            <button 
+                class="btn btn-sm btn-light"
+                hx-get="{% url 'bookings_v2:htmx_patient_records' patient.id %}"
+                hx-target="#patientRecordsModalBody"
+                hx-swap="innerHTML"
+                data-bs-toggle="modal"
+                data-bs-target="#patientRecordsModal"
+            >
+                View All ({{ stats.total_records }})
+            </button>
+        </div>
+        <div class="card-body">
+            {% if recent_records %}
+            <div class="timeline">
+                {% for record in recent_records %}
+                <div class="timeline-item mb-3 pb-3 border-bottom">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <strong class="text-primary">{{ record.visit_date|date:"M d, Y" }}</strong>
+                            <p class="mb-1"><strong>Diagnosis:</strong> {{ record.diagnosis|truncatewords:15 }}</p>
+                            {% if record.prescriptions.count > 0 %}
+                            <small class="text-muted">
+                                <i class="fas fa-pills"></i> {{ record.prescriptions.count }} prescription(s)
+                            </small>
+                            {% endif %}
+                        </div>
+                        <span class="badge bg-info">{{ record.created_by.get_full_name }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-muted mb-0">No medical records yet.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Billing History -->
+    <div class="card">
+        <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+            <span><i class="fas fa-receipt me-2"></i>Billing History</span>
+            <span class="badge bg-dark">{{ recent_billings.count }}</span>
+        </div>
+        <div class="card-body">
+            {% if recent_billings %}
+            <div class="table-responsive">
+                <table class="table table-sm table-hover">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Amount</th>
+                            <th>Service Fee</th>
+                            <th>Items</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for billing in recent_billings %}
+                        <tr>
+                            <td>{{ billing.date_issued|date:"M d, Y" }}</td>
+                            <td class="fw-bold">₱{{ billing.total_amount|floatformat:2 }}</td>
+                            <td>₱{{ billing.service_fee|floatformat:2 }}</td>
+                            <td>₱{{ billing.items_total|floatformat:2 }}</td>
+                            <td>
+                                {% if billing.is_paid %}
+                                    <span class="badge bg-success"><i class="fas fa-check"></i> Paid</span>
+                                {% else %}
+                                    <span class="badge bg-danger"><i class="fas fa-times"></i> Unpaid</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted mb-0">No billing records yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+    .patient-header {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        padding: 1.5rem;
+        border-radius: 10px;
+    }
+    
+    .stat-box {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border: 1px solid #dee2e6;
+    }
+    
+    .stat-box:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .timeline-item {
+        position: relative;
+        padding-left: 20px;
+    }
+    
+    .timeline-item::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 8px;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #17a2b8;
+    }
+</style>

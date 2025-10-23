@@ -1,4 +1,24 @@
 <!-- HTMX Partial: Appointments List -->
+<!-- Search Bar -->
+<div class="search-bar mb-3">
+    <div class="input-group">
+        <span class="input-group-text bg-white">
+            <i class="fas fa-search text-muted"></i>
+        </span>
+        <input 
+            type="text" 
+            class="form-control" 
+            placeholder="Search by patient name, email, or phone..." 
+            name="search"
+            hx-get="{% url 'bookings_v2:htmx_appointments_list' %}"
+            hx-trigger="keyup changed delay:500ms"
+            hx-target="#appointmentsModalBody"
+            hx-swap="innerHTML"
+            hx-include="this"
+        >
+    </div>
+</div>
+
 {% if appointments %}
 <div class="table-responsive">
     <table class="table table-hover align-middle">

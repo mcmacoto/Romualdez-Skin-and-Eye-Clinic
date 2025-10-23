@@ -1,4 +1,24 @@
 <!-- HTMX Partial: Medical Records List -->
+<!-- Search Bar -->
+<div class="search-bar mb-3">
+    <div class="input-group">
+        <span class="input-group-text bg-white">
+            <i class="fas fa-search text-muted"></i>
+        </span>
+        <input 
+            type="text" 
+            class="form-control" 
+            placeholder="Search by patient name, diagnosis, or complaint..." 
+            name="search"
+            hx-get="{% url 'bookings_v2:htmx_medical_records_list' %}"
+            hx-trigger="keyup changed delay:500ms"
+            hx-target="#medicalRecordsModalBody"
+            hx-swap="innerHTML"
+            hx-include="this"
+        >
+    </div>
+</div>
+
 {% if records %}
 <div class="table-responsive">
     <table class="table table-hover align-middle">
@@ -75,14 +95,15 @@
                     {% endif %}
                 </td>
                 <td class="text-center">
-                    <a 
-                        href="/admin/bookings/medicalrecord/{{ record.id }}/change/" 
+                    <button 
                         class="btn btn-sm btn-primary"
+                        hx-get="{% url 'bookings_v2:htmx_medical_record_edit_form' record.id %}"
+                        hx-target="#medicalRecordsModalBody"
+                        hx-swap="innerHTML"
                         title="Edit Record"
-                        target="_blank"
                     >
                         <i class="fas fa-edit"></i>
-                    </a>
+                    </button>
                 </td>
             </tr>
             {% endfor %}

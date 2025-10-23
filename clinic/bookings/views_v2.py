@@ -296,13 +296,25 @@ def htmx_unpaid_patients(request):
 @login_required
 @require_http_methods(["GET"])
 def htmx_all_billings(request):
-    """Return HTML fragment of all billings for HTMX"""
+    """Return HTML fragment of all billings for HTMX with optional search"""
     if not request.user.is_staff:
         return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
     
     billings = Billing.objects.select_related(
-        'booking__service'
-    ).order_by('-issued_date')
+        'booking__service', 'patient__user'
+    )
+    
+    # Handle search
+    search_query = request.GET.get('search', '').strip()
+    if search_query:
+        from django.db.models import Q
+        billings = billings.filter(
+            Q(patient__user__first_name__icontains=search_query) |
+            Q(patient__user__last_name__icontains=search_query) |
+            Q(booking__service__name__icontains=search_query)
+        )
+    
+    billings = billings.order_by('-issued_date')
     
     return render(request, 'bookings_v2/partials/all_billings_list.html', {
         'billings': billings
@@ -621,14 +633,24 @@ def htmx_submit_contact(request):
 @login_required
 @require_http_methods(["GET"])
 def htmx_appointments_list(request):
-    """Return HTML fragment of all appointments"""
+    """Return HTML fragment of all appointments with optional search and filter"""
     if not request.user.is_staff:
         return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
     
     # Get filter parameter
     filter_status = request.GET.get('status', 'all')
     
-    appointments = Booking.objects.select_related('service').order_by('-date', '-time')
+    appointments = Booking.objects.select_related('service')
+    
+    # Handle search
+    search_query = request.GET.get('search', '').strip()
+    if search_query:
+        from django.db.models import Q
+        appointments = appointments.filter(
+            Q(patient_name__icontains=search_query) |
+            Q(patient_email__icontains=search_query) |
+            Q(patient_phone__icontains=search_query)
+        )
     
     # Apply filters
     if filter_status == 'confirmed':
@@ -639,6 +661,8 @@ def htmx_appointments_list(request):
         appointments = appointments.filter(status='Completed')
     elif filter_status == 'today':
         appointments = appointments.filter(date=date.today())
+    
+    appointments = appointments.order_by('-date', '-time')
     
     return render(request, 'bookings_v2/partials/appointments_list.html', {
         'appointments': appointments
@@ -743,11 +767,25 @@ def htmx_delete_appointment(request, booking_id):
 @login_required
 @require_http_methods(["GET"])
 def htmx_patients_list(request):
-    """Return HTML fragment of all patients"""
+    """Return HTML fragment of all patients with optional search"""
     if not request.user.is_staff:
         return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
     
-    patients = Patient.objects.select_related('user').prefetch_related('medical_records').order_by('-created_at')
+    patients = Patient.objects.select_related('user').prefetch_related('medical_records')
+    
+    # Handle search
+    search_query = request.GET.get('search', '').strip()
+    if search_query:
+        from django.db.models import Q
+        patients = patients.filter(
+            Q(user__first_name__icontains=search_query) |
+            Q(user__last_name__icontains=search_query) |
+            Q(user__username__icontains=search_query) |
+            Q(user__email__icontains=search_query) |
+            Q(phone__icontains=search_query)
+        )
+    
+    patients = patients.order_by('-created_at')
     
     return render(request, 'bookings_v2/partials/patients_list.html', {
         'patients': patients
@@ -777,6 +815,70 @@ def htmx_patient_records(request, patient_id):
         return HttpResponse(
             '<div class="alert alert-danger">Patient not found</div>',
             status=404
+        )
+
+
+@login_required
+def htmx_patient_detail(request, patient_id):
+    """Return HTML fragment with detailed patient profile"""
+    if not request.user.is_staff:
+        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
+    
+    try:
+        patient = Patient.objects.select_related('user').get(id=patient_id)
+        
+        # Get statistics
+        total_appointments = Booking.objects.filter(
+            patient_name=patient.user.get_full_name()
+        ).count()
+        
+        total_records = MedicalRecord.objects.filter(patient=patient).count()
+        
+        # Calculate outstanding balance
+        unpaid_billings = Billing.objects.filter(
+            patient=patient,
+            is_paid=False
+        )
+        total_outstanding = sum(billing.total_amount for billing in unpaid_billings) if unpaid_billings.exists() else 0
+        
+        # Get recent appointments (last 5)
+        recent_appointments = Booking.objects.filter(
+            patient_name=patient.user.get_full_name()
+        ).select_related('service').order_by('-date', '-time')[:5]
+        
+        # Get recent medical records (last 3)
+        recent_records = MedicalRecord.objects.filter(
+            patient=patient
+        ).select_related('created_by').prefetch_related('prescriptions').order_by('-visit_date')[:3]
+        
+        # Get recent billings (last 5)
+        recent_billings = Billing.objects.filter(
+            patient=patient
+        ).order_by('-date_issued')[:5]
+        
+        context = {
+            'patient': patient,
+            'stats': {
+                'total_appointments': total_appointments,
+                'total_records': total_records,
+                'total_outstanding': total_outstanding,
+            },
+            'recent_appointments': recent_appointments,
+            'recent_records': recent_records,
+            'recent_billings': recent_billings,
+        }
+        
+        return render(request, 'bookings_v2/partials/patient_detail.html', context)
+    except Patient.DoesNotExist:
+        return HttpResponse(
+            '<div class="alert alert-danger">Patient not found</div>',
+            status=404
+        )
+    except Exception as e:
+        import traceback
+        return HttpResponse(
+            f'<div class="alert alert-danger">Error loading patient: {str(e)}<br><pre>{traceback.format_exc()}</pre></div>',
+            status=500
         )
 
 
@@ -826,7 +928,7 @@ def htmx_delete_patient(request, patient_id):
 @login_required
 @require_http_methods(["GET"])
 def htmx_medical_records_list(request):
-    """Return HTML fragment of all medical records"""
+    """Return HTML fragment of all medical records with optional search"""
     if not request.user.is_staff:
         return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
     
@@ -834,11 +936,100 @@ def htmx_medical_records_list(request):
         'patient__user', 'created_by'
     ).prefetch_related(
         'prescriptions', 'images'
-    ).order_by('-visit_date')
+    )
+    
+    # Handle search
+    search_query = request.GET.get('search', '').strip()
+    if search_query:
+        from django.db.models import Q
+        records = records.filter(
+            Q(patient__user__first_name__icontains=search_query) |
+            Q(patient__user__last_name__icontains=search_query) |
+            Q(diagnosis__icontains=search_query) |
+            Q(chief_complaint__icontains=search_query) |
+            Q(treatment_plan__icontains=search_query)
+        )
+    
+    records = records.order_by('-visit_date')
     
     return render(request, 'bookings_v2/partials/medical_records_list.html', {
         'records': records
     })
+
+
+@login_required
+@require_http_methods(["GET"])
+def htmx_medical_record_edit_form(request, record_id):
+    """Return HTML fragment with medical record edit form"""
+    if not request.user.is_staff:
+        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
+    
+    try:
+        record = MedicalRecord.objects.select_related(
+            'patient__user'
+        ).prefetch_related(
+            'prescriptions', 'images'
+        ).get(id=record_id)
+        
+        return render(request, 'bookings_v2/htmx_partials/medical_record_form.html', {
+            'record': record
+        })
+    except MedicalRecord.DoesNotExist:
+        return HttpResponse(
+            '<div class="alert alert-danger">Medical record not found</div>',
+            status=404
+        )
+
+
+@login_required
+@require_http_methods(["PUT", "POST"])
+def htmx_medical_record_update(request, record_id):
+    """Update medical record and return updated list"""
+    if not request.user.is_staff:
+        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
+    
+    try:
+        record = MedicalRecord.objects.get(id=record_id)
+        
+        # Update fields
+        record.visit_date = request.POST.get('visit_date')
+        record.chief_complaint = request.POST.get('chief_complaint')
+        record.diagnosis = request.POST.get('diagnosis')
+        record.treatment_plan = request.POST.get('treatment_plan')
+        record.blood_pressure = request.POST.get('blood_pressure', '')
+        record.temperature = request.POST.get('temperature', '')
+        record.weight = request.POST.get('weight', '')
+        record.notes = request.POST.get('notes', '')
+        
+        follow_up_date = request.POST.get('follow_up_date')
+        if follow_up_date:
+            record.follow_up_date = follow_up_date
+        else:
+            record.follow_up_date = None
+        
+        record.save()
+        
+        # Return updated list
+        records = MedicalRecord.objects.select_related(
+            'patient__user', 'created_by'
+        ).prefetch_related(
+            'prescriptions', 'images'
+        ).order_by('-visit_date')
+        
+        return render(request, 'bookings_v2/partials/medical_records_list.html', {
+            'records': records
+        })
+        
+    except MedicalRecord.DoesNotExist:
+        return HttpResponse(
+            '<div class="alert alert-danger">Medical record not found</div>',
+            status=404
+        )
+    except Exception as e:
+        return HttpResponse(
+            f'<div class="alert alert-danger">Error updating record: {str(e)}</div>',
+            status=500
+        )
 
 
 @login_required
@@ -890,14 +1081,24 @@ def htmx_medical_images(request, record_id):
 @login_required
 @require_http_methods(["GET"])
 def htmx_inventory_list(request):
-    """Return HTML fragment of inventory items"""
+    """Return HTML fragment of inventory items with optional search"""
     if not request.user.is_staff:
         return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
     
     # Get filter parameter
     filter_status = request.GET.get('status', 'all')
     
-    inventory_items = Inventory.objects.all().order_by('name')
+    inventory_items = Inventory.objects.all()
+    
+    # Handle search
+    search_query = request.GET.get('search', '').strip()
+    if search_query:
+        from django.db.models import Q
+        inventory_items = inventory_items.filter(
+            Q(name__icontains=search_query) |
+            Q(category__icontains=search_query) |
+            Q(description__icontains=search_query)
+        )
     
     # Apply filters
     if filter_status == 'in_stock':
@@ -906,6 +1107,8 @@ def htmx_inventory_list(request):
         inventory_items = inventory_items.filter(status='Low Stock')
     elif filter_status == 'out_of_stock':
         inventory_items = inventory_items.filter(status='Out of Stock')
+    
+    inventory_items = inventory_items.order_by('name')
     
     # Calculate summary stats
     in_stock_count = Inventory.objects.filter(status='In Stock').count()

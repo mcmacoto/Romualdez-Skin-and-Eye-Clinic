@@ -247,7 +247,7 @@
             <div class="stat-label">Total Appointments</div>
         </div>
         
-        <div class="stat-card">
+        <div class="stat-card" onclick="document.getElementById('medical-records-section').scrollIntoView({ behavior: 'smooth', block: 'start' });" style="cursor: pointer;">
             <div class="stat-icon">
                 <i class="fas fa-file-medical"></i>
             </div>
@@ -446,7 +446,7 @@
 
     <!-- Medical Records -->
     {% if medical_records %}
-    <div class="section-card">
+    <div class="section-card" id="medical-records-section">
         <h3 class="section-title">
             <i class="fas fa-notes-medical"></i>
             Medical Records
