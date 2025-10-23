@@ -1,0 +1,201 @@
+<!-- HTMX Partial: Patient Medical Records (for specific patient) -->
+{% if records %}
+<div class="row">
+    {% for record in records %}
+    <div class="col-12 mb-3">
+        <div class="card border-left-primary shadow-sm">
+            <div class="card-header bg-light">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <h6 class="mb-0">
+                            <i class="fas fa-calendar-day text-primary"></i>
+                            Visit Date: <strong>{{ record.visit_date|date:"F d, Y" }}</strong> at {{ record.visit_date|time:"g:i A" }}
+                        </h6>
+                    </div>
+                    <div class="col-auto">
+                        <a 
+                            href="/admin/bookings/medicalrecord/{{ record.id }}/change/" 
+                            class="btn btn-sm btn-outline-primary"
+                            target="_blank"
+                        >
+                            <i class="fas fa-edit"></i> Edit Record
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <h6 class="text-muted mb-2">
+                            <i class="fas fa-notes-medical"></i> Chief Complaint
+                        </h6>
+                        <p class="mb-0">{{ record.chief_complaint }}</p>
+                    </div>
+                    
+                    {% if record.symptoms %}
+                    <div class="col-md-6 mb-3">
+                        <h6 class="text-muted mb-2">
+                            <i class="fas fa-heartbeat"></i> Symptoms
+                        </h6>
+                        <p class="mb-0">{{ record.symptoms }}</p>
+                    </div>
+                    {% endif %}
+                    
+                    {% if record.diagnosis %}
+                    <div class="col-md-6 mb-3">
+                        <h6 class="text-muted mb-2">
+                            <i class="fas fa-diagnoses"></i> Diagnosis
+                        </h6>
+                        <p class="mb-0">{{ record.diagnosis }}</p>
+                    </div>
+                    {% endif %}
+                    
+                    {% if record.treatment_plan %}
+                    <div class="col-md-6 mb-3">
+                        <h6 class="text-muted mb-2">
+                            <i class="fas fa-procedures"></i> Treatment Plan
+                        </h6>
+                        <p class="mb-0">{{ record.treatment_plan }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Vital Signs -->
+                {% if record.temperature or record.heart_rate or record.blood_pressure_systolic %}
+                <div class="row mt-3 pt-3 border-top">
+                    <div class="col-12 mb-2">
+                        <h6 class="text-primary">
+                            <i class="fas fa-heartbeat"></i> Vital Signs
+                        </h6>
+                    </div>
+                    {% if record.temperature %}
+                    <div class="col-md-3">
+                        <small class="text-muted">Temperature</small>
+                        <div><strong>{{ record.temperature }}°C</strong></div>
+                    </div>
+                    {% endif %}
+                    {% if record.heart_rate %}
+                    <div class="col-md-3">
+                        <small class="text-muted">Heart Rate</small>
+                        <div><strong>{{ record.heart_rate }} bpm</strong></div>
+                    </div>
+                    {% endif %}
+                    {% if record.blood_pressure_systolic and record.blood_pressure_diastolic %}
+                    <div class="col-md-3">
+                        <small class="text-muted">Blood Pressure</small>
+                        <div><strong>{{ record.blood_pressure_systolic }}/{{ record.blood_pressure_diastolic }} mmHg</strong></div>
+                    </div>
+                    {% endif %}
+                    {% if record.weight %}
+                    <div class="col-md-3">
+                        <small class="text-muted">Weight</small>
+                        <div><strong>{{ record.weight }} kg</strong></div>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+                
+                <!-- Prescriptions -->
+                {% if record.prescriptions.count > 0 %}
+                <div class="row mt-3 pt-3 border-top">
+                    <div class="col-12 mb-2">
+                        <h6 class="text-success">
+                            <i class="fas fa-pills"></i> Prescriptions ({{ record.prescriptions.count }})
+                        </h6>
+                    </div>
+                    <div class="col-12">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-bordered">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Medication</th>
+                                        <th>Dosage</th>
+                                        <th>Frequency</th>
+                                        <th>Duration</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for prescription in record.prescriptions.all %}
+                                    <tr>
+                                        <td><strong>{{ prescription.medication }}</strong></td>
+                                        <td>{{ prescription.dosage }}</td>
+                                        <td>{{ prescription.frequency }}</td>
+                                        <td>{{ prescription.duration }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!-- Medical Images -->
+                {% if record.images.count > 0 %}
+                <div class="row mt-3 pt-3 border-top">
+                    <div class="col-12 mb-2">
+                        <h6 class="text-info">
+                            <i class="fas fa-images"></i> Medical Images ({{ record.images.count }})
+                        </h6>
+                    </div>
+                    <div class="col-12">
+                        <div class="row g-2">
+                            {% for image in record.images.all %}
+                            <div class="col-md-3">
+                                <div class="card">
+                                    {% if image.image %}
+                                    <img src="{{ image.image.url }}" class="card-img-top" alt="{{ image.title }}" style="height: 150px; object-fit: cover;">
+                                    {% else %}
+                                    <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 150px;">
+                                        <i class="fas fa-image fa-3x text-muted"></i>
+                                    </div>
+                                    {% endif %}
+                                    <div class="card-body p-2">
+                                        <small class="text-muted d-block">{{ image.get_image_type_display }}</small>
+                                        <small><strong>{{ image.title|default:"Medical Image" }}</strong></small>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!-- Additional Notes -->
+                {% if record.additional_notes %}
+                <div class="row mt-3 pt-3 border-top">
+                    <div class="col-12">
+                        <h6 class="text-muted">
+                            <i class="fas fa-sticky-note"></i> Additional Notes
+                        </h6>
+                        <p class="mb-0">{{ record.additional_notes }}</p>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!-- Footer Info -->
+                <div class="row mt-3 pt-3 border-top">
+                    <div class="col-md-6">
+                        <small class="text-muted">
+                            <i class="fas fa-user-md"></i> Created by: <strong>{{ record.created_by.get_full_name|default:record.created_by.username }}</strong>
+                        </small>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <small class="text-muted">
+                            <i class="fas fa-clock"></i> {{ record.created_at|date:"M d, Y g:i A" }}
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="alert alert-info text-center">
+    <i class="fas fa-info-circle fa-2x mb-3"></i>
+    <h5>No Medical Records</h5>
+    <p class="mb-0">This patient doesn't have any medical records yet.</p>
+</div>
+{% endif %}

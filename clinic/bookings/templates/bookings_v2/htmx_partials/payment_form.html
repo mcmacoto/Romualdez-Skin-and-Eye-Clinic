@@ -1,0 +1,127 @@
+<!-- HTMX Partial: Record Payment Form -->
+<form hx-post="{% url 'bookings_v2:htmx_payment_create' %}"
+      hx-target="#billingsModalBody"
+      hx-swap="innerHTML">
+    
+    {% csrf_token %}
+    
+    <div class="alert alert-info mb-4">
+        <i class="fas fa-info-circle"></i>
+        Record a payment transaction for a billing record.
+    </div>
+    
+    <!-- Select Billing -->
+    <div class="mb-3">
+        <label for="billing_id" class="form-label">
+            <i class="fas fa-file-invoice text-primary"></i> Select Billing Record *
+        </label>
+        <select class="form-select" id="billing_id" name="billing_id" required>
+            <option value="">Choose a billing...</option>
+            {% for billing in unpaid_billings %}
+            <option value="{{ billing.id }}">
+                Bill #{{ billing.id }} - {{ billing.booking.patient_name }} - 
+                Balance: ₱{{ billing.balance|floatformat:2 }} 
+                (Total: ₱{{ billing.total_amount|floatformat:2 }})
+            </option>
+            {% endfor %}
+        </select>
+        <small class="text-muted">Only showing billings with outstanding balance</small>
+    </div>
+    
+    <!-- Amount Paid -->
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label for="amount_paid" class="form-label">
+                <i class="fas fa-money-bill-wave text-primary"></i> Amount Paid *
+            </label>
+            <div class="input-group">
+                <span class="input-group-text">₱</span>
+                <input type="number" 
+                       class="form-control" 
+                       id="amount_paid" 
+                       name="amount_paid" 
+                       step="0.01"
+                       min="0.01"
+                       required>
+            </div>
+        </div>
+        
+        <!-- Payment Method -->
+        <div class="col-md-6 mb-3">
+            <label for="payment_method" class="form-label">
+                <i class="fas fa-credit-card text-primary"></i> Payment Method *
+            </label>
+            <select class="form-select" id="payment_method" name="payment_method" required>
+                <option value="">Select method...</option>
+                <option value="Cash">Cash</option>
+                <option value="GCash">GCash</option>
+                <option value="Bank Transfer">Bank Transfer</option>
+                <option value="Card">Credit/Debit Card</option>
+                <option value="Other">Other</option>
+            </select>
+        </div>
+    </div>
+    
+    <!-- Reference Number -->
+    <div class="mb-3">
+        <label for="reference_number" class="form-label">
+            <i class="fas fa-hashtag text-primary"></i> Reference Number
+        </label>
+        <input type="text" 
+               class="form-control" 
+               id="reference_number" 
+               name="reference_number"
+               placeholder="Transaction reference (optional)">
+        <small class="text-muted">For GCash, Bank Transfer, or Card payments</small>
+    </div>
+    
+    <!-- Notes -->
+    <div class="mb-3">
+        <label for="notes" class="form-label">
+            <i class="fas fa-comment text-primary"></i> Notes
+        </label>
+        <textarea class="form-control" 
+                  id="notes" 
+                  name="notes" 
+                  rows="3"
+                  placeholder="Payment notes or remarks (optional)"></textarea>
+    </div>
+    
+    <!-- Action Buttons -->
+    <div class="d-flex justify-content-end gap-2 mt-4">
+        <button type="button" 
+                class="btn btn-secondary"
+                hx-get="{% url 'bookings_v2:htmx_all_billings' %}"
+                hx-target="#billingsModalBody"
+                hx-swap="innerHTML">
+            <i class="fas fa-times"></i> Cancel
+        </button>
+        <button type="submit" class="btn btn-success">
+            <i class="fas fa-check"></i> Record Payment
+        </button>
+    </div>
+</form>
+
+<script>
+    // Auto-populate amount when billing is selected
+    document.getElementById('billing_id').addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        if (selectedOption.value) {
+            const balanceText = selectedOption.text.match(/Balance: ₱([\d,]+\.\d{2})/);
+            if (balanceText) {
+                const balance = balanceText[1].replace(/,/g, '');
+                document.getElementById('amount_paid').value = balance;
+            }
+        }
+    });
+    
+    // Show/hide reference number based on payment method
+    document.getElementById('payment_method').addEventListener('change', function() {
+        const refGroup = document.getElementById('reference_number').parentElement;
+        if (['GCash', 'Bank Transfer', 'Card'].includes(this.value)) {
+            refGroup.style.display = 'block';
+        } else {
+            refGroup.style.display = 'block'; // Always show but with hint
+        }
+    });
+</script>

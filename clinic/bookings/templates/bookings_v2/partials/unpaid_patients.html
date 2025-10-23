@@ -1,0 +1,46 @@
+<!-- Unpaid Patients List - HTMX Partial -->
+{% if unpaid_billings %}
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>Patient Name</th>
+                    <th>Service</th>
+                    <th>Booking Date</th>
+                    <th class="text-end">Balance</th>
+                    <th class="text-center">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for billing in unpaid_billings %}
+                <tr id="billing-{{ billing.id }}">
+                    <td>
+                        <strong>{{ billing.booking.patient_name }}</strong><br>
+                        <small class="text-muted">{{ billing.booking.patient_email }}</small>
+                    </td>
+                    <td>{{ billing.booking.service.name }}</td>
+                    <td>{{ billing.booking.date|date:"F d, Y" }}</td>
+                    <td class="text-end">
+                        <span class="badge bg-danger fs-6">₱{{ billing.balance|floatformat:2 }}</span>
+                    </td>
+                    <td class="text-center">
+                        <button class="btn btn-sm btn-success"
+                                hx-post="{% url 'bookings_v2:htmx_mark_paid' billing.id %}"
+                                hx-target="#billing-{{ billing.id }}"
+                                hx-swap="outerHTML"
+                                hx-confirm="Mark this billing as paid?">
+                            <i class="fas fa-check"></i> Mark Paid
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <div class="alert alert-success text-center" role="alert">
+        <i class="fas fa-check-circle fs-1 mb-3 d-block"></i>
+        <h4 class="alert-heading">All Clear!</h4>
+        <p class="mb-0">No unpaid bills at the moment.</p>
+    </div>
+{% endif %}

@@ -1,0 +1,244 @@
+{% load static %}
+
+<form hx-post="{% if user %}{% url 'bookings_v2:htmx_user_update' user.id %}{% else %}{% url 'bookings_v2:htmx_user_create' %}{% endif %}" 
+      hx-target="#usersListContainer"
+      hx-swap="innerHTML">
+    {% csrf_token %}
+    
+    <div class="row">
+        <div class="col-md-12">
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i>
+                {% if user %}
+                    <strong>Edit User:</strong> Modify the user details below. Only superusers can modify other staff accounts.
+                {% else %}
+                    <strong>Create New User:</strong> Fill in the required fields to create a new user account.
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Basic Information -->
+        <div class="col-md-6">
+            <div class="mb-3">
+                <label for="username" class="form-label">
+                    <i class="fas fa-user"></i> Username <span class="text-danger">*</span>
+                </label>
+                <input type="text" class="form-control" id="username" name="username" 
+                       value="{% if user %}{{ user.username }}{% endif %}" 
+                       {% if user %}readonly{% endif %}
+                       required>
+                <small class="form-text text-muted">Username cannot be changed after creation</small>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="mb-3">
+                <label for="email" class="form-label">
+                    <i class="fas fa-envelope"></i> Email <span class="text-danger">*</span>
+                </label>
+                <input type="email" class="form-control" id="email" name="email" 
+                       value="{% if user %}{{ user.email }}{% endif %}" 
+                       required>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-6">
+            <div class="mb-3">
+                <label for="first_name" class="form-label">
+                    <i class="fas fa-id-card"></i> First Name
+                </label>
+                <input type="text" class="form-control" id="first_name" name="first_name" 
+                       value="{% if user %}{{ user.first_name }}{% endif %}">
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="mb-3">
+                <label for="last_name" class="form-label">
+                    <i class="fas fa-id-card"></i> Last Name
+                </label>
+                <input type="text" class="form-control" id="last_name" name="last_name" 
+                       value="{% if user %}{{ user.last_name }}{% endif %}">
+            </div>
+        </div>
+    </div>
+    
+    {% if not user %}
+    <div class="row">
+        <div class="col-md-6">
+            <div class="mb-3">
+                <label for="password1" class="form-label">
+                    <i class="fas fa-lock"></i> Password <span class="text-danger">*</span>
+                </label>
+                <input type="password" class="form-control" id="password1" name="password1" required>
+                <small class="form-text text-muted">Minimum 8 characters</small>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="mb-3">
+                <label for="password2" class="form-label">
+                    <i class="fas fa-lock"></i> Confirm Password <span class="text-danger">*</span>
+                </label>
+                <input type="password" class="form-control" id="password2" name="password2" required>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <hr>
+    
+    <!-- Permissions Section -->
+    <div class="row">
+        <div class="col-md-12">
+            <h5 class="mb-3">
+                <i class="fas fa-shield-alt text-success"></i> Permissions & Access
+            </h5>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-4">
+            <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" id="is_active" name="is_active" 
+                       {% if not user or user.is_active %}checked{% endif %}>
+                <label class="form-check-label" for="is_active">
+                    <i class="fas fa-check-circle"></i> <strong>Active Account</strong>
+                    <br><small class="text-muted">User can log in and access the system</small>
+                </label>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            {% if request.user.is_superuser %}
+            <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" id="is_staff" name="is_staff" 
+                       {% if user and user.is_staff %}checked{% endif %}
+                       onchange="toggleStaffWarning(this)">
+                <label class="form-check-label" for="is_staff">
+                    <i class="fas fa-user-shield"></i> <strong>Staff Status</strong>
+                    <br><small class="text-muted">Can access admin dashboard</small>
+                </label>
+            </div>
+            {% else %}
+            <div class="alert alert-warning py-2">
+                <small><i class="fas fa-exclamation-triangle"></i> Only superusers can grant staff status</small>
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="col-md-4">
+            {% if request.user.is_superuser %}
+            <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" id="is_superuser" name="is_superuser" 
+                       {% if user and user.is_superuser %}checked{% endif %}
+                       onchange="toggleSuperuserWarning(this)">
+                <label class="form-check-label" for="is_superuser">
+                    <i class="fas fa-crown"></i> <strong>Superuser</strong>
+                    <br><small class="text-muted">Full system access</small>
+                </label>
+            </div>
+            {% else %}
+            <div class="alert alert-danger py-2">
+                <small><i class="fas fa-ban"></i> Only superusers can grant superuser status</small>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div id="staffWarning" class="alert alert-warning" style="display: none;">
+        <i class="fas fa-exclamation-triangle"></i>
+        <strong>Staff Access Warning:</strong> This user will be able to access the admin dashboard and manage clinic data.
+    </div>
+    
+    <div id="superuserWarning" class="alert alert-danger" style="display: none;">
+        <i class="fas fa-exclamation-circle"></i>
+        <strong>Superuser Warning:</strong> This user will have complete access to all system functions, including user management and system settings.
+    </div>
+    
+    <hr>
+    
+    <!-- Groups -->
+    <div class="row">
+        <div class="col-md-12">
+            <h5 class="mb-3">
+                <i class="fas fa-users text-info"></i> User Groups
+            </h5>
+            
+            <div class="form-check mb-2">
+                <input class="form-check-input" type="checkbox" id="group_staff" name="groups" value="Clinic Staff"
+                       {% if user_groups and 'Clinic Staff' in user_groups %}checked{% endif %}>
+                <label class="form-check-label" for="group_staff">
+                    <i class="fas fa-user-md"></i> Clinic Staff
+                </label>
+            </div>
+            
+            <div class="form-check mb-2">
+                <input class="form-check-input" type="checkbox" id="group_customer" name="groups" value="Customer"
+                       {% if user_groups and 'Customer' in user_groups %}checked{% endif %}>
+                <label class="form-check-label" for="group_customer">
+                    <i class="fas fa-user"></i> Customer
+                </label>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            <i class="fas fa-times"></i> Cancel
+        </button>
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save"></i> {% if user %}Update User{% else %}Create User{% endif %}
+        </button>
+    </div>
+</form>
+
+<script>
+    function toggleStaffWarning(checkbox) {
+        const warning = document.getElementById('staffWarning');
+        warning.style.display = checkbox.checked ? 'block' : 'none';
+    }
+    
+    function toggleSuperuserWarning(checkbox) {
+        const warning = document.getElementById('superuserWarning');
+        warning.style.display = checkbox.checked ? 'block' : 'none';
+        
+        // If superuser is checked, also check staff
+        if (checkbox.checked) {
+            document.getElementById('is_staff').checked = true;
+            toggleStaffWarning(document.getElementById('is_staff'));
+        }
+    }
+    
+    // Password validation
+    {% if not user %}
+    const password2Field = document.getElementById('password2');
+    if (password2Field) {
+        password2Field.addEventListener('input', function() {
+            const password1 = document.getElementById('password1').value;
+            const password2 = this.value;
+            
+            if (password1 !== password2) {
+                this.setCustomValidity('Passwords do not match');
+            } else {
+                this.setCustomValidity('');
+            }
+        });
+    }
+    {% endif %}
+</script>
+
+<style>
+    .form-check-label small {
+        display: block;
+        margin-top: 0.25rem;
+    }
+    
+    .alert {
+        font-size: 0.875rem;
+    }
+</style>

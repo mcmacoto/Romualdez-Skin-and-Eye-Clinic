@@ -1,0 +1,130 @@
+{% load static %}
+
+<div class="table-responsive">
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th width="15%">Patient Name</th>
+                <th width="15%">Contact</th>
+                <th width="15%">Service</th>
+                <th width="12%">Date</th>
+                <th width="10%">Time</th>
+                <th width="10%">Status</th>
+                <th width="23%">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if bookings %}
+                {% for booking in bookings %}
+                <tr id="booking-row-{{ booking.id }}">
+                    <td>
+                        <strong>{{ booking.patient_name }}</strong>
+                    </td>
+                    <td>
+                        <div class="small">
+                            <i class="fas fa-envelope"></i> {{ booking.patient_email }}<br>
+                            <i class="fas fa-phone"></i> {{ booking.patient_phone }}
+                        </div>
+                    </td>
+                    <td>
+                        {% if booking.service %}
+                            <span class="badge bg-info">{{ booking.service.name }}</span>
+                        {% else %}
+                            <span class="text-muted">N/A</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <i class="fas fa-calendar"></i>
+                        {{ booking.date|date:"M d, Y" }}
+                    </td>
+                    <td>
+                        <i class="fas fa-clock"></i>
+                        {{ booking.time|time:"g:i A" }}
+                    </td>
+                    <td>
+                        <span class="badge bg-warning text-dark">
+                            <i class="fas fa-hourglass-half"></i> Pending
+                        </span>
+                    </td>
+                    <td>
+                        <div class="btn-group btn-group-sm" role="group">
+                            <button type="button" 
+                                    class="btn btn-success"
+                                    hx-post="{% url 'bookings_v2:htmx_accept_booking' booking.id %}"
+                                    hx-target="#booking-row-{{ booking.id }}"
+                                    hx-swap="outerHTML"
+                                    hx-confirm="Accept this booking for {{ booking.patient_name }}? This will create patient records."
+                                    title="Accept Booking">
+                                <i class="fas fa-check"></i> Accept
+                            </button>
+                            <button type="button" 
+                                    class="btn btn-danger"
+                                    hx-post="{% url 'bookings_v2:htmx_decline_booking' booking.id %}"
+                                    hx-target="#booking-row-{{ booking.id }}"
+                                    hx-swap="outerHTML"
+                                    hx-confirm="Are you sure you want to decline this booking?"
+                                    title="Decline Booking">
+                                <i class="fas fa-times"></i> Decline
+                            </button>
+                            <button type="button" 
+                                    class="btn btn-info"
+                                    data-bs-toggle="collapse" 
+                                    data-bs-target="#notes-{{ booking.id }}"
+                                    title="View Notes">
+                                <i class="fas fa-sticky-note"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% if booking.notes %}
+                <tr class="collapse" id="notes-{{ booking.id }}">
+                    <td colspan="7" class="bg-light">
+                        <div class="p-2">
+                            <strong><i class="fas fa-sticky-note"></i> Patient Notes:</strong>
+                            <p class="mb-0 mt-1">{{ booking.notes }}</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endif %}
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="7" class="text-center py-4">
+                        <div class="text-muted">
+                            <i class="fas fa-inbox fa-3x mb-3"></i>
+                            <p class="mb-0">No pending bookings at this time</p>
+                        </div>
+                    </td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+
+{% if bookings %}
+<div class="d-flex justify-content-between align-items-center mt-3">
+    <div class="text-muted">
+        Showing {{ bookings|length }} pending booking{{ bookings|length|pluralize }}
+    </div>
+    <button type="button" class="btn btn-sm btn-outline-primary" 
+            hx-get="{% url 'bookings_v2:htmx_pending_bookings' %}" 
+            hx-target="#pendingBookingsContainer">
+        <i class="fas fa-sync-alt"></i> Refresh
+    </button>
+</div>
+{% endif %}
+
+<style>
+    .table td {
+        vertical-align: middle;
+    }
+    
+    .badge {
+        font-size: 0.875rem;
+        padding: 0.35rem 0.65rem;
+    }
+    
+    .btn-group-sm > .btn {
+        font-size: 0.875rem;
+    }
+</style>

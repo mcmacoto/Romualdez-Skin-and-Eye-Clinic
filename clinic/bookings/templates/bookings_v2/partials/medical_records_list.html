@@ -1,0 +1,98 @@
+<!-- HTMX Partial: Medical Records List -->
+{% if records %}
+<div class="table-responsive">
+    <table class="table table-hover align-middle">
+        <thead class="table-light">
+            <tr>
+                <th><i class="fas fa-user me-2"></i>Patient</th>
+                <th><i class="fas fa-calendar me-2"></i>Visit Date</th>
+                <th><i class="fas fa-notes-medical me-2"></i>Chief Complaint</th>
+                <th><i class="fas fa-diagnoses me-2"></i>Diagnosis</th>
+                <th><i class="fas fa-pills me-2"></i>Prescriptions</th>
+                <th class="text-center"><i class="fas fa-images me-2"></i>Images</th>
+                <th class="text-center"><i class="fas fa-cog me-2"></i>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for record in records %}
+            <tr>
+                <td>
+                    <div>
+                        <strong>{{ record.patient.user.get_full_name|default:record.patient.user.username }}</strong>
+                        <br>
+                        <small class="text-muted">
+                            <i class="fas fa-envelope"></i> {{ record.patient.user.email }}
+                        </small>
+                    </div>
+                </td>
+                <td>
+                    <strong>{{ record.visit_date|date:"M d, Y" }}</strong>
+                    <br>
+                    <small class="text-muted">{{ record.visit_date|time:"g:i A" }}</small>
+                </td>
+                <td>
+                    <div style="max-width: 200px;">
+                        {{ record.chief_complaint|truncatewords:10 }}
+                    </div>
+                </td>
+                <td>
+                    <div style="max-width: 200px;">
+                        {% if record.diagnosis %}
+                            {{ record.diagnosis|truncatewords:10 }}
+                        {% else %}
+                            <span class="text-muted">Not recorded</span>
+                        {% endif %}
+                    </div>
+                </td>
+                <td>
+                    {% if record.prescriptions.count > 0 %}
+                        <span class="badge bg-success">
+                            <i class="fas fa-pills"></i> {{ record.prescriptions.count }} item(s)
+                        </span>
+                    {% else %}
+                        <span class="badge bg-secondary">
+                            <i class="fas fa-minus"></i> None
+                        </span>
+                    {% endif %}
+                </td>
+                <td class="text-center">
+                    {% if record.images.count > 0 %}
+                        <button 
+                            class="btn btn-sm btn-info"
+                            hx-get="{% url 'bookings_v2:htmx_medical_images' record.id %}"
+                            hx-target="#medical-images-modal-body"
+                            hx-swap="innerHTML"
+                            onclick="document.getElementById('medicalImagesModal').classList.add('show')"
+                            title="View Medical Images"
+                        >
+                            <i class="fas fa-images"></i>
+                            <span class="badge bg-white text-info ms-1">{{ record.images.count }}</span>
+                        </button>
+                    {% else %}
+                        <span class="text-muted">
+                            <i class="fas fa-image-slash"></i> None
+                        </span>
+                    {% endif %}
+                </td>
+                <td class="text-center">
+                    <a 
+                        href="/admin/bookings/medicalrecord/{{ record.id }}/change/" 
+                        class="btn btn-sm btn-primary"
+                        title="Edit Record"
+                        target="_blank"
+                    >
+                        <i class="fas fa-edit"></i>
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="alert alert-info text-center my-4">
+    <i class="fas fa-info-circle fa-2x mb-3"></i>
+    <h5>No Medical Records Found</h5>
+    <p class="mb-0">There are no medical records matching your criteria.</p>
+</div>
+{% endif %}

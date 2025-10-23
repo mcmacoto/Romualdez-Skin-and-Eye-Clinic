@@ -1,0 +1,420 @@
+{% extends 'bookings_v2/base_v2.html' %}
+{% load static %}
+
+{% block title %}About Us - V2{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="bg-primary text-white py-5">
+    <div class="container text-center">
+        <h1 class="display-3 fw-bold mb-3" x-data x-init="$el.classList.add('animate__animated', 'animate__fadeInDown')">
+            About Romualdez Skin & Eye Clinic
+        </h1>
+        <p class="lead" x-data x-init="$el.classList.add('animate__animated', 'animate__fadeInUp')">
+            Dedicated to providing exceptional dermatological care since 2010
+        </p>
+    </div>
+</div>
+
+<!-- Mission & Vision Section -->
+<div class="container py-5">
+    <div class="row g-4 mb-5">
+        <div class="col-md-6">
+            <div class="card h-100 border-0 shadow-lg hover-lift">
+                <div class="card-body p-4">
+                    <div class="text-center mb-3">
+                        <div class="icon-circle bg-primary">
+                            <i class="fas fa-heart fa-3x text-white"></i>
+                        </div>
+                    </div>
+                    <h3 class="card-title text-center text-primary fw-bold mb-3">Our Mission</h3>
+                    <p class="card-text text-muted">
+                        To provide comprehensive, compassionate, and cutting-edge skin care services that enhance 
+                        the quality of life for our patients. We are committed to excellence in patient care, 
+                        education, and research.
+                    </p>
+                    <p class="card-text text-muted">
+                        Our mission extends beyond treatment to include prevention, education, and long-term 
+                        wellness support for every patient who walks through our doors.
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card h-100 border-0 shadow-lg hover-lift">
+                <div class="card-body p-4">
+                    <div class="text-center mb-3">
+                        <div class="icon-circle bg-success">
+                            <i class="fas fa-bullseye fa-3x text-white"></i>
+                        </div>
+                    </div>
+                    <h3 class="card-title text-center text-success fw-bold mb-3">Our Vision</h3>
+                    <p class="card-text text-muted">
+                        To be the leading dermatology clinic in the region, recognized for our innovative treatments, 
+                        exceptional patient care, and commitment to community health.
+                    </p>
+                    <p class="card-text text-muted">
+                        We envision a future where everyone has access to quality skin care, promoting overall 
+                        health and confidence in our community.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Team Section -->
+    <div class="mb-5">
+        <h2 class="text-center text-primary fw-bold mb-2">
+            <i class="fas fa-users"></i> Meet Our Expert Team
+        </h2>
+        <p class="text-center text-muted mb-5">
+            Our dedicated professionals are committed to providing you with the highest quality care
+        </p>
+        
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow hover-lift text-center">
+                    <div class="card-body p-4">
+                        <div class="team-photo bg-primary">
+                            <i class="fas fa-user-md fa-4x text-white"></i>
+                        </div>
+                        <h5 class="card-title fw-bold mt-3">Dr. Ana Liza L. Romualdez</h5>
+                        <p class="text-muted fst-italic">Founder & Chief Dermatologist</p>
+                        <p class="card-text small">
+                            Board-certified dermatologist with over 15 years of experience in medical 
+                            and cosmetic dermatology.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow hover-lift text-center">
+                    <div class="card-body p-4">
+                        <div class="team-photo bg-info">
+                            <i class="fas fa-microscope fa-4x text-white"></i>
+                        </div>
+                        <h5 class="card-title fw-bold mt-3">Dr. Ben C. Romualdez</h5>
+                        <p class="text-muted fst-italic">Ophthalmologist</p>
+                        <p class="card-text small">
+                            A specialist in eye care and vision health, dedicated to providing precise 
+                            diagnosis and compassionate treatment.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow hover-lift text-center">
+                    <div class="card-body p-4">
+                        <div class="team-photo bg-success">
+                            <i class="fas fa-user-nurse fa-4x text-white"></i>
+                        </div>
+                        <h5 class="card-title fw-bold mt-3">Noemi Valdez</h5>
+                        <p class="text-muted fst-italic">Head Nurse & Secretary</p>
+                        <p class="card-text small">
+                            A dedicated healthcare professional who oversees patient care and clinic operations 
+                            with compassion and efficiency.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Why Choose Us Section -->
+    <div class="mb-5">
+        <h2 class="text-center text-primary fw-bold mb-5">
+            <i class="fas fa-star"></i> Why Choose Us?
+        </h2>
+        
+        <div class="row g-4">
+            <div class="col-md-3 col-sm-6">
+                <div class="text-center feature-card" x-data="{ hovered: false }" @mouseenter="hovered = true" @mouseleave="hovered = false">
+                    <div class="feature-icon" :class="{ 'scale-up': hovered }">
+                        <i class="fas fa-award fa-3x text-primary"></i>
+                    </div>
+                    <h5 class="fw-bold mt-3">Expert Care</h5>
+                    <p class="text-muted small">Board-certified specialists with years of experience</p>
+                </div>
+            </div>
+            
+            <div class="col-md-3 col-sm-6">
+                <div class="text-center feature-card" x-data="{ hovered: false }" @mouseenter="hovered = true" @mouseleave="hovered = false">
+                    <div class="feature-icon" :class="{ 'scale-up': hovered }">
+                        <i class="fas fa-microscope fa-3x text-success"></i>
+                    </div>
+                    <h5 class="fw-bold mt-3">Advanced Technology</h5>
+                    <p class="text-muted small">State-of-the-art equipment and latest treatment methods</p>
+                </div>
+            </div>
+            
+            <div class="col-md-3 col-sm-6">
+                <div class="text-center feature-card" x-data="{ hovered: false }" @mouseenter="hovered = true" @mouseleave="hovered = false">
+                    <div class="feature-icon" :class="{ 'scale-up': hovered }">
+                        <i class="fas fa-hands-helping fa-3x text-info"></i>
+                    </div>
+                    <h5 class="fw-bold mt-3">Personalized Care</h5>
+                    <p class="text-muted small">Tailored treatment plans for each patient's unique needs</p>
+                </div>
+            </div>
+            
+            <div class="col-md-3 col-sm-6">
+                <div class="text-center feature-card" x-data="{ hovered: false }" @mouseenter="hovered = true" @mouseleave="hovered = false">
+                    <div class="feature-icon" :class="{ 'scale-up': hovered }">
+                        <i class="fas fa-clock fa-3x text-warning"></i>
+                    </div>
+                    <h5 class="fw-bold mt-3">Convenient Hours</h5>
+                    <p class="text-muted small">Extended hours and weekend availability</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Timeline Section with Alpine.js -->
+    <div class="mb-5">
+        <h2 class="text-center text-primary fw-bold mb-5">
+            <i class="fas fa-history"></i> Our Journey
+        </h2>
+        
+        <div class="timeline" x-data="{ activeYear: 2010 }">
+            <div class="timeline-item" @click="activeYear = 2010">
+                <div class="timeline-marker" :class="{ 'active': activeYear === 2010 }">
+                    <i class="fas fa-flag"></i>
+                </div>
+                <div class="timeline-content" :class="{ 'active': activeYear === 2010 }" x-transition>
+                    <h5 class="fw-bold">2010 - Foundation</h5>
+                    <p class="text-muted">Romualdez Skin & Eye Clinic was established, bringing expert dermatological care to the community.</p>
+                </div>
+            </div>
+            
+            <div class="timeline-item" @click="activeYear = 2015">
+                <div class="timeline-marker" :class="{ 'active': activeYear === 2015 }">
+                    <i class="fas fa-expand-arrows-alt"></i>
+                </div>
+                <div class="timeline-content" :class="{ 'active': activeYear === 2015 }" x-transition>
+                    <h5 class="fw-bold">2015 - Expansion</h5>
+                    <p class="text-muted">Expanded services to include advanced cosmetic treatments and added ophthalmology department.</p>
+                </div>
+            </div>
+            
+            <div class="timeline-item" @click="activeYear = 2020">
+                <div class="timeline-marker" :class="{ 'active': activeYear === 2020 }">
+                    <i class="fas fa-laptop-medical"></i>
+                </div>
+                <div class="timeline-content" :class="{ 'active': activeYear === 2020 }" x-transition>
+                    <h5 class="fw-bold">2020 - Digital Transformation</h5>
+                    <p class="text-muted">Implemented modern digital systems for better patient management and care coordination.</p>
+                </div>
+            </div>
+            
+            <div class="timeline-item" @click="activeYear = 2025">
+                <div class="timeline-marker active" :class="{ 'active': activeYear === 2025 }">
+                    <i class="fas fa-star"></i>
+                </div>
+                <div class="timeline-content" :class="{ 'active': activeYear === 2025 }" x-transition>
+                    <h5 class="fw-bold">2025 - Present Day</h5>
+                    <p class="text-muted">Continuing to serve our community with excellence, innovation, and compassion.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CTA Section -->
+    <div class="text-center py-5">
+        <div class="card border-0 bg-light shadow-lg p-5">
+            <h3 class="fw-bold mb-3">Ready to Experience Quality Care?</h3>
+            <p class="text-muted mb-4">Book your appointment today and let us take care of your skin health needs.</p>
+            <div class="d-flex gap-3 justify-content-center flex-wrap">
+                <a href="{% url 'bookings_v2:booking' %}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-calendar-check"></i> Book Appointment
+                </a>
+                <a href="{% url 'bookings_v2:services' %}" class="btn btn-outline-primary btn-lg">
+                    <i class="fas fa-list"></i> View Services
+                </a>
+                <a href="/v2/" class="btn btn-outline-secondary btn-lg">
+                    <i class="fas fa-home"></i> Back to Home
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Custom Styles -->
+<style>
+/* Icon Circle */
+.icon-circle {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+}
+
+/* Team Photo */
+.team-photo {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+}
+
+/* Hover Effects */
+.hover-lift {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hover-lift:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Feature Cards */
+.feature-card {
+    padding: 20px;
+    border-radius: 10px;
+    transition: background-color 0.3s ease;
+}
+
+.feature-card:hover {
+    background-color: #f8f9fa;
+}
+
+.feature-icon {
+    transition: transform 0.3s ease;
+}
+
+.feature-icon.scale-up {
+    transform: scale(1.2);
+}
+
+/* Timeline Styles */
+.timeline {
+    position: relative;
+    padding: 20px 0;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #dee2e6;
+    transform: translateX(-50%);
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 40px;
+    cursor: pointer;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: white;
+    border: 3px solid #dee2e6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6c757d;
+    font-size: 1.2rem;
+    transition: all 0.3s ease;
+    z-index: 2;
+}
+
+.timeline-marker.active {
+    background: var(--bs-primary);
+    border-color: var(--bs-primary);
+    color: white;
+    transform: translateX(-50%) scale(1.2);
+}
+
+.timeline-content {
+    width: 45%;
+    padding: 20px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.timeline-item:nth-child(odd) .timeline-content {
+    margin-left: auto;
+    text-align: left;
+}
+
+.timeline-item:nth-child(even) .timeline-content {
+    margin-right: auto;
+    text-align: right;
+}
+
+.timeline-content.active {
+    background: #e7f3ff;
+    box-shadow: 0 5px 20px rgba(13, 110, 253, 0.3);
+}
+
+/* Responsive Timeline */
+@media (max-width: 768px) {
+    .timeline::before {
+        left: 30px;
+    }
+    
+    .timeline-marker {
+        left: 30px;
+    }
+    
+    .timeline-content {
+        width: calc(100% - 80px);
+        margin-left: auto !important;
+        text-align: left !important;
+    }
+}
+
+/* Animations */
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate__animated {
+    animation-duration: 1s;
+}
+
+.animate__fadeInDown {
+    animation-name: fadeInDown;
+}
+
+.animate__fadeInUp {
+    animation-name: fadeInUp;
+}
+</style>
+{% endblock %}

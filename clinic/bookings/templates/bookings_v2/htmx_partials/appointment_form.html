@@ -1,0 +1,141 @@
+<!-- HTMX Partial: Create/Edit Appointment Form -->
+<form hx-post="{% if appointment %}{% url 'bookings_v2:htmx_appointment_update' appointment.id %}{% else %}{% url 'bookings_v2:htmx_appointment_create' %}{% endif %}"
+      hx-target="#appointmentsModalBody"
+      hx-swap="innerHTML">
+    
+    {% csrf_token %}
+    
+    <div class="row">
+        <!-- Patient Name -->
+        <div class="col-md-6 mb-3">
+            <label for="name" class="form-label">
+                <i class="fas fa-user text-primary"></i> Patient Name *
+            </label>
+            <input type="text" 
+                   class="form-control" 
+                   id="name" 
+                   name="name" 
+                   value="{{ appointment.patient_name|default:'' }}"
+                   required>
+        </div>
+        
+        <!-- Email -->
+        <div class="col-md-6 mb-3">
+            <label for="email" class="form-label">
+                <i class="fas fa-envelope text-primary"></i> Email *
+            </label>
+            <input type="email" 
+                   class="form-control" 
+                   id="email" 
+                   name="email" 
+                   value="{{ appointment.patient_email|default:'' }}"
+                   required>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Phone -->
+        <div class="col-md-6 mb-3">
+            <label for="phone" class="form-label">
+                <i class="fas fa-phone text-primary"></i> Phone *
+            </label>
+            <input type="tel" 
+                   class="form-control" 
+                   id="phone" 
+                   name="phone" 
+                   value="{{ appointment.patient_phone|default:'' }}"
+                   required>
+        </div>
+        
+        <!-- Date -->
+        <div class="col-md-6 mb-3">
+            <label for="date" class="form-label">
+                <i class="fas fa-calendar text-primary"></i> Date *
+            </label>
+            <input type="date" 
+                   class="form-control" 
+                   id="date" 
+                   name="date" 
+                   value="{{ appointment.date|date:'Y-m-d'|default:'' }}"
+                   min="{{ today }}"
+                   required>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Time -->
+        <div class="col-md-6 mb-3">
+            <label for="time" class="form-label">
+                <i class="fas fa-clock text-primary"></i> Time *
+            </label>
+            <input type="time" 
+                   class="form-control" 
+                   id="time" 
+                   name="time" 
+                   value="{{ appointment.time|time:'H:i'|default:'' }}"
+                   required>
+        </div>
+        
+        <!-- Service -->
+        <div class="col-md-6 mb-3">
+            <label for="service" class="form-label">
+                <i class="fas fa-list text-primary"></i> Service *
+            </label>
+            <select class="form-select" id="service" name="service" required>
+                <option value="">Select Service...</option>
+                {% for service in services %}
+                <option value="{{ service.id }}" {% if appointment.service.id == service.id %}selected{% endif %}>
+                    {{ service.name }} - ₱{{ service.price }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Status -->
+        <div class="col-md-6 mb-3">
+            <label for="status" class="form-label">
+                <i class="fas fa-info-circle text-primary"></i> Status *
+            </label>
+            <select class="form-select" id="status" name="status" required>
+                <option value="Pending" {% if appointment.status == 'Pending' %}selected{% endif %}>Pending</option>
+                <option value="Confirmed" {% if appointment.status == 'Confirmed' %}selected{% endif %}>Confirmed</option>
+                <option value="Cancelled" {% if appointment.status == 'Cancelled' %}selected{% endif %}>Cancelled</option>
+            </select>
+        </div>
+    </div>
+    
+    <!-- Consultation Status (only if editing) -->
+    {% if appointment %}
+    <div class="mb-3">
+        <label for="consultation_status" class="form-label">
+            <i class="fas fa-tasks text-primary"></i> Consultation Status
+        </label>
+        <select class="form-select" id="consultation_status" name="consultation_status">
+            <option value="Not Yet" {% if appointment.consultation_status == 'Not Yet' %}selected{% endif %}>Not Yet</option>
+            <option value="Ongoing" {% if appointment.consultation_status == 'Ongoing' %}selected{% endif %}>Ongoing</option>
+            <option value="Done" {% if appointment.consultation_status == 'Done' %}selected{% endif %}>Done</option>
+        </select>
+    </div>
+    {% endif %}
+    
+    <!-- Action Buttons -->
+    <div class="d-flex justify-content-end gap-2 mt-4">
+        <button type="button" 
+                class="btn btn-secondary"
+                hx-get="{% url 'bookings_v2:htmx_appointments_list' %}"
+                hx-target="#appointmentsModalBody"
+                hx-swap="innerHTML">
+            <i class="fas fa-times"></i> Cancel
+        </button>
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save"></i> {% if appointment %}Update{% else %}Create{% endif %} Appointment
+        </button>
+    </div>
+</form>
+
+<script>
+    // Set minimum date to today
+    document.getElementById('date').min = new Date().toISOString().split('T')[0];
+</script>

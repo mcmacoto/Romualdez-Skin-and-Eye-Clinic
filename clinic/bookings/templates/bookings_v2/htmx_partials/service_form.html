@@ -1,0 +1,130 @@
+<!-- HTMX Partial: Create/Edit Service Form -->
+<form hx-post="{% if service %}{% url 'bookings_v2:htmx_service_update' service.id %}{% else %}{% url 'bookings_v2:htmx_service_create' %}{% endif %}"
+      hx-target="#servicesModalBody"
+      hx-swap="innerHTML"
+      hx-encoding="multipart/form-data">
+    
+    {% csrf_token %}
+    
+    <div class="alert alert-info mb-4">
+        <i class="fas fa-info-circle"></i>
+        {% if service %}
+        Editing service: <strong>{{ service.name }}</strong>
+        {% else %}
+        Create a new service offering for the clinic.
+        {% endif %}
+    </div>
+    
+    <!-- Service Name -->
+    <div class="mb-3">
+        <label for="name" class="form-label">
+            <i class="fas fa-concierge-bell text-primary"></i> Service Name *
+        </label>
+        <input type="text" 
+               class="form-control" 
+               id="name" 
+               name="name" 
+               value="{{ service.name|default:'' }}"
+               placeholder="e.g., Skin Consultation"
+               required>
+    </div>
+    
+    <!-- Description -->
+    <div class="mb-3">
+        <label for="description" class="form-label">
+            <i class="fas fa-align-left text-primary"></i> Description *
+        </label>
+        <textarea class="form-control" 
+                  id="description" 
+                  name="description" 
+                  rows="4"
+                  placeholder="Detailed description of the service..."
+                  required>{{ service.description|default:'' }}</textarea>
+        <small class="text-muted">Describe what this service includes</small>
+    </div>
+    
+    <!-- Price -->
+    <div class="mb-3">
+        <label for="price" class="form-label">
+            <i class="fas fa-tag text-primary"></i> Price *
+        </label>
+        <div class="input-group">
+            <span class="input-group-text">₱</span>
+            <input type="number" 
+                   class="form-control" 
+                   id="price" 
+                   name="price" 
+                   step="0.01"
+                   min="0"
+                   value="{{ service.price|default:'0.00' }}"
+                   required>
+        </div>
+        <small class="text-muted">Service price in Philippine Pesos</small>
+    </div>
+    
+    <!-- Image Upload -->
+    <div class="mb-3">
+        <label for="image" class="form-label">
+            <i class="fas fa-image text-primary"></i> Service Image {% if not service %}*{% endif %}
+        </label>
+        
+        {% if service.image %}
+        <div class="mb-2">
+            <img src="{{ service.image.url }}" 
+                 alt="{{ service.name }}" 
+                 style="max-width: 200px; height: auto; border-radius: 8px; border: 2px solid #dee2e6;">
+            <p class="text-muted small mb-0 mt-1">Current image</p>
+        </div>
+        {% endif %}
+        
+        <input type="file" 
+               class="form-control" 
+               id="image" 
+               name="image" 
+               accept="image/*"
+               {% if not service %}required{% endif %}>
+        <small class="text-muted">
+            {% if service %}
+            Leave empty to keep current image. Upload a new image to replace it.
+            {% else %}
+            Upload an image for this service (JPG, PNG, etc.)
+            {% endif %}
+        </small>
+    </div>
+    
+    <!-- Action Buttons -->
+    <div class="d-flex justify-content-end gap-2 mt-4">
+        <button type="button" 
+                class="btn btn-secondary"
+                hx-get="{% url 'bookings_v2:htmx_services_list' %}"
+                hx-target="#servicesModalBody"
+                hx-swap="innerHTML">
+            <i class="fas fa-times"></i> Cancel
+        </button>
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save"></i> {% if service %}Update{% else %}Create{% endif %} Service
+        </button>
+    </div>
+</form>
+
+<script>
+    // Preview image before upload
+    document.getElementById('image').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                // Create preview if it doesn't exist
+                let preview = document.getElementById('imagePreview');
+                if (!preview) {
+                    preview = document.createElement('img');
+                    preview.id = 'imagePreview';
+                    preview.style.cssText = 'max-width: 200px; height: auto; border-radius: 8px; border: 2px solid #dee2e6; margin-top: 10px; display: block;';
+                    e.target.parentElement.appendChild(preview);
+                }
+                preview.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+</script>

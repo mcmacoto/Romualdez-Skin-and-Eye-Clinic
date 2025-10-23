@@ -1,0 +1,574 @@
+{% extends "bookings_v2/base_v2.html" %}
+{% load static %}
+
+{% block title %}My Dashboard - Romualdez Skin & Eye Clinic{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        background-color: #f8f9fa;
+    }
+    
+    .dashboard-container {
+        padding: 2rem 0;
+    }
+    
+    .dashboard-header {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--dark-green) 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 12px;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .dashboard-header h1 {
+        margin: 0 0 0.5rem 0;
+        font-size: 2rem;
+        font-weight: 600;
+    }
+    
+    .dashboard-header p {
+        margin: 0;
+        opacity: 0.9;
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .stat-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        text-align: center;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+    }
+    
+    .stat-icon {
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--dark-green) 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+        color: white;
+        font-size: 1.5rem;
+    }
+    
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--primary-color);
+        margin-bottom: 0.5rem;
+    }
+    
+    .stat-label {
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+    
+    .section-card {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+    
+    .section-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--primary-color);
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .section-title i {
+        color: var(--primary-color);
+    }
+    
+    .no-profile-card {
+        background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+        border-radius: 12px;
+        padding: 3rem;
+        text-align: center;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .no-profile-card i {
+        font-size: 4rem;
+        color: #856404;
+        margin-bottom: 1.5rem;
+    }
+    
+    .appointment-card {
+        background: white;
+        border-left: 4px solid var(--primary-color);
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .appointment-card:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        transform: translateX(5px);
+    }
+    
+    .appointment-card.past {
+        border-left-color: #6c757d;
+        opacity: 0.8;
+    }
+    
+    .appointment-card.pending {
+        border-left-color: #ffc107;
+    }
+    
+    .appointment-card.confirmed {
+        border-left-color: #28a745;
+    }
+    
+    .record-card {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        border: 1px solid #dee2e6;
+    }
+    
+    .billing-table {
+        width: 100%;
+        font-size: 0.95rem;
+    }
+    
+    .billing-table th {
+        background-color: #f8f9fa;
+        font-weight: 600;
+        padding: 0.75rem;
+    }
+    
+    .billing-table td {
+        padding: 0.75rem;
+        vertical-align: middle;
+    }
+    
+    .badge-paid {
+        background-color: #28a745;
+    }
+    
+    .badge-unpaid {
+        background-color: #dc3545;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: #6c757d;
+    }
+    
+    .empty-state i {
+        font-size: 4rem;
+        color: #dee2e6;
+        margin-bottom: 1rem;
+    }
+    
+    .profile-info {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+    }
+    
+    .info-item {
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+    }
+    
+    .info-label {
+        font-size: 0.85rem;
+        color: #6c757d;
+        margin-bottom: 0.25rem;
+        text-transform: uppercase;
+        font-weight: 600;
+    }
+    
+    .info-value {
+        font-size: 1.1rem;
+        color: #212529;
+        font-weight: 500;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container container">
+    <!-- Dashboard Header -->
+    <div class="dashboard-header">
+        <h1>
+            <i class="fas fa-user-circle"></i>
+            Welcome, {{ user.get_full_name|default:user.username }}!
+        </h1>
+        <p>Manage your appointments, view medical records, and track your billing</p>
+    </div>
+
+    {% if not has_profile %}
+    <!-- No Profile Found -->
+    <div class="no-profile-card">
+        <i class="fas fa-exclamation-triangle"></i>
+        <h2>No Patient Profile Found</h2>
+        <p class="lead mb-4">Your account doesn't have an associated patient profile yet.</p>
+        <p>This profile is created automatically when your booking is accepted by our staff.</p>
+        <a href="{% url 'bookings_v2:booking' %}" class="btn btn-warning btn-lg">
+            <i class="fas fa-calendar-plus"></i> Book Your First Appointment
+        </a>
+    </div>
+    {% else %}
+    <!-- Stats Overview -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-calendar-alt"></i>
+            </div>
+            <div class="stat-number">{{ total_bookings }}</div>
+            <div class="stat-label">Total Appointments</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-file-medical"></i>
+            </div>
+            <div class="stat-number">{{ total_records }}</div>
+            <div class="stat-label">Medical Records</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-money-bill-wave"></i>
+            </div>
+            <div class="stat-number">₱{{ total_outstanding|floatformat:2 }}</div>
+            <div class="stat-label">Outstanding Balance</div>
+        </div>
+    </div>
+
+    <!-- Personal Information -->
+    <div class="section-card">
+        <h3 class="section-title">
+            <i class="fas fa-user"></i>
+            Personal Information
+        </h3>
+        <div class="profile-info">
+            <div class="info-item">
+                <div class="info-label">Full Name</div>
+                <div class="info-value">{{ user.get_full_name|default:"Not Set" }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Email</div>
+                <div class="info-value">{{ user.email }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Phone</div>
+                <div class="info-value">{{ patient.phone|default:"Not Set" }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Date of Birth</div>
+                <div class="info-value">{{ patient.date_of_birth|date:"M d, Y" }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Gender</div>
+                <div class="info-value">{{ patient.get_gender_display }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Blood Type</div>
+                <div class="info-value">{{ patient.blood_type }}</div>
+            </div>
+        </div>
+        
+        {% if patient.allergies or patient.current_medications %}
+        <hr class="my-4">
+        <div class="row">
+            {% if patient.allergies %}
+            <div class="col-md-6">
+                <h5 class="text-danger mb-3"><i class="fas fa-exclamation-triangle"></i> Allergies</h5>
+                <div class="alert alert-warning">
+                    {{ patient.allergies|linebreaks }}
+                </div>
+            </div>
+            {% endif %}
+            {% if patient.current_medications %}
+            <div class="col-md-6">
+                <h5 class="text-primary mb-3"><i class="fas fa-pills"></i> Current Medications</h5>
+                <div class="alert alert-info">
+                    {{ patient.current_medications|linebreaks }}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Upcoming Appointments -->
+    <div class="section-card">
+        <h3 class="section-title">
+            <i class="fas fa-calendar-check"></i>
+            Upcoming Appointments
+        </h3>
+        
+        {% if upcoming_bookings %}
+            {% for booking in upcoming_bookings %}
+            <div class="appointment-card {{ booking.status|lower }}">
+                <div class="row align-items-center">
+                    <div class="col-md-3">
+                        <div class="text-muted small">DATE & TIME</div>
+                        <div class="fw-bold">
+                            <i class="fas fa-calendar"></i> {{ booking.date|date:"M d, Y" }}
+                        </div>
+                        <div>
+                            <i class="fas fa-clock"></i> {{ booking.time|time:"g:i A" }}
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-muted small">SERVICE</div>
+                        <div class="fw-bold">
+                            {% if booking.service %}
+                                {{ booking.service.name }}
+                            {% else %}
+                                General Consultation
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-muted small">STATUS</div>
+                        <div>
+                            {% if booking.status == 'Pending' %}
+                                <span class="badge bg-warning text-dark">
+                                    <i class="fas fa-hourglass-half"></i> Pending Review
+                                </span>
+                            {% elif booking.status == 'Confirmed' %}
+                                <span class="badge bg-success">
+                                    <i class="fas fa-check-circle"></i> Confirmed
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-2 text-end">
+                        {% if booking.notes %}
+                        <button class="btn btn-sm btn-outline-info" 
+                                data-bs-toggle="collapse" 
+                                data-bs-target="#notes-{{ booking.id }}">
+                            <i class="fas fa-sticky-note"></i> Notes
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+                {% if booking.notes %}
+                <div class="collapse mt-3" id="notes-{{ booking.id }}">
+                    <div class="alert alert-info mb-0">
+                        <strong><i class="fas fa-sticky-note"></i> Your Notes:</strong>
+                        <p class="mb-0 mt-2">{{ booking.notes }}</p>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-calendar-times"></i>
+                <h4>No Upcoming Appointments</h4>
+                <p>You don't have any scheduled appointments.</p>
+                <a href="{% url 'bookings_v2:booking' %}" class="btn btn-success">
+                    <i class="fas fa-calendar-plus"></i> Book an Appointment
+                </a>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Past Appointments -->
+    {% if past_bookings %}
+    <div class="section-card">
+        <h3 class="section-title">
+            <i class="fas fa-history"></i>
+            Past Appointments
+        </h3>
+        
+        {% for booking in past_bookings|slice:":5" %}
+        <div class="appointment-card past">
+            <div class="row align-items-center">
+                <div class="col-md-3">
+                    <div class="text-muted small">DATE & TIME</div>
+                    <div>
+                        <i class="fas fa-calendar"></i> {{ booking.date|date:"M d, Y" }}
+                    </div>
+                    <div class="small">
+                        <i class="fas fa-clock"></i> {{ booking.time|time:"g:i A" }}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="text-muted small">SERVICE</div>
+                    <div>
+                        {% if booking.service %}
+                            {{ booking.service.name }}
+                        {% else %}
+                            General Consultation
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="text-muted small">STATUS</div>
+                    <span class="badge bg-secondary">
+                        <i class="fas fa-check"></i> {{ booking.status }}
+                    </span>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        
+        {% if past_bookings.count > 5 %}
+        <div class="text-center mt-3">
+            <small class="text-muted">Showing 5 of {{ past_bookings.count }} past appointments</small>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Medical Records -->
+    {% if medical_records %}
+    <div class="section-card">
+        <h3 class="section-title">
+            <i class="fas fa-notes-medical"></i>
+            Medical Records
+        </h3>
+        
+        {% for record in medical_records|slice:":3" %}
+        <div class="record-card">
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="text-muted small">VISIT DATE</div>
+                    <div class="fw-bold">{{ record.visit_date|date:"M d, Y" }}</div>
+                </div>
+                <div class="col-md-9">
+                    <div class="text-muted small">CHIEF COMPLAINT</div>
+                    <div>{{ record.chief_complaint|truncatewords:20 }}</div>
+                    
+                    {% if record.diagnosis %}
+                    <div class="mt-2">
+                        <div class="text-muted small">DIAGNOSIS</div>
+                        <div class="text-primary fw-bold">{{ record.diagnosis|truncatewords:15 }}</div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        
+        {% if medical_records.count > 3 %}
+        <div class="alert alert-info text-center mt-3 mb-0">
+            <i class="fas fa-info-circle"></i>
+            Showing 3 of {{ medical_records.count }} records. Contact the clinic for complete medical history.
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Billing Information -->
+    <div class="section-card">
+        <h3 class="section-title">
+            <i class="fas fa-file-invoice-dollar"></i>
+            Billing & Payments
+        </h3>
+        
+        {% if billings %}
+            <div class="table-responsive">
+                <table class="table billing-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Service</th>
+                            <th>Amount</th>
+                            <th>Paid</th>
+                            <th>Balance</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for billing in billings|slice:":10" %}
+                        <tr>
+                            <td>{{ billing.issued_date|date:"M d, Y" }}</td>
+                            <td>
+                                {% if billing.booking.service %}
+                                    {{ billing.booking.service.name }}
+                                {% else %}
+                                    General Consultation
+                                {% endif %}
+                            </td>
+                            <td>₱{{ billing.total_amount|floatformat:2 }}</td>
+                            <td>₱{{ billing.amount_paid|floatformat:2 }}</td>
+                            <td class="fw-bold">₱{{ billing.balance|floatformat:2 }}</td>
+                            <td>
+                                {% if billing.is_paid %}
+                                    <span class="badge badge-paid">
+                                        <i class="fas fa-check-circle"></i> Paid
+                                    </span>
+                                {% else %}
+                                    <span class="badge badge-unpaid">
+                                        <i class="fas fa-exclamation-circle"></i> Unpaid
+                                    </span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    {% if unpaid_bills %}
+                    <tfoot>
+                        <tr class="table-warning">
+                            <td colspan="4" class="text-end fw-bold">Total Outstanding:</td>
+                            <td colspan="2" class="fw-bold text-danger">₱{{ total_outstanding|floatformat:2 }}</td>
+                        </tr>
+                    </tfoot>
+                    {% endif %}
+                </table>
+            </div>
+            
+            {% if billings.count > 10 %}
+            <div class="text-center mt-3">
+                <small class="text-muted">Showing 10 of {{ billings.count }} billing records</small>
+            </div>
+            {% endif %}
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-receipt"></i>
+                <h4>No Billing Records</h4>
+                <p>You don't have any billing records yet.</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <a href="{% url 'bookings_v2:booking' %}" class="btn btn-success btn-lg w-100">
+                <i class="fas fa-calendar-plus"></i> Book New Appointment
+            </a>
+        </div>
+        <div class="col-md-6 mb-3">
+            <a href="{% url 'bookings_v2:contact' %}" class="btn btn-outline-primary btn-lg w-100">
+                <i class="fas fa-phone"></i> Contact Clinic
+            </a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

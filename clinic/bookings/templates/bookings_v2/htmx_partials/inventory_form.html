@@ -1,0 +1,179 @@
+<!-- HTMX Partial: Create/Edit Inventory Item Form -->
+<form hx-post="{% if item %}{% url 'bookings_v2:htmx_inventory_update' item.item_id %}{% else %}{% url 'bookings_v2:htmx_inventory_create' %}{% endif %}"
+      hx-target="#inventoryModalBody"
+      hx-swap="innerHTML">
+    
+    {% csrf_token %}
+    
+    <div class="alert alert-info mb-4">
+        <i class="fas fa-info-circle"></i>
+        {% if item %}
+        Editing inventory item: <strong>{{ item.name }}</strong>
+        {% else %}
+        Add a new item to the inventory (medicine, equipment, or miscellaneous).
+        {% endif %}
+    </div>
+    
+    <!-- Basic Information -->
+    <h6 class="text-primary mb-3"><i class="fas fa-box"></i> Item Information</h6>
+    
+    <div class="row">
+        <div class="col-md-8 mb-3">
+            <label for="name" class="form-label">Item Name *</label>
+            <input type="text" 
+                   class="form-control" 
+                   id="name" 
+                   name="name" 
+                   value="{{ item.name|default:'' }}"
+                   required>
+        </div>
+        
+        <div class="col-md-4 mb-3">
+            <label for="category" class="form-label">Category *</label>
+            <select class="form-select" id="category" name="category" required>
+                <option value="">Select...</option>
+                <option value="Medicine" {% if item.category == 'Medicine' %}selected{% endif %}>Medicine</option>
+                <option value="Equipment" {% if item.category == 'Equipment' %}selected{% endif %}>Equipment</option>
+                <option value="Miscellaneous" {% if item.category == 'Miscellaneous' %}selected{% endif %}>Miscellaneous</option>
+            </select>
+        </div>
+    </div>
+    
+    <div class="mb-3">
+        <label for="description" class="form-label">Description *</label>
+        <textarea class="form-control" 
+                  id="description" 
+                  name="description" 
+                  rows="2"
+                  required>{{ item.description|default:'' }}</textarea>
+    </div>
+    
+    <!-- Pricing and Stock -->
+    <h6 class="text-primary mb-3"><i class="fas fa-tag"></i> Pricing & Stock Levels</h6>
+    
+    <div class="row">
+        <div class="col-md-4 mb-3">
+            <label for="price" class="form-label">Unit Price *</label>
+            <div class="input-group">
+                <span class="input-group-text">₱</span>
+                <input type="number" 
+                       class="form-control" 
+                       id="price" 
+                       name="price" 
+                       step="0.01"
+                       min="0"
+                       value="{{ item.price|default:'0.00' }}"
+                       required>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-3">
+            <label for="quantity" class="form-label">Current Quantity *</label>
+            <input type="number" 
+                   class="form-control" 
+                   id="quantity" 
+                   name="quantity" 
+                   min="0"
+                   value="{{ item.quantity|default:'0' }}"
+                   required>
+            <small class="text-muted">Current stock on hand</small>
+        </div>
+        
+        <div class="col-md-4 mb-3">
+            <label for="stock" class="form-label">Minimum Stock Level *</label>
+            <input type="number" 
+                   class="form-control" 
+                   id="stock" 
+                   name="stock" 
+                   min="0"
+                   value="{{ item.stock|default:'10' }}"
+                   required>
+            <small class="text-muted">Alert threshold</small>
+        </div>
+    </div>
+    
+    <!-- Expiry Date (for medicines) -->
+    <div class="mb-3" id="expiry_date_field" style="{% if item.category != 'Medicine' and not item %}display: none;{% endif %}">
+        <label for="expiry_date" class="form-label">
+            <i class="fas fa-calendar-times text-warning"></i> Expiry Date
+        </label>
+        <input type="date" 
+               class="form-control" 
+               id="expiry_date" 
+               name="expiry_date" 
+               value="{{ item.expiry_date|date:'Y-m-d'|default:'' }}"
+               min="{{ today }}">
+        <small class="text-muted">Required for medicines</small>
+    </div>
+    
+    <!-- Status (auto-calculated, shown for editing) -->
+    {% if item %}
+    <div class="alert alert-secondary">
+        <strong>Current Status:</strong> 
+        <span class="badge 
+            {% if item.status == 'In Stock' %}bg-success
+            {% elif item.status == 'Low Stock' %}bg-warning
+            {% else %}bg-danger{% endif %}">
+            {{ item.status }}
+        </span>
+        <br>
+        <small class="text-muted">Status is automatically calculated based on quantity vs. minimum stock level</small>
+    </div>
+    {% endif %}
+    
+    <!-- Action Buttons -->
+    <div class="d-flex justify-content-end gap-2 mt-4">
+        <button type="button" 
+                class="btn btn-secondary"
+                hx-get="{% url 'bookings_v2:htmx_inventory_list' %}"
+                hx-target="#inventoryModalBody"
+                hx-swap="innerHTML">
+            <i class="fas fa-times"></i> Cancel
+        </button>
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save"></i> {% if item %}Update{% else %}Create{% endif %} Item
+        </button>
+    </div>
+</form>
+
+<script>
+    // Show/hide expiry date based on category
+    document.getElementById('category').addEventListener('change', function() {
+        const expiryField = document.getElementById('expiry_date_field');
+        const expiryInput = document.getElementById('expiry_date');
+        
+        if (this.value === 'Medicine') {
+            expiryField.style.display = 'block';
+            expiryInput.required = true;
+        } else {
+            expiryField.style.display = 'none';
+            expiryInput.required = false;
+            expiryInput.value = '';
+        }
+    });
+    
+    // Set minimum date to today for expiry
+    document.getElementById('expiry_date').min = new Date().toISOString().split('T')[0];
+    
+    // Highlight if quantity is below minimum
+    const quantityInput = document.getElementById('quantity');
+    const stockInput = document.getElementById('stock');
+    
+    function checkStock() {
+        const quantity = parseInt(quantityInput.value) || 0;
+        const minStock = parseInt(stockInput.value) || 0;
+        
+        if (quantity <= 0) {
+            quantityInput.classList.add('is-invalid');
+            quantityInput.classList.remove('is-valid');
+        } else if (quantity <= minStock) {
+            quantityInput.classList.add('is-valid');
+            quantityInput.classList.remove('is-invalid');
+        } else {
+            quantityInput.classList.remove('is-invalid', 'is-valid');
+        }
+    }
+    
+    quantityInput.addEventListener('input', checkStock);
+    stockInput.addEventListener('input', checkStock);
+</script>

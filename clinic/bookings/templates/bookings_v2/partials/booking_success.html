@@ -1,0 +1,31 @@
+<div class="alert alert-success alert-dismissible fade show" role="alert">
+    <h4 class="alert-heading">
+        <i class="fas fa-check-circle"></i> Booking Confirmed!
+    </h4>
+    <p class="mb-2">
+        Thank you <strong>{{ booking.patient_name }}</strong>! Your appointment has been successfully booked.
+    </p>
+    <hr>
+    <div class="mb-2">
+        <strong><i class="fas fa-concierge-bell"></i> Service:</strong> {{ booking.service.name }}<br>
+        <strong><i class="fas fa-calendar"></i> Date:</strong> {{ booking.date|date:"F d, Y" }}<br>
+        <strong><i class="fas fa-clock"></i> Time:</strong> {{ booking.time|time:"g:i A" }}<br>
+        <strong><i class="fas fa-envelope"></i> Email:</strong> {{ booking.patient_email }}<br>
+        <strong><i class="fas fa-phone"></i> Phone:</strong> {{ booking.patient_phone }}
+    </div>
+    <hr>
+    <p class="mb-0">
+        <i class="fas fa-info-circle"></i> We'll send you a confirmation email within 24 hours. 
+        Please check your inbox at <strong>{{ booking.patient_email }}</strong>.
+    </p>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+
+<div class="text-center mt-4">
+    <a href="/v2/" class="btn btn-primary btn-lg">
+        <i class="fas fa-home"></i> Back to Home
+    </a>
+    <a href="/v2/booking/" class="btn btn-outline-secondary btn-lg">
+        <i class="fas fa-plus"></i> Book Another Appointment
+    </a>
+</div>

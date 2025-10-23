@@ -1,0 +1,225 @@
+{% load static %}
+
+<div class="user-detail-container">
+    <div class="row">
+        <div class="col-md-4 text-center border-end">
+            <div class="user-profile-section">
+                <div class="user-avatar-large mb-3">
+                    <i class="fas fa-user-circle fa-5x {% if user.is_staff %}text-success{% else %}text-info{% endif %}"></i>
+                </div>
+                <h4>{{ user.get_full_name|default:user.username }}</h4>
+                <p class="text-muted">@{{ user.username }}</p>
+                
+                <div class="mb-3">
+                    {% if user.is_superuser %}
+                        <span class="badge bg-danger">
+                            <i class="fas fa-crown"></i> Superuser
+                        </span>
+                    {% elif user.is_staff %}
+                        <span class="badge bg-success">
+                            <i class="fas fa-user-shield"></i> Staff
+                        </span>
+                    {% else %}
+                        <span class="badge bg-info">
+                            <i class="fas fa-user"></i> Customer
+                        </span>
+                    {% endif %}
+                    
+                    {% if user.is_active %}
+                        <span class="badge bg-success">
+                            <i class="fas fa-check-circle"></i> Active
+                        </span>
+                    {% else %}
+                        <span class="badge bg-secondary">
+                            <i class="fas fa-times-circle"></i> Inactive
+                        </span>
+                    {% endif %}
+                </div>
+                
+                <div class="d-grid gap-2">
+                    {% if not user.is_superuser or request.user.is_superuser %}
+                    <button type="button" class="btn btn-warning btn-sm" 
+                            hx-get="{% url 'bookings_v2:htmx_user_edit' user.id %}" 
+                            hx-target="#userEditModalBody"
+                            data-bs-toggle="modal" 
+                            data-bs-target="#userEditModal"
+                            data-bs-dismiss="modal">
+                        <i class="fas fa-edit"></i> Edit User
+                    </button>
+                    {% endif %}
+                    
+                    {% if not user.is_superuser and user.id != request.user.id %}
+                    <button type="button" class="btn btn-outline-danger btn-sm" 
+                            hx-delete="{% url 'bookings_v2:htmx_user_delete' user.id %}" 
+                            hx-confirm="Are you sure you want to deactivate {{ user.username }}?"
+                            hx-target="#usersListContainer"
+                            data-bs-dismiss="modal">
+                        <i class="fas fa-user-slash"></i> Deactivate
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-8">
+            <div class="user-info-section">
+                <h5 class="mb-3">
+                    <i class="fas fa-info-circle text-primary"></i> User Information
+                </h5>
+                
+                <div class="info-grid">
+                    <div class="info-item">
+                        <label class="info-label">
+                            <i class="fas fa-envelope"></i> Email
+                        </label>
+                        <div class="info-value">
+                            {% if user.email %}
+                                <a href="mailto:{{ user.email }}">{{ user.email }}</a>
+                            {% else %}
+                                <span class="text-muted">Not provided</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="info-item">
+                        <label class="info-label">
+                            <i class="fas fa-user"></i> First Name
+                        </label>
+                        <div class="info-value">
+                            {{ user.first_name|default:"—" }}
+                        </div>
+                    </div>
+                    
+                    <div class="info-item">
+                        <label class="info-label">
+                            <i class="fas fa-user"></i> Last Name
+                        </label>
+                        <div class="info-value">
+                            {{ user.last_name|default:"—" }}
+                        </div>
+                    </div>
+                    
+                    <div class="info-item">
+                        <label class="info-label">
+                            <i class="fas fa-calendar-alt"></i> Date Joined
+                        </label>
+                        <div class="info-value">
+                            {{ user.date_joined|date:"F d, Y" }}
+                            <small class="text-muted">({{ user.date_joined|timesince }} ago)</small>
+                        </div>
+                    </div>
+                    
+                    <div class="info-item">
+                        <label class="info-label">
+                            <i class="fas fa-clock"></i> Last Login
+                        </label>
+                        <div class="info-value">
+                            {% if user.last_login %}
+                                {{ user.last_login|date:"F d, Y g:i A" }}
+                                <small class="text-muted">({{ user.last_login|timesince }} ago)</small>
+                            {% else %}
+                                <span class="text-muted">Never</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <h5 class="mb-3">
+                    <i class="fas fa-shield-alt text-success"></i> Permissions
+                </h5>
+                
+                <div class="permissions-grid">
+                    <div class="permission-item">
+                        <i class="fas {% if user.is_active %}fa-check-circle text-success{% else %}fa-times-circle text-danger{% endif %}"></i>
+                        <span>Active Account</span>
+                    </div>
+                    
+                    <div class="permission-item">
+                        <i class="fas {% if user.is_staff %}fa-check-circle text-success{% else %}fa-times-circle text-muted{% endif %}"></i>
+                        <span>Staff Access</span>
+                    </div>
+                    
+                    <div class="permission-item">
+                        <i class="fas {% if user.is_superuser %}fa-check-circle text-success{% else %}fa-times-circle text-muted{% endif %}"></i>
+                        <span>Superuser Privileges</span>
+                    </div>
+                </div>
+                
+                {% if user.groups.exists %}
+                <hr>
+                <h5 class="mb-3">
+                    <i class="fas fa-users text-info"></i> Groups
+                </h5>
+                <div class="groups-list">
+                    {% for group in user.groups.all %}
+                    <span class="badge bg-info me-2">
+                        <i class="fas fa-users"></i> {{ group.name }}
+                    </span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .user-detail-container {
+        padding: 1rem;
+    }
+    
+    .user-profile-section {
+        padding: 1rem;
+    }
+    
+    .user-avatar-large {
+        margin-bottom: 1rem;
+    }
+    
+    .info-grid {
+        display: grid;
+        gap: 1rem;
+    }
+    
+    .info-item {
+        padding: 0.75rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+    }
+    
+    .info-label {
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 0.25rem;
+        display: block;
+        font-size: 0.875rem;
+    }
+    
+    .info-value {
+        color: #212529;
+        font-size: 0.95rem;
+    }
+    
+    .permissions-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+    }
+    
+    .permission-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem;
+        background: #f8f9fa;
+        border-radius: 6px;
+    }
+    
+    .groups-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+</style>

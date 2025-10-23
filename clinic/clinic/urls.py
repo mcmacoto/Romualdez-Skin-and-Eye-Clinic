@@ -15,7 +15,7 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
 from django.contrib.auth.views import LoginView, LogoutView
 from django.conf import settings
 from django.conf.urls.static import static
@@ -29,6 +29,11 @@ admin.site.index_title = "Dashboard"
 
 urlpatterns = [
     path('admin/', clinic_admin_site.urls),
+    
+    # === V2 Routes (Bootstrap/HTMX/Alpine) - TEST VERSION ===
+    path('v2/', include('bookings.urls_v2')),  # Access via http://localhost:8000/v2/
+    
+    # === Original Routes (Current Production) ===
     path('login/', LoginView.as_view(template_name='bookings/login.html'), name='login'),
     path('logout/', LogoutView.as_view(next_page='landing'), name='logout'),
     path('landing/', views.landing, name='landing'),
