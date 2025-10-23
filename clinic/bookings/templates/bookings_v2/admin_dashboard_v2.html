@@ -1,0 +1,1153 @@
+{% extends "bookings_v2/base_v2.html" %}
+{% load static %}
+
+{% block title %}Admin Dashboard - Romualdez Skin & Eye Clinic{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        background-color: #f8f9fa;
+    }
+    
+    .dashboard-container {
+        padding: 2rem 0;
+    }
+    
+    .dashboard-header {
+        background: linear-gradient(135deg, #3d5c3d 0%, #2e472e 100%) !important;
+        color: white !important;
+        padding: 2rem;
+        border-radius: 12px;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .dashboard-header h1 {
+        margin: 0 0 0.5rem 0;
+        font-size: 2rem;
+        font-weight: 600;
+        color: white !important;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .dashboard-header p {
+        margin: 0;
+        opacity: 0.95;
+        color: rgba(255, 255, 255, 0.95) !important;
+    }
+    
+    .permission-notice {
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .permission-notice.superuser {
+        background: linear-gradient(135deg, #4a7c59 0%, #3d5c3d 100%);
+        color: white;
+    }
+    
+    .permission-notice.staff {
+        background: linear-gradient(135deg, #0dcaf0 0%, #0891b2 100%);
+        color: white;
+    }
+    
+    .permission-notice i {
+        font-size: 1.5rem;
+    }
+    
+    .section-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--primary-color);
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .section-title i {
+        color: var(--primary-color);
+    }
+    
+    /* Stats Grid */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .stat-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--dark-green) 100%);
+        transform: scaleX(0);
+        transform-origin: left;
+        transition: transform 0.3s ease;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    }
+    
+    .stat-card:hover::before {
+        transform: scaleX(1);
+    }
+    
+    .stat-card.warning {
+        border-left: 4px solid #ffc107;
+    }
+    
+    .stat-card.danger {
+        border-left: 4px solid #dc3545;
+    }
+    
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1rem;
+        font-size: 1.5rem;
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--dark-green) 100%);
+        color: white;
+    }
+    
+    .stat-card.warning .stat-icon {
+        background: linear-gradient(135deg, #ffc107 0%, #ffca2c 100%);
+    }
+    
+    .stat-card.danger .stat-icon {
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    }
+    
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--primary-color);
+        margin-bottom: 0.5rem;
+    }
+    
+    .stat-label {
+        font-size: 0.95rem;
+        color: #6c757d;
+        margin-bottom: 0.5rem;
+    }
+    
+    .stat-hint {
+        font-size: 0.85rem;
+        color: #adb5bd;
+        font-style: italic;
+    }
+    
+    /* Financial Cards */
+    .financial-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .financial-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+    }
+    
+    .financial-card.revenue {
+        background: linear-gradient(135deg, #28a745 0%, #34ce57 100%);
+        color: white;
+    }
+    
+    .financial-card.balance {
+        background: linear-gradient(135deg, #ffc107 0%, #ffca2c 100%);
+        color: white;
+    }
+    
+    .financial-card.billed {
+        background: linear-gradient(135deg, #17a2b8 0%, #20c997 100%);
+        color: white;
+    }
+    
+    .financial-icon {
+        width: 60px;
+        height: 60px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+    }
+    
+    .financial-content {
+        flex: 1;
+    }
+    
+    .financial-label {
+        font-size: 0.9rem;
+        opacity: 0.9;
+        margin-bottom: 0.5rem;
+    }
+    
+    .financial-value {
+        font-size: 1.8rem;
+        font-weight: 700;
+    }
+    
+    /* Quick Actions */
+    .quick-actions-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 1rem;
+    }
+    
+    .quick-action-btn {
+        background: white;
+        border: 2px solid #e9ecef;
+        border-radius: 12px;
+        padding: 1.5rem 1rem;
+        text-align: center;
+        text-decoration: none;
+        color: var(--primary-color);
+        transition: all 0.3s ease;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .quick-action-btn:hover {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--dark-green) 100%);
+        color: white;
+        border-color: var(--primary-color);
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(61, 92, 61, 0.3);
+    }
+    
+    .quick-action-btn i {
+        font-size: 2rem;
+    }
+    
+    .quick-action-btn span {
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+    
+    /* Modal Styles */
+    .modal-header {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--dark-green) 100%);
+        color: white;
+        border-radius: 8px 8px 0 0;
+    }
+    
+    .modal-header .btn-close {
+        filter: invert(1);
+    }
+    
+    .modal-body {
+        max-height: 70vh;
+        overflow-y: auto;
+    }
+    
+    /* Loading State */
+    .loading-state {
+        text-align: center;
+        padding: 3rem;
+        color: #6c757d;
+    }
+    
+    .loading-state .spinner-border {
+        width: 3rem;
+        height: 3rem;
+        border-width: 0.25rem;
+        margin-bottom: 1rem;
+    }
+    
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: #6c757d;
+    }
+    
+    .empty-state i {
+        font-size: 4rem;
+        color: #dee2e6;
+        margin-bottom: 1rem;
+    }
+    
+    .empty-state h3 {
+        color: #495057;
+        margin-bottom: 0.5rem;
+    }
+    
+    /* Transaction Summary */
+    .transaction-summary {
+        margin-top: 1.5rem;
+        padding-top: 1.5rem;
+        border-top: 2px solid #e9ecef;
+    }
+    
+    .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+        margin-top: 0.75rem;
+    }
+    
+    .summary-item {
+        background: #fff;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        padding: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        transition: all 0.2s ease;
+    }
+    
+    .summary-item.clickable {
+        cursor: pointer;
+    }
+    
+    .summary-item.clickable:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        transform: translateY(-2px);
+        border-color: var(--primary-color);
+    }
+    
+    .summary-icon {
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        font-size: 1.25rem;
+    }
+    
+    .summary-icon.paid {
+        background: rgba(40, 167, 69, 0.1);
+        color: #28a745;
+    }
+    
+    .summary-icon.unpaid {
+        background: rgba(220, 53, 69, 0.1);
+        color: #dc3545;
+    }
+    
+    .summary-icon.total {
+        background: rgba(108, 117, 125, 0.1);
+        color: #6c757d;
+    }
+    
+    .summary-details {
+        flex: 1;
+    }
+    
+    .summary-count {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #212529;
+        line-height: 1;
+    }
+    
+    .summary-label {
+        font-size: 0.75rem;
+        color: #6c757d;
+        margin-top: 0.25rem;
+    }
+
+    @media (max-width: 768px) {
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .financial-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .quick-actions-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .summary-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container dashboard-container">
+    <!-- Dashboard Header -->
+    <div class="dashboard-header">
+        <h1>
+            <i class="fas fa-tachometer-alt"></i>
+            Welcome, {{ user.get_full_name|default:user.username }}
+        </h1>
+        <p>Here's an overview of your clinic operations</p>
+    </div>
+    
+    <!-- Permission Notice -->
+    {% if user.is_superuser %}
+    <div class="permission-notice superuser">
+        <i class="fas fa-crown"></i>
+        <div>
+            <strong>Superuser Access</strong>
+            <p class="mb-0">You have full administrative privileges</p>
+        </div>
+    </div>
+    {% elif user.is_staff %}
+    <div class="permission-notice staff">
+        <i class="fas fa-user-shield"></i>
+        <div>
+            <strong>Staff Access</strong>
+            <p class="mb-0">You have staff-level permissions</p>
+        </div>
+    </div>
+    {% endif %}
+    
+    <div class="row">
+        <!-- LEFT COLUMN: Statistics -->
+        <div class="col-lg-8">
+            <h3 class="section-title">
+                <i class="fas fa-chart-line"></i>
+                Key Statistics
+            </h3>
+            
+            <div class="stats-grid">
+                <!-- Total Appointments -->
+                <div class="stat-card" hx-get="{% url 'bookings_v2:htmx_appointments_list' %}" hx-target="#appointmentsModalBody" hx-trigger="click" data-bs-toggle="modal" data-bs-target="#appointmentsModal">
+                    <div class="stat-icon">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                    <div class="stat-number">{{ total_appointments }}</div>
+                    <div class="stat-label">Total Appointments</div>
+                    <div class="stat-hint">Click to view all</div>
+                </div>
+                
+                <!-- Pending Bookings -->
+                <div class="stat-card warning" hx-get="{% url 'bookings_v2:htmx_pending_bookings' %}" hx-target="#pendingBookingsContainer" hx-trigger="click" data-bs-toggle="modal" data-bs-target="#pendingBookingsModal">
+                    <div class="stat-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stat-number">{{ pending_bookings }}</div>
+                    <div class="stat-label">Pending Bookings</div>
+                    <div class="stat-hint">Click to manage</div>
+                </div>
+                
+                <!-- Today's Appointments -->
+                <div class="stat-card" hx-get="{% url 'bookings_v2:htmx_appointments_list' %}?status=today" hx-target="#appointmentsModalBody" hx-trigger="click" data-bs-toggle="modal" data-bs-target="#appointmentsModal">
+                    <div class="stat-icon">
+                        <i class="fas fa-calendar-day"></i>
+                    </div>
+                    <div class="stat-number">{{ today_bookings }}</div>
+                    <div class="stat-label">Today's Appointments</div>
+                    <div class="stat-hint">Click to view</div>
+                </div>
+                
+                <!-- Total Bookings -->
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                    <div class="stat-number">{{ total_bookings }}</div>
+                    <div class="stat-label">Total Bookings</div>
+                </div>
+                
+                <!-- Unpaid Bills -->
+                <div class="stat-card warning" hx-get="{% url 'bookings_v2:htmx_unpaid_patients' %}" hx-target="#billingsModalBody" hx-trigger="click" data-bs-toggle="modal" data-bs-target="#billingsModal">
+                    <div class="stat-icon">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="stat-number">{{ unpaid_bills }}</div>
+                    <div class="stat-label">Unpaid Bills</div>
+                    <div class="stat-hint">Click to view</div>
+                </div>
+                
+                <!-- Patient Profiles -->
+                <div class="stat-card" hx-get="{% url 'bookings_v2:htmx_patients_list' %}" hx-target="#patientsModalBody" hx-trigger="click" data-bs-toggle="modal" data-bs-target="#patientsModal">
+                    <div class="stat-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-number">{{ total_patient_profiles }}</div>
+                    <div class="stat-label">Patient Profiles</div>
+                    <div class="stat-hint">Click to view</div>
+                </div>
+                
+                <!-- Medical Records -->
+                <div class="stat-card" hx-get="{% url 'bookings_v2:htmx_medical_records_list' %}" hx-target="#medicalRecordsModalBody" hx-trigger="click" data-bs-toggle="modal" data-bs-target="#medicalRecordsModal">
+                    <div class="stat-icon">
+                        <i class="fas fa-file-medical"></i>
+                    </div>
+                    <div class="stat-number">{{ total_medical_records }}</div>
+                    <div class="stat-label">Medical Records</div>
+                    <div class="stat-hint">Click to view</div>
+                </div>
+                
+                <!-- Inventory Items -->
+                <div class="stat-card" hx-get="{% url 'bookings_v2:htmx_inventory_list' %}" hx-target="#inventoryModalBody" hx-trigger="click" data-bs-toggle="modal" data-bs-target="#inventoryModal">
+                    <div class="stat-icon">
+                        <i class="fas fa-boxes"></i>
+                    </div>
+                    <div class="stat-number">{{ total_inventory_items }}</div>
+                    <div class="stat-label">Inventory Items</div>
+                    <div class="stat-hint">Click to manage</div>
+                </div>
+                
+                <!-- Low Stock Items -->
+                {% if low_stock_items > 0 %}
+                <div class="stat-card warning" hx-get="{% url 'bookings_v2:htmx_inventory_list' %}?status=low_stock" hx-target="#inventoryModalBody" hx-trigger="click" data-bs-toggle="modal" data-bs-target="#inventoryModal">
+                    <div class="stat-icon">
+                        <i class="fas fa-exclamation-circle"></i>
+                    </div>
+                    <div class="stat-number">{{ low_stock_items }}</div>
+                    <div class="stat-label">Low Stock Items</div>
+                    <div class="stat-hint">Action required</div>
+                </div>
+                {% endif %}
+                
+                <!-- Out of Stock Items -->
+                {% if out_of_stock_items > 0 %}
+                <div class="stat-card danger" hx-get="{% url 'bookings_v2:htmx_inventory_list' %}?status=out_of_stock" hx-target="#inventoryModalBody" hx-trigger="click" data-bs-toggle="modal" data-bs-target="#inventoryModal">
+                    <div class="stat-icon">
+                        <i class="fas fa-times-circle"></i>
+                    </div>
+                    <div class="stat-number">{{ out_of_stock_items }}</div>
+                    <div class="stat-label">Out of Stock</div>
+                    <div class="stat-hint">Urgent action needed</div>
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Financial Overview -->
+            <h3 class="section-title">
+                <i class="fas fa-dollar-sign"></i>
+                Financial Overview
+            </h3>
+            
+            <div class="financial-grid">
+                <div class="financial-card revenue">
+                    <div class="financial-icon">
+                        <i class="fas fa-coins"></i>
+                    </div>
+                    <div class="financial-content">
+                        <div class="financial-label">Total Revenue (Paid)</div>
+                        <div class="financial-value">₱{{ total_revenue|floatformat:2 }}</div>
+                    </div>
+                </div>
+                
+                <div class="financial-card balance">
+                    <div class="financial-icon">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="financial-content">
+                        <div class="financial-label">Outstanding Balance</div>
+                        <div class="financial-value">₱{{ total_balance_outstanding|floatformat:2 }}</div>
+                    </div>
+                </div>
+                
+                <div class="financial-card billed">
+                    <div class="financial-icon">
+                        <i class="fas fa-file-invoice-dollar"></i>
+                    </div>
+                    <div class="financial-content">
+                        <div class="financial-label">Total Billed</div>
+                        <div class="financial-value">₱{{ total_amount_billed|floatformat:2 }}</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Transaction Summary -->
+            <div class="transaction-summary">
+                <h4 style="margin: 1rem 0 0.75rem 0; color: #333; font-size: 1rem;">
+                    <i class="fas fa-chart-bar"></i> Transaction Summary
+                </h4>
+                <div class="summary-grid">
+                    <div class="summary-item clickable" 
+                         hx-get="{% url 'bookings_v2:htmx_paid_billings' %}" 
+                         hx-target="#billingsModalBody" 
+                         hx-trigger="click" 
+                         data-bs-toggle="modal" 
+                         data-bs-target="#billingsModal"
+                         style="cursor: pointer;" 
+                         title="Click to view fully paid bills">
+                        <div class="summary-icon paid">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="summary-details">
+                            <div class="summary-count">{{ paid_bills }}</div>
+                            <div class="summary-label">Fully Paid</div>
+                        </div>
+                    </div>
+                    <div class="summary-item clickable" 
+                         hx-get="{% url 'bookings_v2:htmx_unpaid_billings' %}" 
+                         hx-target="#billingsModalBody" 
+                         hx-trigger="click" 
+                         data-bs-toggle="modal" 
+                         data-bs-target="#billingsModal"
+                         style="cursor: pointer;" 
+                         title="Click to view unpaid bills">
+                        <div class="summary-icon unpaid">
+                            <i class="fas fa-times-circle"></i>
+                        </div>
+                        <div class="summary-details">
+                            <div class="summary-count">{{ unpaid_bills }}</div>
+                            <div class="summary-label">Unpaid</div>
+                        </div>
+                    </div>
+                    <div class="summary-item clickable" 
+                         hx-get="{% url 'bookings_v2:htmx_all_billings_list' %}" 
+                         hx-target="#billingsModalBody" 
+                         hx-trigger="click" 
+                         data-bs-toggle="modal" 
+                         data-bs-target="#billingsModal"
+                         style="cursor: pointer;" 
+                         title="Click to view all bills">
+                        <div class="summary-icon total">
+                            <i class="fas fa-list"></i>
+                        </div>
+                        <div class="summary-details">
+                            <div class="summary-count">{{ total_billings }}</div>
+                            <div class="summary-label">Total Bills</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- RIGHT COLUMN: Quick Actions -->
+        <div class="col-lg-4">
+            <h3 class="section-title">
+                <i class="fas fa-bolt"></i>
+                Quick Actions
+            </h3>
+            
+            <div class="quick-actions-grid">
+                <!-- User Management -->
+                <button type="button" class="quick-action-btn" 
+                        hx-get="{% url 'bookings_v2:htmx_users_list' %}" 
+                        hx-target="#usersListContainer"
+                        data-bs-toggle="modal" 
+                        data-bs-target="#usersModal">
+                    <i class="fas fa-users"></i>
+                    <span>Manage Users</span>
+                </button>
+                
+                <button type="button" class="quick-action-btn" 
+                        hx-get="{% url 'bookings_v2:htmx_user_create_form' %}" 
+                        hx-target="#userEditModalBody"
+                        data-bs-toggle="modal" 
+                        data-bs-target="#userEditModal">
+                    <i class="fas fa-user-plus"></i>
+                    <span>Create User</span>
+                </button>
+                
+                <!-- Pending Bookings Management -->
+                <button type="button" class="quick-action-btn" 
+                        hx-get="{% url 'bookings_v2:htmx_pending_bookings' %}" 
+                        hx-target="#pendingBookingsContainer"
+                        data-bs-toggle="modal" 
+                        data-bs-target="#pendingBookingsModal">
+                    <i class="fas fa-clock"></i>
+                    <span>Pending Bookings</span>
+                </button>
+                
+                <!-- Django Admin Links (fallback) -->
+                <button type="button" class="quick-action-btn"
+                        hx-get="{% url 'bookings_v2:htmx_appointments_list' %}" 
+                        hx-target="#appointmentsModalBody"
+                        data-bs-toggle="modal" 
+                        data-bs-target="#appointmentsModal">
+                    <i class="fas fa-calendar-plus"></i>
+                    <span>View Appointments</span>
+                </button>
+                
+                <button type="button" class="quick-action-btn"
+                        hx-get="{% url 'bookings_v2:htmx_patients_list' %}" 
+                        hx-target="#patientsModalBody"
+                        data-bs-toggle="modal" 
+                        data-bs-target="#patientsModal">
+                    <i class="fas fa-clipboard-list"></i>
+                    <span>Patient Profiles</span>
+                </button>
+                
+                <button type="button" class="quick-action-btn"
+                        hx-get="{% url 'bookings_v2:htmx_medical_records_list' %}" 
+                        hx-target="#medicalRecordsModalBody"
+                        data-bs-toggle="modal" 
+                        data-bs-target="#medicalRecordsModal">
+                    <i class="fas fa-notes-medical"></i>
+                    <span>Medical Records</span>
+                </button>
+                
+                <button type="button" class="quick-action-btn"
+                        hx-get="{% url 'bookings_v2:htmx_all_billings' %}" 
+                        hx-target="#billingsModalBody"
+                        data-bs-toggle="modal" 
+                        data-bs-target="#billingsModal">
+                    <i class="fas fa-file-invoice-dollar"></i>
+                    <span>All Bills</span>
+                </button>
+                
+                <button type="button" class="quick-action-btn"
+                        hx-get="{% url 'bookings_v2:htmx_inventory_list' %}" 
+                        hx-target="#inventoryModalBody"
+                        data-bs-toggle="modal" 
+                        data-bs-target="#inventoryModal">
+                    <i class="fas fa-boxes"></i>
+                    <span>View Inventory</span>
+                </button>
+                
+                <a href="{% url 'bookings_v2:booking' %}" class="quick-action-btn">
+                    <i class="fas fa-plus"></i>
+                    <span>New Booking</span>
+                </a>
+                
+                <!-- V2 Create Forms -->
+                <button type="button" class="quick-action-btn"
+                        hx-get="{% url 'bookings_v2:htmx_appointment_create_form' %}" 
+                        hx-target="#appointmentsModalBody"
+                        data-bs-toggle="modal" 
+                        data-bs-target="#appointmentsModal">
+                    <i class="fas fa-calendar-plus"></i>
+                    <span>New Appointment</span>
+                </button>
+                
+                <button type="button" class="quick-action-btn"
+                        hx-get="{% url 'bookings_v2:htmx_patient_create_form' %}" 
+                        hx-target="#patientsModalBody"
+                        data-bs-toggle="modal" 
+                        data-bs-target="#patientsModal">
+                    <i class="fas fa-user-md"></i>
+                    <span>New Patient</span>
+                </button>
+                
+                <button type="button" class="quick-action-btn"
+                        hx-get="{% url 'bookings_v2:htmx_payment_create_form' %}" 
+                        hx-target="#billingsModalBody"
+                        data-bs-toggle="modal" 
+                        data-bs-target="#billingsModal">
+                    <i class="fas fa-money-bill-wave"></i>
+                    <span>Record Payment</span>
+                </button>
+                
+                <button type="button" class="quick-action-btn"
+                        hx-get="{% url 'bookings_v2:htmx_inventory_create_form' %}" 
+                        hx-target="#inventoryModalBody"
+                        data-bs-toggle="modal" 
+                        data-bs-target="#inventoryModal">
+                    <i class="fas fa-box"></i>
+                    <span>Add Inventory</span>
+                </button>
+                
+                <!-- Django Admin Links (for features not yet in V2) -->
+                <a href="/admin/bookings/medicalrecord/add/" class="quick-action-btn">
+                    <i class="fas fa-file-medical-alt"></i>
+                    <span>New Record</span>
+                </a>
+                
+                <button type="button" class="quick-action-btn"
+                        hx-get="{% url 'bookings_v2:htmx_services_list' %}" 
+                        hx-target="#servicesModalBody"
+                        data-bs-toggle="modal" 
+                        data-bs-target="#servicesModal">
+                    <i class="fas fa-cogs"></i>
+                    <span>Manage Services</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Appointments Modal -->
+<div class="modal fade" id="appointmentsModal" tabindex="-1" aria-labelledby="appointmentsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="appointmentsModalLabel">
+                    <i class="fas fa-calendar-check"></i>
+                    Appointments
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="appointmentsModalBody">
+                <div class="loading-state">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p>Loading appointments...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Patients Modal -->
+<div class="modal fade" id="patientsModal" tabindex="-1" aria-labelledby="patientsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="patientsModalLabel">
+                    <i class="fas fa-users"></i>
+                    Patient Profiles
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="patientsModalBody">
+                <div class="loading-state">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p>Loading patients...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Medical Records Modal -->
+<div class="modal fade" id="medicalRecordsModal" tabindex="-1" aria-labelledby="medicalRecordsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="medicalRecordsModalLabel">
+                    <i class="fas fa-file-medical"></i>
+                    Medical Records
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="medicalRecordsModalBody">
+                <div class="loading-state">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p>Loading medical records...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Services Modal -->
+<div class="modal fade" id="servicesModal" tabindex="-1" aria-labelledby="servicesModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="servicesModalLabel">
+                    <i class="fas fa-cogs"></i>
+                    Services Management
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="servicesModalBody">
+                <div class="d-flex justify-content-end mb-3">
+                    <button type="button" 
+                            class="btn btn-primary"
+                            hx-get="{% url 'bookings_v2:htmx_service_create_form' %}"
+                            hx-target="#servicesModalBody"
+                            hx-swap="innerHTML">
+                        <i class="fas fa-plus"></i> Add Service
+                    </button>
+                </div>
+                <div class="loading-state">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p>Loading services...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Inventory Modal -->
+<div class="modal fade" id="inventoryModal" tabindex="-1" aria-labelledby="inventoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="inventoryModalLabel">
+                    <i class="fas fa-boxes"></i>
+                    Inventory Management
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="inventoryModalBody">
+                <div class="loading-state">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p>Loading inventory...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Billings Modal -->
+<div class="modal fade" id="billingsModal" tabindex="-1" aria-labelledby="billingsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="billingsModalLabel">
+                    <i class="fas fa-file-invoice-dollar"></i>
+                    Unpaid Bills
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="billingsModalBody">
+                <div class="loading-state">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p>Loading billing records...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Patient Records Modal (nested modal for viewing specific patient records) -->
+<div class="modal fade" id="patientRecordsModal" tabindex="-1" aria-labelledby="patientRecordsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="patientRecordsModalLabel">
+                    <i class="fas fa-file-medical"></i>
+                    Patient Medical Records
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="patientRecordsModalBody">
+                <div class="loading-state">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p>Loading records...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Users Management Modal -->
+<div class="modal fade" id="usersModal" tabindex="-1" aria-labelledby="usersModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="usersModalLabel">
+                    <i class="fas fa-users"></i>
+                    User Management
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-outline-primary active" 
+                                hx-get="{% url 'bookings_v2:htmx_users_list' %}?role=all" 
+                                hx-target="#usersListContainer">
+                            <i class="fas fa-users"></i> All Users
+                        </button>
+                        <button type="button" class="btn btn-outline-success" 
+                                hx-get="{% url 'bookings_v2:htmx_users_list' %}?role=staff" 
+                                hx-target="#usersListContainer">
+                            <i class="fas fa-user-shield"></i> Staff
+                        </button>
+                        <button type="button" class="btn btn-outline-info" 
+                                hx-get="{% url 'bookings_v2:htmx_users_list' %}?role=customer" 
+                                hx-target="#usersListContainer">
+                            <i class="fas fa-user"></i> Customers
+                        </button>
+                        <button type="button" class="btn btn-outline-danger" 
+                                hx-get="{% url 'bookings_v2:htmx_users_list' %}?role=superuser" 
+                                hx-target="#usersListContainer">
+                            <i class="fas fa-crown"></i> Superusers
+                        </button>
+                    </div>
+                    <button type="button" class="btn btn-primary" 
+                            hx-get="{% url 'bookings_v2:htmx_user_create_form' %}" 
+                            hx-target="#userEditModalBody"
+                            data-bs-toggle="modal" 
+                            data-bs-target="#userEditModal">
+                        <i class="fas fa-user-plus"></i> Create New User
+                    </button>
+                </div>
+                <div id="usersListContainer">
+                    <div class="loading-state">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p>Loading users...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- User Detail Modal -->
+<div class="modal fade" id="userDetailModal" tabindex="-1" aria-labelledby="userDetailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="userDetailModalLabel">
+                    <i class="fas fa-user-circle"></i>
+                    User Details
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="userDetailModalBody">
+                <div class="loading-state">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p>Loading user details...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- User Edit/Create Modal -->
+<div class="modal fade" id="userEditModal" tabindex="-1" aria-labelledby="userEditModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="userEditModalLabel">
+                    <i class="fas fa-user-edit"></i>
+                    <span id="userEditModalTitle">Edit User</span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="userEditModalBody">
+                <div class="loading-state">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p>Loading form...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Pending Bookings Modal -->
+<div class="modal fade" id="pendingBookingsModal" tabindex="-1" aria-labelledby="pendingBookingsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="pendingBookingsModalLabel">
+                    <i class="fas fa-clock"></i>
+                    Pending Bookings
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <p class="mb-0 text-muted">
+                        <i class="fas fa-info-circle"></i>
+                        Review and accept or decline pending bookings. Accepting a booking will create patient records and confirm the appointment.
+                    </p>
+                    <button type="button" class="btn btn-sm btn-outline-primary" 
+                            hx-get="{% url 'bookings_v2:htmx_pending_bookings' %}" 
+                            hx-target="#pendingBookingsContainer">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
+                <div id="pendingBookingsContainer">
+                    <div class="loading-state">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p>Loading pending bookings...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // HTMX event listeners for better UX
+    document.body.addEventListener('htmx:beforeRequest', function(event) {
+        // Show loading spinner in the target element
+        const target = event.detail.target;
+        if (target) {
+            target.innerHTML = `
+                <div class="loading-state">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p>Loading...</p>
+                </div>
+            `;
+        }
+    });
+    
+    document.body.addEventListener('htmx:afterSwap', function(event) {
+        // Initialize any tooltips or popovers after content swap
+        const tooltips = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+        tooltips.forEach(tooltip => new bootstrap.Tooltip(tooltip));
+    });
+    
+    // Success toast notification
+    document.body.addEventListener('htmx:afterRequest', function(event) {
+        if (event.detail.successful && event.detail.xhr.status === 200) {
+            // Check if response contains a success message
+            const response = event.detail.xhr.responseText;
+            if (response.includes('success')) {
+                // You can implement a toast notification here if needed
+                console.log('Operation completed successfully');
+            }
+        }
+    });
+    
+    // Error handling
+    document.body.addEventListener('htmx:responseError', function(event) {
+        console.error('HTMX Error:', event.detail);
+        const target = event.detail.target;
+        if (target) {
+            target.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <h3>Error Loading Data</h3>
+                    <p>Failed to load content. Please try again.</p>
+                    <button class="btn btn-primary" onclick="location.reload()">Refresh Page</button>
+                </div>
+            `;
+        }
+    });
+</script>
+{% endblock %}

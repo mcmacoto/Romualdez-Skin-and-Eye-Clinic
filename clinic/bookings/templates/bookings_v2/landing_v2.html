@@ -1,0 +1,287 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome - Romualdez Skin & Eye Clinic</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'css/custom_v2.css' %}">
+    
+    <style>
+        :root {
+            --primary-color: #3d5c3d;
+            --dark-green: #2e472e;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .landing-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .welcome-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            animation: fadeInUp 0.8s ease;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .welcome-header {
+            background: linear-gradient(135deg, #3d5c3d 0%, #2e472e 100%) !important;
+            color: white;
+            padding: 3rem;
+            text-align: center;
+        }
+        
+        .welcome-header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: white !important;
+        }
+        
+        .welcome-header p {
+            font-size: 1.2rem;
+            opacity: 0.95;
+            color: white !important;
+        }
+        
+        .portal-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            padding: 3rem;
+        }
+        
+        .portal-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 15px;
+            padding: 2.5rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 3px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .portal-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--dark-green) 100%);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+        
+        .portal-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+            border-color: var(--primary-color);
+        }
+        
+        .portal-card:hover::before {
+            transform: scaleX(1);
+        }
+        
+        .portal-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 1.5rem;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--dark-green) 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            color: white;
+            transition: all 0.3s ease;
+        }
+        
+        .portal-card:hover .portal-icon {
+            transform: scale(1.1) rotate(5deg);
+        }
+        
+        .portal-card h3 {
+            color: var(--primary-color);
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+        
+        .portal-card p {
+            color: #6c757d;
+            margin-bottom: 1.5rem;
+        }
+        
+        .portal-card .btn {
+            width: 100%;
+            padding: 0.75rem;
+            font-weight: 600;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-patient {
+            background: linear-gradient(135deg, #17a2b8 0%, #138496 100%) !important;
+            border: none;
+            color: white !important;
+            font-weight: 600;
+            padding: 0.75rem 1.5rem;
+        }
+        
+        .btn-patient:hover {
+            background: linear-gradient(135deg, #138496 0%, #117a8b 100%) !important;
+            transform: scale(1.05);
+            color: white !important;
+        }
+        
+        .btn-staff {
+            background: linear-gradient(135deg, #3d5c3d 0%, #2e472e 100%) !important;
+            border: none;
+            color: white !important;
+            font-weight: 600;
+            padding: 0.75rem 1.5rem;
+        }
+        
+        .btn-staff:hover {
+            background: linear-gradient(135deg, #2e472e 0%, #2a4a2a 100%) !important;
+            transform: scale(1.05);
+            color: white !important;
+        }
+        
+        .features-list {
+            list-style: none;
+            padding: 0;
+            text-align: left;
+            margin-top: 1rem;
+        }
+        
+        .features-list li {
+            padding: 0.5rem 0;
+            color: #495057;
+        }
+        
+        .features-list li i {
+            color: var(--primary-color);
+            margin-right: 0.5rem;
+        }
+        
+        .guest-section {
+            text-align: center;
+            padding: 2rem 3rem 3rem;
+            background: #f8f9fa;
+            border-top: 2px solid #e9ecef;
+        }
+        
+        .guest-section h4 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+        
+        .guest-section .btn {
+            margin: 0 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="landing-container">
+        <div class="welcome-card">
+            <!-- Header -->
+            <div class="welcome-header">
+                <i class="fas fa-clinic-medical fa-3x mb-3"></i>
+                <h1>Welcome to Romualdez Skin & Eye Clinic</h1>
+                <p>Your trusted partner in skin and eye care</p>
+            </div>
+            
+            <!-- Portal Selection -->
+            <div class="portal-grid">
+                <!-- Patient Portal -->
+                <div class="portal-card">
+                    <div class="portal-icon">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <h3>Patient Portal</h3>
+                    <p>Book appointments, view your records, and manage your health</p>
+                    
+                    <ul class="features-list">
+                        <li><i class="fas fa-check-circle"></i> Book appointments online</li>
+                        <li><i class="fas fa-check-circle"></i> View medical history</li>
+                        <li><i class="fas fa-check-circle"></i> Manage prescriptions</li>
+                        <li><i class="fas fa-check-circle"></i> Check billing status</li>
+                    </ul>
+                    
+                    <a href="{% url 'bookings_v2:login' %}" class="btn btn-patient mt-3">
+                        <i class="fas fa-sign-in-alt"></i> Patient Login
+                    </a>
+                </div>
+                
+                <!-- Staff Portal -->
+                <div class="portal-card">
+                    <div class="portal-icon">
+                        <i class="fas fa-user-md"></i>
+                    </div>
+                    <h3>Staff Portal</h3>
+                    <p>Access admin dashboard and manage clinic operations</p>
+                    
+                    <ul class="features-list">
+                        <li><i class="fas fa-check-circle"></i> Manage appointments</li>
+                        <li><i class="fas fa-check-circle"></i> Patient records</li>
+                        <li><i class="fas fa-check-circle"></i> Inventory management</li>
+                        <li><i class="fas fa-check-circle"></i> Billing & reports</li>
+                    </ul>
+                    
+                    <a href="{% url 'bookings_v2:staff_login' %}" class="btn btn-staff mt-3">
+                        <i class="fas fa-shield-alt"></i> Staff Login
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Guest Section -->
+            <div class="guest-section">
+                <h4>Just Visiting?</h4>
+                <p class="text-muted mb-3">Explore our services and learn more about us</p>
+                <a href="{% url 'bookings_v2:home' %}" class="btn btn-outline-primary">
+                    <i class="fas fa-home"></i> Browse as Guest
+                </a>
+                <a href="{% url 'bookings_v2:services' %}" class="btn btn-outline-success">
+                    <i class="fas fa-list"></i> View Services
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
