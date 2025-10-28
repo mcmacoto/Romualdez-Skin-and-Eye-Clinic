@@ -1,0 +1,107 @@
+<!-- HTMX Partial: Medical Image Upload Form -->
+<form hx-post="{% url 'bookings_v2:htmx_medical_image_upload' record.id %}" 
+      hx-target="#medicalImagesModalBody"
+      hx-swap="innerHTML"
+      hx-encoding="multipart/form-data">
+    {% csrf_token %}
+    
+    <div class="mb-3">
+        <h5><i class="fas fa-upload me-2"></i>Upload Medical Image</h5>
+        <p class="text-muted">
+            <strong>Patient:</strong> {{ record.patient.user.get_full_name }}<br>
+            <strong>Visit Date:</strong> {{ record.visit_date|date:"F d, Y" }}
+        </p>
+    </div>
+
+    <!-- Image File -->
+    <div class="mb-3">
+        <label class="form-label required">Image File</label>
+        <input 
+            type="file" 
+            class="form-control" 
+            name="image"
+            accept="image/*"
+            required
+            id="imageInput"
+        >
+        <small class="text-muted">Accepted formats: JPG, PNG, GIF. Max size: 10MB</small>
+    </div>
+
+    <!-- Image Preview -->
+    <div class="mb-3" id="imagePreview" style="display: none;">
+        <label class="form-label">Preview</label>
+        <div class="border rounded p-2 text-center">
+            <img id="preview" src="" alt="Preview" style="max-width: 100%; max-height: 300px;">
+        </div>
+    </div>
+
+    <!-- Title -->
+    <div class="mb-3">
+        <label class="form-label required">Title</label>
+        <input 
+            type="text" 
+            class="form-control" 
+            name="title"
+            placeholder="Brief description of the image"
+            required
+            maxlength="100"
+        >
+    </div>
+
+    <!-- Image Type -->
+    <div class="mb-3">
+        <label class="form-label required">Image Type</label>
+        <select class="form-select" name="image_type" required>
+            <option value="clinical">Clinical Photo</option>
+            <option value="dermoscopy">Dermoscopy</option>
+            <option value="before">Before Treatment</option>
+            <option value="after">After Treatment</option>
+            <option value="diagnostic">Diagnostic Image</option>
+            <option value="other">Other</option>
+        </select>
+    </div>
+
+    <!-- Description -->
+    <div class="mb-3">
+        <label class="form-label">Description</label>
+        <textarea 
+            class="form-control" 
+            name="description" 
+            rows="3"
+            placeholder="Detailed description or notes about the image (optional)"
+        ></textarea>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="d-flex gap-2 justify-content-end">
+        <button 
+            type="button" 
+            class="btn btn-secondary"
+            hx-get="{% url 'bookings_v2:htmx_medical_images' record.id %}"
+            hx-target="#medicalImagesModalBody"
+            hx-swap="innerHTML"
+        >
+            <i class="fas fa-times me-2"></i>Cancel
+        </button>
+        <button type="submit" class="btn btn-info">
+            <i class="fas fa-upload me-2"></i>Upload Image
+        </button>
+    </div>
+</form>
+
+<script>
+// Preview image before upload
+document.getElementById('imageInput').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('preview').src = e.target.result;
+            document.getElementById('imagePreview').style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    } else {
+        document.getElementById('imagePreview').style.display = 'none';
+    }
+});
+</script>

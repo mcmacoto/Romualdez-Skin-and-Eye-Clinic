@@ -1,0 +1,51 @@
+{% if products %}
+    {% for item in products %}
+    <div class="col-md-4 col-lg-3">
+        <div class="card h-100 product-card {% if item.quantity <= 0 %}out-of-stock{% endif %}" 
+             style="cursor: pointer;"
+             hx-post="{% url 'bookings_v2:htmx_pos_add_to_cart' item.item_id %}"
+             hx-target="#posCartBody"
+             hx-swap="innerHTML">
+            <div class="card-body p-2">
+                <div class="text-center">
+                    <div class="product-icon mb-2">
+                        {% if item.category == 'Medicine' %}
+                            <i class="fas fa-pills fa-2x text-success"></i>
+                        {% elif item.category == 'Equipment' %}
+                            <i class="fas fa-stethoscope fa-2x text-info"></i>
+                        {% else %}
+                            <i class="fas fa-box fa-2x text-secondary"></i>
+                        {% endif %}
+                    </div>
+                    <h6 class="mb-1 small">{{ item.name|truncatewords:3 }}</h6>
+                    <p class="text-primary fw-bold mb-1">₱{{ item.price }}</p>
+                    <small class="{% if item.quantity <= 0 %}text-danger{% elif item.quantity <= item.stock %}text-warning{% else %}text-success{% endif %}">
+                        Stock: {{ item.quantity }}
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+{% else %}
+    <div class="col-12 text-center text-muted py-5">
+        <i class="fas fa-box-open fa-3x mb-3 d-block"></i>
+        <p>No products available</p>
+    </div>
+{% endif %}
+
+<style>
+.product-card {
+    transition: all 0.2s;
+    border: 2px solid transparent;
+}
+.product-card:hover:not(.out-of-stock) {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    border-color: #0d6efd;
+}
+.product-card.out-of-stock {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+</style>

@@ -13,13 +13,15 @@
                         </h6>
                     </div>
                     <div class="col-auto">
-                        <a 
-                            href="/admin/bookings/medicalrecord/{{ record.id }}/change/" 
+                        <button 
                             class="btn btn-sm btn-outline-primary"
-                            target="_blank"
+                            hx-get="{% url 'bookings_v2:htmx_medical_record_edit_form' record.id %}?patient_id={{ patient.id }}"
+                            hx-target="#patientRecordsModalBody"
+                            hx-swap="innerHTML"
+                            title="Edit Record"
                         >
                             <i class="fas fa-edit"></i> Edit Record
-                        </a>
+                        </button>
                     </div>
                 </div>
             </div>

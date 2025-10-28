@@ -727,6 +727,25 @@
                     <span>View Inventory</span>
                 </button>
                 
+                <button type="button" class="quick-action-btn"
+                        hx-get="{% url 'bookings_v2:htmx_pos_interface' %}" 
+                        hx-target="#posModalBody"
+                        data-bs-toggle="modal" 
+                        data-bs-target="#posModal"
+                        style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
+                    <i class="fas fa-cash-register"></i>
+                    <span>Point of Sale</span>
+                </button>
+                
+                <button type="button" class="quick-action-btn"
+                        hx-get="{% url 'bookings_v2:htmx_pos_sales_list' %}" 
+                        hx-target="#posModalBody"
+                        data-bs-toggle="modal" 
+                        data-bs-target="#posModal">
+                    <i class="fas fa-receipt"></i>
+                    <span>View All Sales</span>
+                </button>
+                
                 <a href="{% url 'bookings_v2:booking' %}" class="quick-action-btn">
                     <i class="fas fa-plus"></i>
                     <span>New Booking</span>
@@ -761,6 +780,24 @@
                 </button>
                 
                 <button type="button" class="quick-action-btn"
+                        hx-get="{% url 'bookings_v2:htmx_services_list' %}" 
+                        hx-target="#servicesModalBody"
+                        data-bs-toggle="modal" 
+                        data-bs-target="#servicesModal">
+                    <i class="fas fa-concierge-bell"></i>
+                    <span>Manage Services</span>
+                </button>
+                
+                <button type="button" class="quick-action-btn"
+                        hx-get="{% url 'bookings_v2:htmx_service_create_form' %}" 
+                        hx-target="#servicesModalBody"
+                        data-bs-toggle="modal" 
+                        data-bs-target="#servicesModal">
+                    <i class="fas fa-plus-circle"></i>
+                    <span>New Service</span>
+                </button>
+                
+                <button type="button" class="quick-action-btn"
                         hx-get="{% url 'bookings_v2:htmx_inventory_create_form' %}" 
                         hx-target="#inventoryModalBody"
                         data-bs-toggle="modal" 
@@ -769,11 +806,14 @@
                     <span>Add Inventory</span>
                 </button>
                 
-                <!-- Django Admin Links (for features not yet in V2) -->
-                <a href="/admin/bookings/medicalrecord/add/" class="quick-action-btn">
+                <button type="button" class="quick-action-btn"
+                        hx-get="{% url 'bookings_v2:htmx_medical_record_create_form' %}" 
+                        hx-target="#medicalRecordsModalBody"
+                        data-bs-toggle="modal" 
+                        data-bs-target="#medicalRecordsModal">
                     <i class="fas fa-file-medical-alt"></i>
                     <span>New Record</span>
-                </a>
+                </button>
                 
                 <button type="button" class="quick-action-btn"
                         hx-get="{% url 'bookings_v2:htmx_services_list' %}" 
@@ -906,6 +946,52 @@
                         <span class="visually-hidden">Loading...</span>
                     </div>
                     <p>Loading inventory...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Inventory Adjust Stock Modal -->
+<div class="modal fade" id="inventoryAdjustModal" tabindex="-1" aria-labelledby="inventoryAdjustModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="inventoryAdjustModalLabel">
+                    <i class="fas fa-plus-minus"></i>
+                    Adjust Stock
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="inventoryAdjustModalBody">
+                <div class="loading-state">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p>Loading...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- POS (Point of Sale) Modal -->
+<div class="modal fade" id="posModal" tabindex="-1" aria-labelledby="posModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-fullscreen">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="posModalLabel">
+                    <i class="fas fa-cash-register"></i>
+                    Point of Sale System
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="posModalBody">
+                <div class="loading-state">
+                    <div class="spinner-border text-success" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p>Loading POS system...</p>
                 </div>
             </div>
         </div>
@@ -1090,6 +1176,52 @@
                         </div>
                         <p>Loading pending bookings...</p>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Medical Images Modal -->
+<div class="modal fade" id="medicalImagesModal" tabindex="-1" aria-labelledby="medicalImagesModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="medicalImagesModalLabel">
+                    <i class="fas fa-images"></i>
+                    Medical Images
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="medicalImagesModalBody">
+                <div class="loading-state">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p>Loading medical images...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Prescriptions Modal -->
+<div class="modal fade" id="prescriptionsModal" tabindex="-1" aria-labelledby="prescriptionsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="prescriptionsModalLabel">
+                    <i class="fas fa-pills"></i>
+                    Prescriptions
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="prescriptionsModalBody">
+                <div class="loading-state">
+                    <div class="spinner-border text-success" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p>Loading prescriptions...</p>
                 </div>
             </div>
         </div>

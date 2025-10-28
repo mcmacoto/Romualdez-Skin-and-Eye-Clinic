@@ -1,6 +1,6 @@
 <!-- HTMX Partial: Medical Record Edit Form -->
-<form hx-put="{% url 'bookings_v2:htmx_medical_record_update' record.id %}" 
-      hx-target="#medicalRecordsModalBody" 
+<form hx-post="{% url 'bookings_v2:htmx_medical_record_update' record.id %}{% if patient_id %}?patient_id={{ patient_id }}{% endif %}" 
+      hx-target="{% if patient_id %}#patientRecordsModalBody{% else %}#medicalRecordsModalBody{% endif %}" 
       hx-swap="innerHTML"
       class="needs-validation" 
       novalidate>
@@ -29,21 +29,48 @@
             >
         </div>
 
-        <!-- Chief Complaint -->
+        <!-- Visit Time -->
         <div class="col-md-6 mb-3">
-            <label for="chief_complaint" class="form-label">
-                <i class="fas fa-comment-medical me-1"></i>Chief Complaint <span class="text-danger">*</span>
+            <label for="visit_time" class="form-label">
+                <i class="fas fa-clock me-1"></i>Visit Time
             </label>
             <input 
-                type="text" 
+                type="time" 
                 class="form-control" 
-                id="chief_complaint" 
-                name="chief_complaint" 
-                value="{{ record.chief_complaint }}"
-                placeholder="e.g., Eye irritation, Skin rash"
-                required
+                id="visit_time" 
+                name="visit_time" 
+                value="{{ record.visit_date|date:'H:i' }}"
             >
         </div>
+    </div>
+
+    <!-- Chief Complaint -->
+    <div class="mb-3">
+        <label for="chief_complaint" class="form-label">
+            <i class="fas fa-comment-medical me-1"></i>Chief Complaint <span class="text-danger">*</span>
+        </label>
+        <textarea 
+            class="form-control" 
+            id="chief_complaint" 
+            name="chief_complaint" 
+            rows="2"
+            placeholder="Patient's main concern or reason for visit"
+            required
+        >{{ record.chief_complaint }}</textarea>
+    </div>
+
+    <!-- Symptoms -->
+    <div class="mb-3">
+        <label for="symptoms" class="form-label">
+            <i class="fas fa-stethoscope me-1"></i>Symptoms
+        </label>
+        <textarea 
+            class="form-control" 
+            id="symptoms" 
+            name="symptoms" 
+            rows="2"
+            placeholder="Observed symptoms (optional)"
+        >{{ record.symptoms|default:'' }}</textarea>
     </div>
 
     <!-- Diagnosis -->
@@ -76,50 +103,93 @@
         >{{ record.treatment_plan }}</textarea>
     </div>
 
-    <div class="row">
-        <!-- Blood Pressure -->
-        <div class="col-md-4 mb-3">
-            <label for="blood_pressure" class="form-label">
-                <i class="fas fa-heartbeat me-1"></i>Blood Pressure
-            </label>
-            <input 
-                type="text" 
-                class="form-control" 
-                id="blood_pressure" 
-                name="blood_pressure" 
-                value="{{ record.blood_pressure|default:'' }}"
-                placeholder="e.g., 120/80"
-            >
+    <!-- Vital Signs -->
+    <div class="card mb-3">
+        <div class="card-header bg-light">
+            <h6 class="mb-0"><i class="fas fa-heartbeat me-2"></i>Vital Signs (Optional)</h6>
         </div>
+        <div class="card-body">
+            <div class="row">
+                <!-- Temperature -->
+                <div class="col-md-4 mb-3">
+                    <label for="temperature" class="form-label">
+                        <i class="fas fa-thermometer-half me-1"></i>Temperature (°C)
+                    </label>
+                    <input 
+                        type="number" 
+                        step="0.1"
+                        class="form-control" 
+                        id="temperature" 
+                        name="temperature" 
+                        value="{{ record.temperature|default:'' }}"
+                        placeholder="e.g., 36.5"
+                    >
+                </div>
 
-        <!-- Temperature -->
-        <div class="col-md-4 mb-3">
-            <label for="temperature" class="form-label">
-                <i class="fas fa-thermometer-half me-1"></i>Temperature (°C)
-            </label>
-            <input 
-                type="text" 
-                class="form-control" 
-                id="temperature" 
-                name="temperature" 
-                value="{{ record.temperature|default:'' }}"
-                placeholder="e.g., 36.5"
-            >
-        </div>
+                <!-- Blood Pressure -->
+                <div class="col-md-4 mb-3">
+                    <label for="blood_pressure" class="form-label">
+                        <i class="fas fa-heartbeat me-1"></i>Blood Pressure
+                    </label>
+                    <input 
+                        type="text" 
+                        class="form-control" 
+                        id="blood_pressure" 
+                        name="blood_pressure" 
+                        value="{{ record.blood_pressure|default:'' }}"
+                        placeholder="e.g., 120/80"
+                    >
+                </div>
 
-        <!-- Weight -->
-        <div class="col-md-4 mb-3">
-            <label for="weight" class="form-label">
-                <i class="fas fa-weight me-1"></i>Weight (kg)
-            </label>
-            <input 
-                type="text" 
-                class="form-control" 
-                id="weight" 
-                name="weight" 
-                value="{{ record.weight|default:'' }}"
-                placeholder="e.g., 65"
-            >
+                <!-- Heart Rate -->
+                <div class="col-md-4 mb-3">
+                    <label for="heart_rate" class="form-label">
+                        <i class="fas fa-heartbeat me-1"></i>Heart Rate (bpm)
+                    </label>
+                    <input 
+                        type="number" 
+                        class="form-control" 
+                        id="heart_rate" 
+                        name="heart_rate" 
+                        value="{{ record.heart_rate|default:'' }}"
+                        placeholder="e.g., 72"
+                    >
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Weight -->
+                <div class="col-md-6 mb-3">
+                    <label for="weight" class="form-label">
+                        <i class="fas fa-weight me-1"></i>Weight (kg)
+                    </label>
+                    <input 
+                        type="number" 
+                        step="0.1"
+                        class="form-control" 
+                        id="weight" 
+                        name="weight" 
+                        value="{{ record.weight|default:'' }}"
+                        placeholder="e.g., 65"
+                    >
+                </div>
+
+                <!-- Height -->
+                <div class="col-md-6 mb-3">
+                    <label for="height" class="form-label">
+                        <i class="fas fa-ruler-vertical me-1"></i>Height (cm)
+                    </label>
+                    <input 
+                        type="number" 
+                        step="0.1"
+                        class="form-control" 
+                        id="height" 
+                        name="height" 
+                        value="{{ record.height|default:'' }}"
+                        placeholder="e.g., 165"
+                    >
+                </div>
+            </div>
         </div>
     </div>
 
@@ -171,6 +241,19 @@
 
     <!-- Form Actions -->
     <div class="d-flex justify-content-between pt-3 border-top">
+        {% if patient_id %}
+        <!-- Opened from patient records view - return to patient records -->
+        <button 
+            type="button" 
+            class="btn btn-secondary"
+            hx-get="{% url 'bookings_v2:htmx_patient_records' patient_id %}"
+            hx-target="#patientRecordsModalBody"
+            hx-swap="innerHTML"
+        >
+            <i class="fas fa-arrow-left me-1"></i>Cancel
+        </button>
+        {% else %}
+        <!-- Opened from general medical records - return to list -->
         <button 
             type="button" 
             class="btn btn-secondary"
@@ -180,6 +263,7 @@
         >
             <i class="fas fa-arrow-left me-1"></i>Cancel
         </button>
+        {% endif %}
         <button type="submit" class="btn btn-primary">
             <i class="fas fa-save me-1"></i>Update Record
         </button>

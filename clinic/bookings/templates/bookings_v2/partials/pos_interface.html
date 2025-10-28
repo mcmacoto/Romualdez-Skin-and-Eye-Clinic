@@ -1,0 +1,101 @@
+{% load static %}
+
+<div class="container-fluid" id="posInterfaceContainer">
+    <div class="row g-3">
+        <!-- Left: Product Catalog -->
+        <div class="col-md-7">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-bottom">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-shopping-cart"></i>
+                            Product Catalog
+                        </h5>
+                        <div class="input-group" style="max-width: 300px;">
+                            <input 
+                                type="text" 
+                                class="form-control form-control-sm" 
+                                placeholder="Search products..."
+                                hx-get="{% url 'bookings_v2:htmx_pos_product_search' %}"
+                                hx-target="#productGrid"
+                                hx-swap="innerHTML"
+                                hx-trigger="keyup changed delay:300ms"
+                                name="search"
+                            >
+                            <span class="input-group-text">
+                                <i class="fas fa-search"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-body" style="max-height: 600px; overflow-y: auto;">
+                    <!-- Category Tabs -->
+                    <ul class="nav nav-pills mb-3" role="tablist">
+                        <li class="nav-item">
+                            <button 
+                                class="nav-link {% if not filter_category %}active{% endif %}"
+                                hx-get="{% url 'bookings_v2:htmx_pos_product_search' %}"
+                                hx-target="#productGrid"
+                                hx-swap="innerHTML"
+                            >
+                                All
+                            </button>
+                        </li>
+                        <li class="nav-item">
+                            <button 
+                                class="nav-link {% if filter_category == 'Medicine' %}active{% endif %}"
+                                hx-get="{% url 'bookings_v2:htmx_pos_product_search' %}?category=Medicine"
+                                hx-target="#productGrid"
+                                hx-swap="innerHTML"
+                            >
+                                Medicine
+                            </button>
+                        </li>
+                        <li class="nav-item">
+                            <button 
+                                class="nav-link {% if filter_category == 'Equipment' %}active{% endif %}"
+                                hx-get="{% url 'bookings_v2:htmx_pos_product_search' %}?category=Equipment"
+                                hx-target="#productGrid"
+                                hx-swap="innerHTML"
+                            >
+                                Equipment
+                            </button>
+                        </li>
+                        <li class="nav-item">
+                            <button 
+                                class="nav-link {% if filter_category == 'Miscellaneous' %}active{% endif %}"
+                                hx-get="{% url 'bookings_v2:htmx_pos_product_search' %}?category=Miscellaneous"
+                                hx-target="#productGrid"
+                                hx-swap="innerHTML"
+                            >
+                                Miscellaneous
+                            </button>
+                        </li>
+                    </ul>
+                    
+                    <!-- Product Grid -->
+                    <div id="productGrid" class="row g-2">
+                        {% include 'bookings_v2/partials/pos_product_grid.html' %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Right: Shopping Cart & Checkout -->
+        <div class="col-md-5">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-receipt"></i>
+                        Current Sale
+                    </h5>
+                </div>
+                
+                <div class="card-body" id="posCartBody">
+                    {% include 'bookings_v2/partials/pos_cart.html' %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

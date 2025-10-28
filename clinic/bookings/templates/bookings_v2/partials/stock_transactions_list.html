@@ -1,0 +1,241 @@
+{% load static %}
+
+<div class="container-fluid" id="stockTransactionsContainer">
+    <!-- Header with Actions -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1">
+                <i class="fas fa-exchange-alt"></i>
+                Stock Transaction History
+            </h4>
+            <p class="text-muted small mb-0">View all inventory stock movements</p>
+        </div>
+        <button 
+            type="button" 
+            class="btn btn-outline-secondary"
+            hx-get="{% url 'bookings_v2:htmx_inventory_list' %}"
+            hx-target="#inventoryModalBody"
+            hx-swap="innerHTML"
+        >
+            <i class="fas fa-arrow-left me-2"></i>Back to Inventory
+        </button>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted small mb-1">Total Transactions</p>
+                            <h4 class="mb-0">{{ total_count }}</h4>
+                        </div>
+                        <div class="text-primary">
+                            <i class="fas fa-list fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted small mb-1">Stock In</p>
+                            <h4 class="mb-0 text-success">{{ stock_in_count }}</h4>
+                        </div>
+                        <div class="text-success">
+                            <i class="fas fa-arrow-down fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted small mb-1">Stock Out</p>
+                            <h4 class="mb-0 text-danger">{{ stock_out_count }}</h4>
+                        </div>
+                        <div class="text-danger">
+                            <i class="fas fa-arrow-up fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted small mb-1">Today</p>
+                            <h4 class="mb-0">{{ today_count }}</h4>
+                        </div>
+                        <div class="text-info">
+                            <i class="fas fa-calendar-day fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card border-0 shadow-sm mb-3">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label small text-muted">Transaction Type</label>
+                    <select 
+                        class="form-select"
+                        hx-get="{% url 'bookings_v2:htmx_stock_transactions_list' %}"
+                        hx-target="#transactionsTableBody"
+                        hx-swap="innerHTML"
+                        hx-include="[name='item_id'], [name='date_from'], [name='date_to']"
+                        name="transaction_type"
+                    >
+                        <option value="">All Types</option>
+                        <option value="Stock In" {% if filter_type == 'Stock In' %}selected{% endif %}>Stock In</option>
+                        <option value="Stock Out" {% if filter_type == 'Stock Out' %}selected{% endif %}>Stock Out</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small text-muted">Inventory Item</label>
+                    <select 
+                        class="form-select"
+                        hx-get="{% url 'bookings_v2:htmx_stock_transactions_list' %}"
+                        hx-target="#transactionsTableBody"
+                        hx-swap="innerHTML"
+                        hx-include="[name='transaction_type'], [name='date_from'], [name='date_to']"
+                        name="item_id"
+                    >
+                        <option value="">All Items</option>
+                        {% for item in inventory_items %}
+                        <option value="{{ item.item_id }}" {% if filter_item_id == item.item_id|stringformat:"s" %}selected{% endif %}>
+                            {{ item.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small text-muted">Date From</label>
+                    <input 
+                        type="date" 
+                        class="form-control"
+                        name="date_from"
+                        value="{{ filter_date_from|default:'' }}"
+                        hx-get="{% url 'bookings_v2:htmx_stock_transactions_list' %}"
+                        hx-target="#transactionsTableBody"
+                        hx-swap="innerHTML"
+                        hx-include="[name='transaction_type'], [name='item_id'], [name='date_to']"
+                        hx-trigger="change"
+                    >
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small text-muted">Date To</label>
+                    <input 
+                        type="date" 
+                        class="form-control"
+                        name="date_to"
+                        value="{{ filter_date_to|default:'' }}"
+                        hx-get="{% url 'bookings_v2:htmx_stock_transactions_list' %}"
+                        hx-target="#transactionsTableBody"
+                        hx-swap="innerHTML"
+                        hx-include="[name='transaction_type'], [name='item_id'], [name='date_from']"
+                        hx-trigger="change"
+                    >
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transactions Table -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Date & Time</th>
+                            <th>Item Name</th>
+                            <th>Type</th>
+                            <th class="text-end">Quantity</th>
+                            <th>Performed By</th>
+                            <th>Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody id="transactionsTableBody">
+                        {% if transactions %}
+                            {% for transaction in transactions %}
+                            <tr>
+                                <td>
+                                    <div>
+                                        <div class="fw-medium">{{ transaction.transaction_date|date:"M d, Y" }}</div>
+                                        <small class="text-muted">{{ transaction.transaction_date|date:"h:i A" }}</small>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div>
+                                        <div class="fw-medium">{{ transaction.inventory_item.name }}</div>
+                                        <small class="text-muted">{{ transaction.inventory_item.category }}</small>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if transaction.transaction_type == 'Stock In' %}
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-arrow-down"></i> Stock In
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-danger">
+                                            <i class="fas fa-arrow-up"></i> Stock Out
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    <strong class="{% if transaction.transaction_type == 'Stock In' %}text-success{% else %}text-danger{% endif %}">
+                                        {% if transaction.transaction_type == 'Stock In' %}+{% else %}-{% endif %}{{ transaction.quantity }}
+                                    </strong>
+                                </td>
+                                <td>
+                                    {% if transaction.performed_by %}
+                                        <div>
+                                            <div>{{ transaction.performed_by.get_full_name|default:transaction.performed_by.username }}</div>
+                                            <small class="text-muted">{{ transaction.performed_by.username }}</small>
+                                        </div>
+                                    {% else %}
+                                        <span class="text-muted">System</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <small class="text-muted">{{ transaction.notes|default:"—" }}</small>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-5">
+                                    <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
+                                    <p class="mb-0">No transactions found</p>
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination Info -->
+            {% if transactions %}
+            <div class="d-flex justify-content-between align-items-center mt-3">
+                <small class="text-muted">
+                    Showing {{ transactions|length }} of {{ total_count }} transaction{{ total_count|pluralize }}
+                </small>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>

@@ -1,4 +1,96 @@
 <!-- HTMX Partial: Inventory List -->
+<!-- Header with Add Button and Filters -->
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="mb-0">
+        <i class="fas fa-boxes me-2"></i>Inventory Management
+    </h5>
+    <div class="btn-group">
+        <button 
+            type="button" 
+            class="btn btn-outline-primary"
+            hx-get="{% url 'bookings_v2:htmx_stock_transactions_list' %}"
+            hx-target="#inventoryModalBody"
+            hx-swap="innerHTML"
+            title="View Stock Transactions"
+        >
+            <i class="fas fa-exchange-alt me-2"></i>Transaction History
+        </button>
+        <button 
+            type="button" 
+            class="btn btn-success"
+            hx-get="{% url 'bookings_v2:htmx_inventory_create_form' %}"
+            hx-target="#inventoryModalBody"
+            hx-swap="innerHTML"
+        >
+            <i class="fas fa-plus me-2"></i>Add New Item
+        </button>
+    </div>
+</div>
+
+<!-- Filter Tabs -->
+<ul class="nav nav-pills mb-3" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button 
+            class="nav-link {% if not filter_status and not filter_category %}active{% endif %}"
+            hx-get="{% url 'bookings_v2:htmx_inventory_list' %}"
+            hx-target="#inventoryModalBody"
+            hx-swap="innerHTML"
+        >
+            <i class="fas fa-list"></i> All Items
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button 
+            class="nav-link {% if filter_status == 'low_stock' %}active{% endif %}"
+            hx-get="{% url 'bookings_v2:htmx_inventory_list' %}?status=low_stock"
+            hx-target="#inventoryModalBody"
+            hx-swap="innerHTML"
+        >
+            <i class="fas fa-exclamation-triangle text-warning"></i> Low Stock
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button 
+            class="nav-link {% if filter_status == 'out_of_stock' %}active{% endif %}"
+            hx-get="{% url 'bookings_v2:htmx_inventory_list' %}?status=out_of_stock"
+            hx-target="#inventoryModalBody"
+            hx-swap="innerHTML"
+        >
+            <i class="fas fa-times-circle text-danger"></i> Out of Stock
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button 
+            class="nav-link {% if filter_category == 'Medicine' %}active{% endif %}"
+            hx-get="{% url 'bookings_v2:htmx_inventory_list' %}?category=Medicine"
+            hx-target="#inventoryModalBody"
+            hx-swap="innerHTML"
+        >
+            <i class="fas fa-pills text-info"></i> Medicine
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button 
+            class="nav-link {% if filter_category == 'Equipment' %}active{% endif %}"
+            hx-get="{% url 'bookings_v2:htmx_inventory_list' %}?category=Equipment"
+            hx-target="#inventoryModalBody"
+            hx-swap="innerHTML"
+        >
+            <i class="fas fa-tools text-primary"></i> Equipment
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button 
+            class="nav-link {% if filter_category == 'Miscellaneous' %}active{% endif %}"
+            hx-get="{% url 'bookings_v2:htmx_inventory_list' %}?category=Miscellaneous"
+            hx-target="#inventoryModalBody"
+            hx-swap="innerHTML"
+        >
+            <i class="fas fa-box text-secondary"></i> Misc
+        </button>
+    </li>
+</ul>
+
 <!-- Search Bar -->
 <div class="search-bar mb-3">
     <div class="input-group">
@@ -104,12 +196,23 @@
                         <button 
                             class="btn btn-outline-success"
                             hx-get="{% url 'bookings_v2:htmx_inventory_adjust' item.item_id %}"
-                            hx-target="#inventory-adjust-modal-body"
+                            hx-target="#inventoryAdjustModalBody"
                             hx-swap="innerHTML"
-                            onclick="document.getElementById('inventoryAdjustModal').classList.add('show')"
+                            data-bs-toggle="modal"
+                            data-bs-target="#inventoryAdjustModal"
                             title="Adjust Stock"
                         >
                             <i class="fas fa-plus-minus"></i>
+                        </button>
+                        <button 
+                            class="btn btn-outline-danger"
+                            hx-delete="{% url 'bookings_v2:htmx_inventory_delete' item.item_id %}"
+                            hx-target="#inventoryModalBody"
+                            hx-swap="innerHTML"
+                            hx-confirm="Are you sure you want to delete '{{ item.name }}'? This action cannot be undone."
+                            title="Delete Item"
+                        >
+                            <i class="fas fa-trash"></i>
                         </button>
                     </div>
                 </td>

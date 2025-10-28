@@ -4,8 +4,13 @@ Handles patient information, medical records, and medical images
 """
 from django.db import models
 from django.contrib.auth.models import User
+from django.core.validators import RegexValidator
 
-from ..utils import phone_validator
+# Phone number validator
+phone_validator = RegexValidator(
+    regex=r'^\+?1?\d{9,15}$',
+    message="Phone number must be entered in the format: '+999999999'. Up to 15 digits allowed."
+)
 
 
 class Patient(models.Model):

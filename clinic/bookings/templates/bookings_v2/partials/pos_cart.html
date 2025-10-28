@@ -1,0 +1,226 @@
+<!-- Customer Info Form -->
+<form id="customerInfoForm" class="mb-3">
+    <div class="mb-2">
+        <label class="form-label small">Customer Type</label>
+        <select class="form-select form-select-sm" name="sale_type" id="saleType">
+            <option value="Walk-in">Walk-in Customer</option>
+            <option value="Patient">Registered Patient</option>
+        </select>
+    </div>
+    
+    <div class="mb-2" id="customerNameField">
+        <label class="form-label small">Customer Name</label>
+        <input type="text" class="form-control form-control-sm" name="customer_name" required>
+    </div>
+    
+    <div class="mb-2 d-none" id="patientSelectField">
+        <label class="form-label small">Select Patient</label>
+        <select class="form-select form-select-sm" name="patient_id">
+            <option value="">Select patient...</option>
+            {% for patient in patients %}
+            <option value="{{ patient.patient_id }}">{{ patient.user.get_full_name }} ({{ patient.user.username }})</option>
+            {% endfor %}
+        </select>
+    </div>
+</form>
+
+<hr>
+
+<!-- Cart Items -->
+<div class="cart-items mb-3" style="max-height: 250px; overflow-y: auto;">
+    {% if cart_items %}
+        {% for item in cart_items %}
+        <div class="cart-item mb-2 p-2 border rounded">
+            <div class="d-flex justify-content-between align-items-start mb-1">
+                <div class="flex-grow-1">
+                    <h6 class="mb-0 small">{{ item.inventory_item.name }}</h6>
+                    <small class="text-muted">₱{{ item.unit_price }} × {{ item.quantity }}</small>
+                </div>
+                <button 
+                    class="btn btn-sm btn-outline-danger"
+                    hx-post="{% url 'bookings_v2:htmx_pos_remove_from_cart' item.id %}"
+                    hx-target="#posCartBody"
+                    hx-swap="innerHTML"
+                    title="Remove"
+                >
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="btn-group btn-group-sm">
+                    <button 
+                        class="btn btn-outline-secondary"
+                        hx-post="{% url 'bookings_v2:htmx_pos_update_quantity' item.id %}?action=decrease"
+                        hx-target="#posCartBody"
+                        hx-swap="innerHTML"
+                    >
+                        <i class="fas fa-minus"></i>
+                    </button>
+                    <button class="btn btn-outline-secondary" disabled>{{ item.quantity }}</button>
+                    <button 
+                        class="btn btn-outline-secondary"
+                        hx-post="{% url 'bookings_v2:htmx_pos_update_quantity' item.id %}?action=increase"
+                        hx-target="#posCartBody"
+                        hx-swap="innerHTML"
+                    >
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+                <strong class="text-primary">₱{{ item.line_total }}</strong>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="text-center text-muted py-4">
+            <i class="fas fa-shopping-cart fa-3x mb-2 d-block"></i>
+            <p class="mb-0 small">Cart is empty</p>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Summary -->
+{% if current_sale %}
+<div class="mb-3">
+    <div class="d-flex justify-content-between mb-1">
+        <span>Subtotal:</span>
+        <strong>₱{{ current_sale.subtotal }}</strong>
+    </div>
+    
+    <div class="input-group input-group-sm mb-1">
+        <span class="input-group-text">Discount %</span>
+        <input 
+            type="number" 
+            class="form-control" 
+            name="discount_percent" 
+            value="{{ current_sale.discount_percent }}"
+            min="0" 
+            max="100" 
+            step="0.01"
+            hx-post="{% url 'bookings_v2:htmx_pos_update_discount' current_sale.id %}"
+            hx-target="#posCartBody"
+            hx-swap="innerHTML"
+            hx-trigger="change"
+        >
+    </div>
+    
+    {% if current_sale.discount_amount > 0 %}
+    <div class="d-flex justify-content-between mb-1 text-success">
+        <span>Discount:</span>
+        <strong>-₱{{ current_sale.discount_amount }}</strong>
+    </div>
+    {% endif %}
+    
+    <hr>
+    
+    <div class="d-flex justify-content-between mb-2">
+        <h5 class="mb-0">Total:</h5>
+        <h5 class="mb-0 text-primary">₱{{ current_sale.total_amount }}</h5>
+    </div>
+    
+    <!-- Payment Method -->
+    <div class="mb-2">
+        <label class="form-label small">Payment Method</label>
+        <select class="form-select form-select-sm" name="payment_method" id="paymentMethod">
+            <option value="Cash">Cash</option>
+            <option value="GCash">GCash</option>
+            <option value="Bank Transfer">Bank Transfer</option>
+            <option value="Card">Credit/Debit Card</option>
+            <option value="Other">Other</option>
+        </select>
+    </div>
+    
+    <!-- Amount Received (for Cash) -->
+    <div class="mb-2" id="amountReceivedField">
+        <label class="form-label small">Amount Received</label>
+        <input 
+            type="number" 
+            class="form-control form-control-sm" 
+            name="amount_received" 
+            id="amountReceived"
+            value="{{ current_sale.total_amount }}"
+            min="{{ current_sale.total_amount }}" 
+            step="0.01"
+        >
+        <small class="text-muted" id="changeAmount">Change: ₱0.00</small>
+    </div>
+    
+    <!-- Reference Number (for electronic payments) -->
+    <div class="mb-2 d-none" id="referenceNumberField">
+        <label class="form-label small">Reference Number</label>
+        <input type="text" class="form-control form-control-sm" name="reference_number">
+    </div>
+    
+    <!-- Action Buttons -->
+    <div class="d-grid gap-2">
+        <button 
+            type="button"
+            class="btn btn-success"
+            hx-post="{% url 'bookings_v2:htmx_pos_complete_sale' current_sale.id %}"
+            hx-include="#customerInfoForm input, #customerInfoForm select, [name='payment_method'], [name='amount_received'], [name='reference_number']"
+            hx-target="#posModalBody"
+            hx-swap="innerHTML"
+            hx-indicator="#completeSaleSpinner"
+        >
+            <span id="completeSaleSpinner" class="htmx-indicator spinner-border spinner-border-sm me-2" role="status"></span>
+            <i class="fas fa-check-circle"></i> Complete Sale
+        </button>
+        <button 
+            type="button"
+            class="btn btn-outline-danger"
+            hx-post="{% url 'bookings_v2:htmx_pos_cancel_sale' current_sale.id %}"
+            hx-target="#posCartBody"
+            hx-swap="innerHTML"
+            hx-confirm="Cancel this sale?"
+        >
+            <i class="fas fa-times"></i> Cancel Sale
+        </button>
+    </div>
+</div>
+{% endif %}
+
+<style>
+.htmx-indicator {
+    display: none;
+}
+.htmx-request .htmx-indicator {
+    display: inline-block;
+}
+</style>
+
+<script>
+// Handle customer type change
+document.getElementById('saleType')?.addEventListener('change', function() {
+    const isPatient = this.value === 'Patient';
+    document.getElementById('customerNameField').classList.toggle('d-none', isPatient);
+    document.getElementById('patientSelectField').classList.toggle('d-none', !isPatient);
+});
+
+// Handle payment method change
+document.getElementById('paymentMethod')?.addEventListener('change', function() {
+    const isCash = this.value === 'Cash';
+    document.getElementById('amountReceivedField').classList.toggle('d-none', !isCash);
+    document.getElementById('referenceNumberField').classList.toggle('d-none', isCash);
+});
+
+// Calculate change
+document.getElementById('amountReceived')?.addEventListener('input', function() {
+    const total = parseFloat('{{ current_sale.total_amount }}') || 0;
+    const received = parseFloat(this.value) || 0;
+    const change = Math.max(0, received - total);
+    document.getElementById('changeAmount').textContent = `Change: ₱${change.toFixed(2)}`;
+});
+
+// Debug HTMX events
+document.body.addEventListener('htmx:beforeRequest', function(evt) {
+    console.log('HTMX Request:', evt.detail);
+});
+
+document.body.addEventListener('htmx:afterRequest', function(evt) {
+    console.log('HTMX Response:', evt.detail);
+});
+
+document.body.addEventListener('htmx:responseError', function(evt) {
+    console.error('HTMX Error:', evt.detail);
+    alert('Error completing sale. Check console for details.');
+});
+</script>

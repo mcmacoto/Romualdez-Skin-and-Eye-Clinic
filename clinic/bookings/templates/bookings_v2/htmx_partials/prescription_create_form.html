@@ -1,0 +1,137 @@
+<!-- HTMX Partial: Prescription Create Form -->
+<form hx-post="{% url 'bookings_v2:htmx_prescription_create' record.id %}" 
+      hx-target="#prescriptionsModalBody"
+      hx-swap="innerHTML">
+    {% csrf_token %}
+    
+    <div class="mb-3">
+        <h5><i class="fas fa-pills me-2"></i>Add Prescription</h5>
+        <p class="text-muted">
+            <strong>Patient:</strong> {{ record.patient.user.get_full_name }}<br>
+            <strong>Visit Date:</strong> {{ record.visit_date|date:"F d, Y" }}
+        </p>
+    </div>
+
+    <!-- Medicine Selection -->
+    <div class="mb-3">
+        <label class="form-label required">Medicine</label>
+        <select class="form-select" name="medicine_id" required id="medicineSelect">
+            <option value="">Select medicine...</option>
+            {% for medicine in medicines %}
+            <option value="{{ medicine.id }}" data-price="{{ medicine.price }}" data-stock="{{ medicine.quantity }}">
+                {{ medicine.name }} - ₱{{ medicine.price }} (Stock: {{ medicine.quantity }})
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <!-- Quantity -->
+    <div class="mb-3">
+        <label class="form-label required">Quantity</label>
+        <input 
+            type="number" 
+            class="form-control" 
+            name="quantity"
+            min="1"
+            value="1"
+            required
+            id="quantityInput"
+        >
+        <small class="text-muted">Available stock will be shown when you select a medicine.</small>
+    </div>
+
+    <!-- Dosage -->
+    <div class="mb-3">
+        <label class="form-label required">Dosage</label>
+        <input 
+            type="text" 
+            class="form-control" 
+            name="dosage"
+            placeholder="e.g., 1 tablet twice daily"
+            required
+        >
+    </div>
+
+    <!-- Duration -->
+    <div class="mb-3">
+        <label class="form-label">Duration</label>
+        <input 
+            type="text" 
+            class="form-control" 
+            name="duration"
+            placeholder="e.g., 7 days, 2 weeks"
+        >
+    </div>
+
+    <!-- Instructions -->
+    <div class="mb-3">
+        <label class="form-label">Instructions</label>
+        <textarea 
+            class="form-control" 
+            name="instructions" 
+            rows="3"
+            placeholder="Additional instructions for the patient (optional)"
+        ></textarea>
+    </div>
+
+    <!-- Price Preview -->
+    <div class="alert alert-info" id="pricePreview" style="display: none;">
+        <i class="fas fa-calculator me-2"></i>
+        <strong>Total Price:</strong> ₱<span id="totalPrice">0.00</span>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="d-flex gap-2 justify-content-end">
+        <button 
+            type="button" 
+            class="btn btn-secondary"
+            hx-get="{% url 'bookings_v2:htmx_prescriptions' record.id %}"
+            hx-target="#prescriptionsModalBody"
+            hx-swap="innerHTML"
+        >
+            <i class="fas fa-times me-2"></i>Cancel
+        </button>
+        <button type="submit" class="btn btn-success">
+            <i class="fas fa-save me-2"></i>Add Prescription
+        </button>
+    </div>
+</form>
+
+<script>
+// Calculate total price based on medicine and quantity
+document.getElementById('medicineSelect').addEventListener('change', function() {
+    updatePrice();
+});
+
+document.getElementById('quantityInput').addEventListener('input', function() {
+    updatePrice();
+});
+
+function updatePrice() {
+    const select = document.getElementById('medicineSelect');
+    const quantity = parseInt(document.getElementById('quantityInput').value) || 0;
+    const option = select.options[select.selectedIndex];
+    
+    if (option && option.value) {
+        const price = parseFloat(option.dataset.price) || 0;
+        const stock = parseInt(option.dataset.stock) || 0;
+        const total = price * quantity;
+        
+        document.getElementById('totalPrice').textContent = total.toFixed(2);
+        document.getElementById('pricePreview').style.display = 'block';
+        
+        // Validate stock
+        if (quantity > stock) {
+            document.getElementById('quantityInput').setCustomValidity(`Only ${stock} units available in stock`);
+            document.getElementById('pricePreview').classList.remove('alert-info');
+            document.getElementById('pricePreview').classList.add('alert-warning');
+        } else {
+            document.getElementById('quantityInput').setCustomValidity('');
+            document.getElementById('pricePreview').classList.remove('alert-warning');
+            document.getElementById('pricePreview').classList.add('alert-info');
+        }
+    } else {
+        document.getElementById('pricePreview').style.display = 'none';
+    }
+}
+</script>

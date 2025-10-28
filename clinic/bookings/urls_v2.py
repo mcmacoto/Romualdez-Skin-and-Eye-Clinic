@@ -68,9 +68,18 @@ urlpatterns = [
     
     # Medical Records HTMX endpoints
     path('htmx/medical-records/', views_v2.htmx_medical_records_list, name='htmx_medical_records_list'),
+    path('htmx/medical-record/create-form/', views_v2.htmx_medical_record_create_form, name='htmx_medical_record_create_form'),
+    path('htmx/medical-record/create/', views_v2.htmx_medical_record_create, name='htmx_medical_record_create'),
     path('htmx/medical-record/<int:record_id>/edit/', views_v2.htmx_medical_record_edit_form, name='htmx_medical_record_edit_form'),
     path('htmx/medical-record/<int:record_id>/update/', views_v2.htmx_medical_record_update, name='htmx_medical_record_update'),
     path('htmx/medical-images/<int:record_id>/', views_v2.htmx_medical_images, name='htmx_medical_images'),
+    path('htmx/medical-image/upload-form/<int:record_id>/', views_v2.htmx_medical_image_upload_form, name='htmx_medical_image_upload_form'),
+    path('htmx/medical-image/upload/<int:record_id>/', views_v2.htmx_medical_image_upload, name='htmx_medical_image_upload'),
+    path('htmx/medical-image/<int:image_id>/delete/', views_v2.htmx_medical_image_delete, name='htmx_medical_image_delete'),
+    path('htmx/prescriptions/<int:record_id>/', views_v2.htmx_prescriptions, name='htmx_prescriptions'),
+    path('htmx/prescription/create-form/<int:record_id>/', views_v2.htmx_prescription_create_form, name='htmx_prescription_create_form'),
+    path('htmx/prescription/create/<int:record_id>/', views_v2.htmx_prescription_create, name='htmx_prescription_create'),
+    path('htmx/prescription/<int:prescription_id>/delete/', views_v2.htmx_prescription_delete, name='htmx_prescription_delete'),
     
     # Billing & Payment HTMX endpoints
     path('htmx/payment/create-form/', views_v2.htmx_payment_create_form, name='htmx_payment_create_form'),
@@ -84,6 +93,22 @@ urlpatterns = [
     path('htmx/inventory/create/', views_v2.htmx_inventory_create, name='htmx_inventory_create'),
     path('htmx/inventory/<int:item_id>/edit/', views_v2.htmx_inventory_edit_form, name='htmx_inventory_edit_form'),
     path('htmx/inventory/<int:item_id>/update/', views_v2.htmx_inventory_update, name='htmx_inventory_update'),
+    path('htmx/inventory/<int:item_id>/delete/', views_v2.htmx_inventory_delete, name='htmx_inventory_delete'),
+    
+    # Stock Transactions HTMX endpoints
+    path('htmx/stock-transactions/', views_v2.htmx_stock_transactions_list, name='htmx_stock_transactions_list'),
+    
+    # POS System HTMX endpoints
+    path('htmx/pos/', views_v2.htmx_pos_interface, name='htmx_pos_interface'),
+    path('htmx/pos/products/', views_v2.htmx_pos_product_search, name='htmx_pos_product_search'),
+    path('htmx/pos/add/<int:item_id>/', views_v2.htmx_pos_add_to_cart, name='htmx_pos_add_to_cart'),
+    path('htmx/pos/remove/<int:item_id>/', views_v2.htmx_pos_remove_from_cart, name='htmx_pos_remove_from_cart'),
+    path('htmx/pos/quantity/<int:item_id>/', views_v2.htmx_pos_update_quantity, name='htmx_pos_update_quantity'),
+    path('htmx/pos/discount/<int:sale_id>/', views_v2.htmx_pos_update_discount, name='htmx_pos_update_discount'),
+    path('htmx/pos/complete/<int:sale_id>/', views_v2.htmx_pos_complete_sale, name='htmx_pos_complete_sale'),
+    path('htmx/pos/cancel/<int:sale_id>/', views_v2.htmx_pos_cancel_sale, name='htmx_pos_cancel_sale'),
+    path('htmx/pos-sales/', views_v2.htmx_pos_sales_list, name='htmx_pos_sales_list'),
+    path('htmx/pos-sale/<int:sale_id>/', views_v2.htmx_pos_sale_detail, name='htmx_pos_sale_detail'),
     
     # Services HTMX endpoints
     path('htmx/services/', views_v2.htmx_services_list, name='htmx_services_list'),

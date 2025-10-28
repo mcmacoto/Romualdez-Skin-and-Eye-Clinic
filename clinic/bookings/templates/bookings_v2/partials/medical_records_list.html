@@ -1,22 +1,33 @@
 <!-- HTMX Partial: Medical Records List -->
-<!-- Search Bar -->
-<div class="search-bar mb-3">
-    <div class="input-group">
-        <span class="input-group-text bg-white">
-            <i class="fas fa-search text-muted"></i>
-        </span>
-        <input 
-            type="text" 
-            class="form-control" 
-            placeholder="Search by patient name, diagnosis, or complaint..." 
-            name="search"
-            hx-get="{% url 'bookings_v2:htmx_medical_records_list' %}"
-            hx-trigger="keyup changed delay:500ms"
-            hx-target="#medicalRecordsModalBody"
-            hx-swap="innerHTML"
-            hx-include="this"
-        >
+<!-- Header with Search and New Record Button -->
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="flex-grow-1 me-2">
+        <div class="input-group">
+            <span class="input-group-text bg-white">
+                <i class="fas fa-search text-muted"></i>
+            </span>
+            <input 
+                type="text" 
+                class="form-control" 
+                placeholder="Search by patient name, diagnosis, or complaint..." 
+                name="search"
+                hx-get="{% url 'bookings_v2:htmx_medical_records_list' %}"
+                hx-trigger="keyup changed delay:500ms"
+                hx-target="#medicalRecordsModalBody"
+                hx-swap="innerHTML"
+                hx-include="this"
+            >
+        </div>
     </div>
+    <button 
+        type="button" 
+        class="btn btn-success"
+        hx-get="{% url 'bookings_v2:htmx_medical_record_create_form' %}"
+        hx-target="#medicalRecordsModalBody"
+        hx-swap="innerHTML"
+    >
+        <i class="fas fa-plus me-2"></i>New Record
+    </button>
 </div>
 
 {% if records %}
@@ -65,10 +76,20 @@
                     </div>
                 </td>
                 <td>
+                    <!-- Debug: Prescription count = {{ record.prescriptions.count }} -->
                     {% if record.prescriptions.count > 0 %}
-                        <span class="badge bg-success">
-                            <i class="fas fa-pills"></i> {{ record.prescriptions.count }} item(s)
-                        </span>
+                        <button 
+                            class="btn btn-sm btn-success"
+                            hx-get="{% url 'bookings_v2:htmx_prescriptions' record.id %}"
+                            hx-target="#prescriptionsModalBody"
+                            hx-swap="innerHTML"
+                            data-bs-toggle="modal"
+                            data-bs-target="#prescriptionsModal"
+                            title="View Prescriptions"
+                        >
+                            <i class="fas fa-pills"></i>
+                            <span class="badge bg-white text-success ms-1">{{ record.prescriptions.count }}</span>
+                        </button>
                     {% else %}
                         <span class="badge bg-secondary">
                             <i class="fas fa-minus"></i> None
@@ -76,13 +97,15 @@
                     {% endif %}
                 </td>
                 <td class="text-center">
+                    <!-- Debug: Images count = {{ record.images.count }} -->
                     {% if record.images.count > 0 %}
                         <button 
                             class="btn btn-sm btn-info"
                             hx-get="{% url 'bookings_v2:htmx_medical_images' record.id %}"
-                            hx-target="#medical-images-modal-body"
+                            hx-target="#medicalImagesModalBody"
                             hx-swap="innerHTML"
-                            onclick="document.getElementById('medicalImagesModal').classList.add('show')"
+                            data-bs-toggle="modal"
+                            data-bs-target="#medicalImagesModal"
                             title="View Medical Images"
                         >
                             <i class="fas fa-images"></i>

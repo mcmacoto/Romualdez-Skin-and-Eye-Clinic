@@ -1,0 +1,54 @@
+{% if transactions %}
+    {% for transaction in transactions %}
+    <tr>
+        <td>
+            <div>
+                <div class="fw-medium">{{ transaction.transaction_date|date:"M d, Y" }}</div>
+                <small class="text-muted">{{ transaction.transaction_date|date:"h:i A" }}</small>
+            </div>
+        </td>
+        <td>
+            <div>
+                <div class="fw-medium">{{ transaction.inventory_item.name }}</div>
+                <small class="text-muted">{{ transaction.inventory_item.category }}</small>
+            </div>
+        </td>
+        <td>
+            {% if transaction.transaction_type == 'Stock In' %}
+                <span class="badge bg-success">
+                    <i class="fas fa-arrow-down"></i> Stock In
+                </span>
+            {% else %}
+                <span class="badge bg-danger">
+                    <i class="fas fa-arrow-up"></i> Stock Out
+                </span>
+            {% endif %}
+        </td>
+        <td class="text-end">
+            <strong class="{% if transaction.transaction_type == 'Stock In' %}text-success{% else %}text-danger{% endif %}">
+                {% if transaction.transaction_type == 'Stock In' %}+{% else %}-{% endif %}{{ transaction.quantity }}
+            </strong>
+        </td>
+        <td>
+            {% if transaction.performed_by %}
+                <div>
+                    <div>{{ transaction.performed_by.get_full_name|default:transaction.performed_by.username }}</div>
+                    <small class="text-muted">{{ transaction.performed_by.username }}</small>
+                </div>
+            {% else %}
+                <span class="text-muted">System</span>
+            {% endif %}
+        </td>
+        <td>
+            <small class="text-muted">{{ transaction.notes|default:"—" }}</small>
+        </td>
+    </tr>
+    {% endfor %}
+{% else %}
+    <tr>
+        <td colspan="6" class="text-center text-muted py-5">
+            <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
+            <p class="mb-0">No transactions found</p>
+        </td>
+    </tr>
+{% endif %}

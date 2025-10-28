@@ -51,7 +51,7 @@
                     </div>
                 </td>
                 <td>
-                    {{ billing.billing_date|date:"M d, Y" }}
+                    {{ billing.issued_date|date:"M d, Y" }}
                 </td>
                 <td>
                     {{ billing.booking.service.name }}
@@ -70,24 +70,22 @@
                     {% endif %}
                 </td>
                 <td>
-                    {% if billing.payment_status == 'Paid' %}
+                    {% if billing.is_paid %}
                         <span class="badge bg-success">
                             <i class="fas fa-check-circle"></i> Paid
                         </span>
-                    {% elif billing.payment_status == 'Partially Paid' %}
+                    {% elif billing.amount_paid > 0 %}
                         <span class="badge bg-warning text-dark">
                             <i class="fas fa-clock"></i> Partially Paid
                         </span>
-                    {% elif billing.payment_status == 'Unpaid' %}
+                    {% else %}
                         <span class="badge bg-danger">
                             <i class="fas fa-times-circle"></i> Unpaid
                         </span>
-                    {% else %}
-                        <span class="badge bg-secondary">{{ billing.payment_status }}</span>
                     {% endif %}
                 </td>
                 <td class="text-center">
-                    {% if billing.payment_status != 'Paid' %}
+                    {% if not billing.is_paid %}
                     <button 
                         class="btn btn-sm btn-success"
                         hx-post="{% url 'bookings_v2:htmx_mark_paid' billing.id %}"

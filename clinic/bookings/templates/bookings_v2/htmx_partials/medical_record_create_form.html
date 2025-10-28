@@ -1,0 +1,205 @@
+<!-- HTMX Partial: Medical Record Create Form -->
+<form hx-post="{% url 'bookings_v2:htmx_medical_record_create' %}" 
+      hx-target="#medicalRecordsModalBody"
+      hx-swap="innerHTML">
+    {% csrf_token %}
+    
+    <div class="mb-3">
+        <h5><i class="fas fa-file-medical me-2"></i>Create New Medical Record</h5>
+        <p class="text-muted">Enter the patient's medical information and examination details.</p>
+    </div>
+
+    <!-- Patient Selection -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <label class="form-label required">Patient</label>
+            <select class="form-select" name="patient_id" required>
+                <option value="">Select a patient...</option>
+                {% for patient in patients %}
+                <option value="{{ patient.id }}">
+                    {{ patient.user.get_full_name|default:patient.user.username }} 
+                    ({{ patient.user.email }})
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+
+    <!-- Visit Information -->
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label class="form-label required">Visit Date</label>
+            <input 
+                type="date" 
+                class="form-control" 
+                name="visit_date"
+                required
+                value="{{ today }}"
+            >
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Visit Time</label>
+            <input 
+                type="time" 
+                class="form-control" 
+                name="visit_time"
+                value="09:00"
+            >
+        </div>
+    </div>
+
+    <!-- Chief Complaint -->
+    <div class="mb-3">
+        <label class="form-label required">Chief Complaint</label>
+        <textarea 
+            class="form-control" 
+            name="chief_complaint" 
+            rows="2"
+            required
+            placeholder="Patient's main concern or reason for visit"
+        ></textarea>
+    </div>
+
+    <!-- Symptoms -->
+    <div class="mb-3">
+        <label class="form-label">Symptoms</label>
+        <textarea 
+            class="form-control" 
+            name="symptoms" 
+            rows="2"
+            placeholder="Observed symptoms (optional)"
+        ></textarea>
+    </div>
+
+    <!-- Diagnosis -->
+    <div class="mb-3">
+        <label class="form-label">Diagnosis</label>
+        <textarea 
+            class="form-control" 
+            name="diagnosis" 
+            rows="2"
+            placeholder="Clinical diagnosis"
+        ></textarea>
+    </div>
+
+    <!-- Treatment Plan -->
+    <div class="mb-3">
+        <label class="form-label">Treatment Plan</label>
+        <textarea 
+            class="form-control" 
+            name="treatment_plan" 
+            rows="3"
+            placeholder="Prescribed treatment and recommendations"
+        ></textarea>
+    </div>
+
+    <!-- Vital Signs -->
+    <div class="card mb-3">
+        <div class="card-header bg-light">
+            <h6 class="mb-0"><i class="fas fa-heartbeat me-2"></i>Vital Signs (Optional)</h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Temperature (°C)</label>
+                    <input 
+                        type="number" 
+                        step="0.1" 
+                        class="form-control" 
+                        name="temperature"
+                        placeholder="e.g., 36.5"
+                    >
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Heart Rate (BPM)</label>
+                    <input 
+                        type="number" 
+                        class="form-control" 
+                        name="heart_rate"
+                        placeholder="e.g., 72"
+                    >
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Blood Pressure - Systolic</label>
+                    <input 
+                        type="number" 
+                        class="form-control" 
+                        name="blood_pressure_systolic"
+                        placeholder="e.g., 120"
+                    >
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Blood Pressure - Diastolic</label>
+                    <input 
+                        type="number" 
+                        class="form-control" 
+                        name="blood_pressure_diastolic"
+                        placeholder="e.g., 80"
+                    >
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Weight (kg)</label>
+                    <input 
+                        type="number" 
+                        step="0.1" 
+                        class="form-control" 
+                        name="weight"
+                        placeholder="e.g., 65.5"
+                    >
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Height (cm)</label>
+                    <input 
+                        type="number" 
+                        step="0.1" 
+                        class="form-control" 
+                        name="height"
+                        placeholder="e.g., 165.0"
+                    >
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Follow-up Date -->
+    <div class="mb-3">
+        <label class="form-label">Follow-up Date</label>
+        <input 
+            type="date" 
+            class="form-control" 
+            name="follow_up_date"
+        >
+    </div>
+
+    <!-- Additional Notes -->
+    <div class="mb-3">
+        <label class="form-label">Additional Notes</label>
+        <textarea 
+            class="form-control" 
+            name="additional_notes" 
+            rows="3"
+            placeholder="Any additional observations or notes"
+        ></textarea>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="d-flex gap-2 justify-content-end">
+        <button 
+            type="button" 
+            class="btn btn-secondary"
+            hx-get="{% url 'bookings_v2:htmx_medical_records_list' %}"
+            hx-target="#medicalRecordsModalBody"
+            hx-swap="innerHTML"
+        >
+            <i class="fas fa-times me-2"></i>Cancel
+        </button>
+        <button type="submit" class="btn btn-success">
+            <i class="fas fa-save me-2"></i>Create Record
+        </button>
+    </div>
+
+    <div class="alert alert-info mt-3">
+        <i class="fas fa-info-circle me-2"></i>
+        <strong>Note:</strong> Prescriptions and medical images can be added after creating the record through the Django admin.
+    </div>
+</form>
