@@ -13,7 +13,7 @@
                 </div>
                 <div class="card-body" id="booking-form-container">
                     <form 
-                        hx-post="/v2/htmx/submit-booking/" 
+                        hx-post="/admin/htmx/submit-booking/" 
                         hx-target="#booking-form-container"
                         hx-swap="innerHTML"
                         hx-indicator="#loading-spinner"
@@ -121,7 +121,7 @@
                                     name="time" 
                                     required 
                                     disabled
-                                    hx-get="/v2/htmx/time-slots/"
+                                    hx-get="/admin/htmx/time-slots/"
                                     hx-trigger="loadTimeSlots from:body"
                                     hx-include="[name='service'], [name='date']"
                                     hx-target="#time-slots-container"
@@ -167,7 +167,7 @@
                             >
                                 <i class="fas fa-check-circle"></i> Book Appointment
                             </button>
-                            <a href="/v2/" class="btn btn-outline-secondary">
+                            <a href="/admin/" class="btn btn-outline-secondary">
                                 <i class="fas fa-arrow-left"></i> Back to Home
                             </a>
                         </div>

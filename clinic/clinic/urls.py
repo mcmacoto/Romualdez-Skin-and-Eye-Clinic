@@ -20,6 +20,7 @@ from django.contrib.auth.views import LoginView, LogoutView
 from django.conf import settings
 from django.conf.urls.static import static
 from bookings import views
+from bookings import views_v2
 from bookings.admin import clinic_admin_site
 
 # Admin site customization
@@ -37,12 +38,12 @@ urlpatterns = [
     # === Public Routes ===
     path('login/', LoginView.as_view(template_name='bookings/login.html'), name='login'),
     path('logout/', LogoutView.as_view(next_page='landing'), name='logout'),
-    path('landing/', views.landing, name='landing'),
-    path('', views.home, name='home'),
-    path('booking/', views.booking, name='booking'),
-    path('about/', views.about, name='about'),
-    path('services/', views.services, name='services'),
-    path('contact/', views.contact, name='contact'),
+    path('landing/', views_v2.landing_v2, name='landing'),
+    path('', views_v2.home_v2, name='home'),
+    path('booking/', views_v2.booking_v2, name='booking'),
+    path('about/', views_v2.about_v2, name='about'),
+    path('services/', views_v2.services_v2, name='services'),
+    path('contact/', views_v2.contact_v2, name='contact'),
 ]
 
 # Serve media files during development

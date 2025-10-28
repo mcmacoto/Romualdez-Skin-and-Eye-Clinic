@@ -1140,15 +1140,17 @@ def htmx_medical_record_create(request):
             created_by=request.user
         )
         
-        # Return updated list
-        records = MedicalRecord.objects.select_related(
-            'patient__user', 'created_by'
+        # Reload record with related data
+        record = MedicalRecord.objects.select_related(
+            'patient__user'
         ).prefetch_related(
             'prescriptions', 'images'
-        ).order_by('-visit_date')
+        ).get(id=record.id)
         
-        return render(request, 'bookings_v2/partials/medical_records_list.html', {
-            'records': records
+        # Return the edit form so user can add prescriptions and images
+        return render(request, 'bookings_v2/htmx_partials/medical_record_form.html', {
+            'record': record,
+            'just_created': True  # Flag to show success message
         })
         
     except Patient.DoesNotExist:
@@ -1184,7 +1186,7 @@ def htmx_medical_images(request, record_id):
             </div>
             <button 
                 class="btn btn-sm btn-info"
-                hx-get="/v2/htmx/medical-image/upload-form/{record_id}/"
+                hx-get="/admin/htmx/medical-image/upload-form/{record_id}/"
                 hx-target="#medicalImagesModalBody"
                 hx-swap="innerHTML"
             >
@@ -1214,7 +1216,7 @@ def htmx_medical_images(request, record_id):
                             </p>
                             <button 
                                 class="btn btn-sm btn-danger w-100"
-                                hx-delete="/v2/htmx/medical-image/{image.id}/delete/"
+                                hx-delete="/admin/htmx/medical-image/{image.id}/delete/"
                                 hx-target="#medicalImagesModalBody"
                                 hx-confirm="Are you sure you want to delete this image: {image.title}?"
                             >
@@ -1264,7 +1266,7 @@ def htmx_prescriptions(request, record_id):
             </div>
             <button 
                 class="btn btn-sm btn-success"
-                hx-get="/v2/htmx/prescription/create-form/{record_id}/"
+                hx-get="/admin/htmx/prescription/create-form/{record_id}/"
                 hx-target="#prescriptionsModalBody"
                 hx-swap="innerHTML"
             >
@@ -1303,7 +1305,7 @@ def htmx_prescriptions(request, record_id):
                     <td class="text-center">
                         <button 
                             class="btn btn-sm btn-danger"
-                            hx-delete="/v2/htmx/prescription/{prescription.id}/delete/"
+                            hx-delete="/admin/htmx/prescription/{prescription.id}/delete/"
                             hx-target="#prescriptionsModalBody"
                             hx-confirm="Are you sure you want to delete this prescription for {prescription.medicine.name}?"
                         >
@@ -2146,7 +2148,7 @@ def htmx_pos_complete_sale(request, sale_id):
                 </button>
                 <button 
                     class="btn btn-success"
-                    hx-get="/v2/htmx/pos/"
+                    hx-get="/admin/htmx/pos/"
                     hx-target="#posModalBody"
                     hx-swap="innerHTML"
                 >
@@ -2154,7 +2156,7 @@ def htmx_pos_complete_sale(request, sale_id):
                 </button>
                 <button 
                     class="btn btn-outline-secondary"
-                    hx-get="/v2/htmx/pos-sales/"
+                    hx-get="/admin/htmx/pos-sales/"
                     hx-target="#posModalBody"
                     hx-swap="innerHTML"
                 >
@@ -2389,7 +2391,7 @@ def htmx_pos_sale_detail(request, sale_id):
                 </button>
                 <button 
                     class="btn btn-outline-secondary"
-                    hx-get="/v2/htmx/pos-sales/"
+                    hx-get="/admin/htmx/pos-sales/"
                     hx-target="#posModalBody"
                     hx-swap="innerHTML"
                 >
