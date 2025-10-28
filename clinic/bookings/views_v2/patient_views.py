@@ -1,0 +1,896 @@
+"""
+Patient and Medical Records Management Views for v2
+Handles patient profiles, medical records, prescriptions, and medical images
+"""
+from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
+from django.http import HttpResponse
+from django.views.decorators.http import require_http_methods
+from django.contrib import messages
+from django.db.models import Q
+from datetime import datetime, date
+
+from ..models import (
+    Patient, MedicalRecord, Billing, Booking, Inventory,
+    Prescription, MedicalImage
+)
+
+
+@login_required
+@require_http_methods(["GET"])
+def htmx_patients_list(request):
+    """Return HTML fragment of all patients with optional search"""
+    if not request.user.is_staff:
+        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
+    
+    patients = Patient.objects.select_related('user').prefetch_related('medical_records')
+    
+    # Handle search
+    search_query = request.GET.get('search', '').strip()
+    if search_query:
+        patients = patients.filter(
+            Q(user__first_name__icontains=search_query) |
+            Q(user__last_name__icontains=search_query) |
+            Q(user__username__icontains=search_query) |
+            Q(user__email__icontains=search_query) |
+            Q(phone__icontains=search_query)
+        )
+    
+    patients = patients.order_by('-created_at')
+    
+    return render(request, 'bookings_v2/partials/patients_list.html', {
+        'patients': patients
+    })
+
+
+@login_required
+@require_http_methods(["GET"])
+def htmx_patient_records(request, patient_id):
+    """Return HTML fragment of medical records for a specific patient"""
+    if not request.user.is_staff:
+        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
+    
+    try:
+        patient = Patient.objects.get(id=patient_id)
+        records = MedicalRecord.objects.filter(
+            patient=patient
+        ).select_related('created_by').prefetch_related(
+            'prescriptions', 'images'
+        ).order_by('-visit_date')
+        
+        return render(request, 'bookings_v2/partials/patient_medical_records.html', {
+            'records': records,
+            'patient': patient
+        })
+    except Patient.DoesNotExist:
+        return HttpResponse(
+            '<div class="alert alert-danger">Patient not found</div>',
+            status=404
+        )
+
+
+@login_required
+def htmx_patient_detail(request, patient_id):
+    """Return HTML fragment with detailed patient profile"""
+    if not request.user.is_staff:
+        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
+    
+    try:
+        patient = Patient.objects.select_related('user').get(id=patient_id)
+        
+        # Get statistics
+        total_appointments = Booking.objects.filter(
+            patient_name=patient.user.get_full_name()
+        ).count()
+        
+        total_records = MedicalRecord.objects.filter(patient=patient).count()
+        
+        # Calculate outstanding balance
+        unpaid_billings = Billing.objects.filter(
+            patient=patient,
+            is_paid=False
+        )
+        total_outstanding = sum(billing.total_amount for billing in unpaid_billings) if unpaid_billings.exists() else 0
+        
+        # Get recent appointments (last 5)
+        recent_appointments = Booking.objects.filter(
+            patient_name=patient.user.get_full_name()
+        ).select_related('service').order_by('-date', '-time')[:5]
+        
+        # Get recent medical records (last 3)
+        recent_records = MedicalRecord.objects.filter(
+            patient=patient
+        ).select_related('created_by').prefetch_related('prescriptions').order_by('-visit_date')[:3]
+        
+        # Get recent billings (last 5)
+        recent_billings = Billing.objects.filter(
+            patient=patient
+        ).order_by('-date_issued')[:5]
+        
+        context = {
+            'patient': patient,
+            'stats': {
+                'total_appointments': total_appointments,
+                'total_records': total_records,
+                'total_outstanding': total_outstanding,
+            },
+            'recent_appointments': recent_appointments,
+            'recent_records': recent_records,
+            'recent_billings': recent_billings,
+        }
+        
+        return render(request, 'bookings_v2/partials/patient_detail.html', context)
+    except Patient.DoesNotExist:
+        return HttpResponse(
+            '<div class="alert alert-danger">Patient not found</div>',
+            status=404
+        )
+    except Exception as e:
+        import traceback
+        return HttpResponse(
+            f'<div class="alert alert-danger">Error loading patient: {str(e)}<br><pre>{traceback.format_exc()}</pre></div>',
+            status=500
+        )
+
+
+@login_required
+@require_http_methods(["DELETE"])
+def htmx_delete_patient(request, patient_id):
+    """Delete patient - handles cascade and returns empty response"""
+    if not request.user.is_staff:
+        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
+    
+    try:
+        patient = Patient.objects.select_related('user').get(id=patient_id)
+        
+        # Check for unpaid bills
+        unpaid_bills = Billing.objects.filter(
+            patient=patient,
+            payment_status__in=['Pending', 'Partial']
+        ).exists()
+        
+        if unpaid_bills:
+            # Return error message - don't delete patients with unpaid bills
+            return HttpResponse(
+                '<tr><td colspan="7" class="text-center text-warning">Cannot delete patient with unpaid bills</td></tr>',
+                status=400
+            )
+        
+        # Get the associated user before deleting patient
+        user = patient.user
+        
+        # Delete patient (will cascade to bookings, medical records, billing due to Django's on_delete)
+        patient.delete()
+        
+        # Also delete the associated user account
+        if user:
+            user.delete()
+        
+        # Return empty response - HTMX will swap and remove the row
+        return HttpResponse('', status=200)
+        
+    except Patient.DoesNotExist:
+        return HttpResponse(
+            '<tr><td colspan="7" class="text-center text-danger">Patient not found</td></tr>',
+            status=404
+        )
+
+
+@login_required
+@require_http_methods(["GET"])
+def htmx_patient_create_form(request):
+    """Return HTML form for creating a new patient"""
+    if not request.user.is_staff:
+        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
+    
+    return render(request, 'bookings_v2/htmx_partials/patient_form.html', {
+        'today': date.today().isoformat()
+    })
+
+
+@login_required
+@require_http_methods(["POST"])
+def htmx_patient_create(request):
+    """Create a new patient with user account"""
+    if not request.user.is_staff:
+        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
+    
+    try:
+        # Check if username already exists
+        username = request.POST.get('username')
+        if User.objects.filter(username=username).exists():
+            return HttpResponse('<div class="alert alert-danger">Username already exists</div>', status=400)
+        
+        # Check if email already exists
+        email = request.POST.get('email')
+        if User.objects.filter(email=email).exists():
+            return HttpResponse('<div class="alert alert-danger">Email already exists</div>', status=400)
+        
+        # Check password match
+        password1 = request.POST.get('password1')
+        password2 = request.POST.get('password2')
+        if password1 != password2:
+            return HttpResponse('<div class="alert alert-danger">Passwords do not match</div>', status=400)
+        
+        # Create user
+        user = User.objects.create_user(
+            username=username,
+            email=email,
+            password=password1,
+            first_name=request.POST.get('first_name'),
+            last_name=request.POST.get('last_name')
+        )
+        
+        # Create patient profile
+        patient = Patient.objects.create(
+            user=user,
+            date_of_birth=request.POST.get('date_of_birth'),
+            gender=request.POST.get('gender'),
+            blood_type=request.POST.get('blood_type', 'UK'),
+            phone=request.POST.get('phone', ''),
+            address=request.POST.get('address', ''),
+            emergency_contact_name=request.POST.get('emergency_contact_name', ''),
+            emergency_contact_phone=request.POST.get('emergency_contact_phone', ''),
+            allergies=request.POST.get('allergies', ''),
+            current_medications=request.POST.get('current_medications', ''),
+            medical_history=request.POST.get('medical_history', ''),
+            created_by=request.user
+        )
+        
+        messages.success(request, f'Patient {user.get_full_name()} created successfully')
+        
+        # Return updated patients list
+        patients = Patient.objects.select_related('user').prefetch_related('medical_records').all()[:20]
+        return render(request, 'bookings_v2/partials/patients_list.html', {
+            'patients': patients
+        })
+        
+    except Exception as e:
+        return HttpResponse(f'<div class="alert alert-danger">Error: {str(e)}</div>', status=400)
+
+
+@login_required
+@require_http_methods(["GET"])
+def htmx_patient_edit_form(request, patient_id):
+    """Return HTML form for editing a patient"""
+    if not request.user.is_staff:
+        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
+    
+    try:
+        patient = Patient.objects.select_related('user').get(id=patient_id)
+        return render(request, 'bookings_v2/htmx_partials/patient_form.html', {
+            'patient': patient,
+            'today': date.today().isoformat()
+        })
+    except Patient.DoesNotExist:
+        return HttpResponse('<div class="alert alert-danger">Patient not found</div>', status=404)
+
+
+@login_required
+@require_http_methods(["POST"])
+def htmx_patient_update(request, patient_id):
+    """Update an existing patient"""
+    if not request.user.is_staff:
+        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
+    
+    try:
+        patient = Patient.objects.select_related('user').get(id=patient_id)
+        user = patient.user
+        
+        # Update user info
+        user.first_name = request.POST.get('first_name')
+        user.last_name = request.POST.get('last_name')
+        user.email = request.POST.get('email')
+        user.save()
+        
+        # Update patient profile
+        patient.date_of_birth = request.POST.get('date_of_birth')
+        patient.gender = request.POST.get('gender')
+        patient.blood_type = request.POST.get('blood_type', 'UK')
+        patient.phone = request.POST.get('phone', '')
+        patient.address = request.POST.get('address', '')
+        patient.emergency_contact_name = request.POST.get('emergency_contact_name', '')
+        patient.emergency_contact_phone = request.POST.get('emergency_contact_phone', '')
+        patient.allergies = request.POST.get('allergies', '')
+        patient.current_medications = request.POST.get('current_medications', '')
+        patient.medical_history = request.POST.get('medical_history', '')
+        patient.save()
+        
+        messages.success(request, f'Patient {user.get_full_name()} updated successfully')
+        
+        # Return updated patients list
+        patients = Patient.objects.select_related('user').prefetch_related('medical_records').all()[:20]
+        return render(request, 'bookings_v2/partials/patients_list.html', {
+            'patients': patients
+        })
+        
+    except Patient.DoesNotExist:
+        return HttpResponse('<div class="alert alert-danger">Patient not found</div>', status=404)
+    except Exception as e:
+        return HttpResponse(f'<div class="alert alert-danger">Error: {str(e)}</div>', status=400)
+
+
+# ========================================
+# MEDICAL RECORDS MANAGEMENT
+# ========================================
+
+@login_required
+@require_http_methods(["GET"])
+def htmx_medical_records_list(request):
+    """Return HTML fragment of all medical records with optional search"""
+    if not request.user.is_staff:
+        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
+    
+    records = MedicalRecord.objects.select_related(
+        'patient__user', 'created_by'
+    ).prefetch_related(
+        'prescriptions', 'images'
+    )
+    
+    # Handle search
+    search_query = request.GET.get('search', '').strip()
+    if search_query:
+        records = records.filter(
+            Q(patient__user__first_name__icontains=search_query) |
+            Q(patient__user__last_name__icontains=search_query) |
+            Q(diagnosis__icontains=search_query) |
+            Q(chief_complaint__icontains=search_query) |
+            Q(treatment_plan__icontains=search_query)
+        )
+    
+    records = records.order_by('-visit_date')
+    
+    return render(request, 'bookings_v2/partials/medical_records_list.html', {
+        'records': records
+    })
+
+
+@login_required
+@require_http_methods(["GET"])
+def htmx_medical_record_edit_form(request, record_id):
+    """Return HTML fragment with medical record edit form"""
+    if not request.user.is_staff:
+        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
+    
+    try:
+        record = MedicalRecord.objects.select_related(
+            'patient__user'
+        ).prefetch_related(
+            'prescriptions', 'images'
+        ).get(id=record_id)
+        
+        # Check if opened from patient records view
+        patient_id = request.GET.get('patient_id')
+        
+        return render(request, 'bookings_v2/htmx_partials/medical_record_form.html', {
+            'record': record,
+            'patient_id': patient_id  # Pass to template for context-aware navigation
+        })
+    except MedicalRecord.DoesNotExist:
+        return HttpResponse(
+            '<div class="alert alert-danger">Medical record not found</div>',
+            status=404
+        )
+
+
+@login_required
+@require_http_methods(["PUT", "POST"])
+def htmx_medical_record_update(request, record_id):
+    """Update medical record and return updated list"""
+    if not request.user.is_staff:
+        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
+    
+    try:
+        record = MedicalRecord.objects.get(id=record_id)
+        
+        # Parse visit date and time
+        visit_date_str = request.POST.get('visit_date')
+        visit_time_str = request.POST.get('visit_time', '00:00')
+        
+        if visit_date_str:
+            # Combine date and time
+            visit_datetime_str = f"{visit_date_str} {visit_time_str}"
+            record.visit_date = datetime.strptime(visit_datetime_str, '%Y-%m-%d %H:%M')
+        
+        # Update fields
+        record.chief_complaint = request.POST.get('chief_complaint')
+        record.symptoms = request.POST.get('symptoms', '')
+        record.diagnosis = request.POST.get('diagnosis', '')
+        record.treatment_plan = request.POST.get('treatment_plan', '')
+        
+        # Vital signs
+        record.blood_pressure = request.POST.get('blood_pressure', '')
+        record.temperature = request.POST.get('temperature', '')
+        record.heart_rate = request.POST.get('heart_rate', '')
+        record.weight = request.POST.get('weight', '')
+        record.height = request.POST.get('height', '')
+        
+        # Notes and follow-up
+        record.notes = request.POST.get('notes', '')
+        
+        follow_up_date = request.POST.get('follow_up_date')
+        if follow_up_date:
+            record.follow_up_date = follow_up_date
+        else:
+            record.follow_up_date = None
+        
+        record.save()
+        
+        # Check if we should return to patient records or general list
+        patient_id = request.GET.get('patient_id')
+        
+        if patient_id:
+            # Return to patient-specific records view
+            try:
+                patient = Patient.objects.get(id=patient_id)
+                records = MedicalRecord.objects.filter(
+                    patient=patient
+                ).select_related('created_by').prefetch_related(
+                    'prescriptions', 'images'
+                ).order_by('-visit_date')
+                
+                return render(request, 'bookings_v2/partials/patient_medical_records.html', {
+                    'records': records,
+                    'patient': patient
+                })
+            except Patient.DoesNotExist:
+                pass
+        
+        # Default: Return to general medical records list
+        records = MedicalRecord.objects.select_related(
+            'patient__user', 'created_by'
+        ).prefetch_related(
+            'prescriptions', 'images'
+        ).order_by('-visit_date')
+        
+        return render(request, 'bookings_v2/partials/medical_records_list.html', {
+            'records': records
+        })
+        
+    except MedicalRecord.DoesNotExist:
+        return HttpResponse(
+            '<div class="alert alert-danger">Medical record not found</div>',
+            status=404
+        )
+    except Exception as e:
+        return HttpResponse(
+            f'<div class="alert alert-danger">Error updating record: {str(e)}</div>',
+            status=500
+        )
+
+
+@login_required
+@require_http_methods(["GET"])
+def htmx_medical_record_create_form(request):
+    """Return HTML fragment with medical record creation form"""
+    if not request.user.is_staff:
+        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
+    
+    # Get all patients for the dropdown
+    patients = Patient.objects.select_related('user').order_by('user__last_name', 'user__first_name')
+    
+    return render(request, 'bookings_v2/htmx_partials/medical_record_create_form.html', {
+        'patients': patients
+    })
+
+
+@login_required
+@require_http_methods(["POST"])
+def htmx_medical_record_create(request):
+    """Create new medical record and return updated list"""
+    if not request.user.is_staff:
+        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
+    
+    try:
+        # Get patient
+        patient_id = request.POST.get('patient_id')
+        patient = Patient.objects.get(id=patient_id)
+        
+        # Parse visit date
+        visit_date_str = request.POST.get('visit_date')
+        visit_time_str = request.POST.get('visit_time', '00:00')
+        visit_datetime = datetime.strptime(f"{visit_date_str} {visit_time_str}", "%Y-%m-%d %H:%M")
+        
+        # Create record
+        record = MedicalRecord.objects.create(
+            patient=patient,
+            visit_date=visit_datetime,
+            chief_complaint=request.POST.get('chief_complaint'),
+            symptoms=request.POST.get('symptoms', ''),
+            diagnosis=request.POST.get('diagnosis', ''),
+            treatment_plan=request.POST.get('treatment_plan', ''),
+            temperature=request.POST.get('temperature') or None,
+            blood_pressure_systolic=request.POST.get('blood_pressure_systolic') or None,
+            blood_pressure_diastolic=request.POST.get('blood_pressure_diastolic') or None,
+            heart_rate=request.POST.get('heart_rate') or None,
+            weight=request.POST.get('weight') or None,
+            height=request.POST.get('height') or None,
+            follow_up_date=request.POST.get('follow_up_date') or None,
+            additional_notes=request.POST.get('additional_notes', ''),
+            created_by=request.user
+        )
+        
+        # Reload record with related data
+        record = MedicalRecord.objects.select_related(
+            'patient__user'
+        ).prefetch_related(
+            'prescriptions', 'images'
+        ).get(id=record.id)
+        
+        # Return the edit form so user can add prescriptions and images
+        return render(request, 'bookings_v2/htmx_partials/medical_record_form.html', {
+            'record': record,
+            'just_created': True  # Flag to show success message
+        })
+        
+    except Patient.DoesNotExist:
+        return HttpResponse(
+            '<div class="alert alert-danger">Patient not found</div>',
+            status=404
+        )
+    except Exception as e:
+        import traceback
+        error_msg = f'<div class="alert alert-danger">Error creating record: {str(e)}<br><pre>{traceback.format_exc()}</pre></div>'
+        print(f"Error in htmx_medical_record_create: {traceback.format_exc()}")
+        return HttpResponse(error_msg, status=500)
+
+
+# ========================================
+# PRESCRIPTION MANAGEMENT
+# ========================================
+
+@login_required
+@require_http_methods(["GET"])
+def htmx_prescriptions(request, record_id):
+    """Return HTML fragment showing prescriptions for a specific record"""
+    if not request.user.is_staff:
+        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
+    
+    try:
+        record = MedicalRecord.objects.prefetch_related(
+            'prescriptions__medicine'
+        ).get(id=record_id)
+        
+        patient = record.patient
+        prescriptions = record.prescriptions.all()
+        
+        if not prescriptions:
+            return HttpResponse(
+                '<div class="alert alert-info">No prescriptions found for this record.</div>'
+            )
+        
+        html = f'''
+        <div class="mb-3 d-flex justify-content-between align-items-center">
+            <div>
+                <h6><strong>Patient:</strong> {patient.user.get_full_name()}</h6>
+                <p class="text-muted mb-0">
+                    <strong>Visit Date:</strong> {record.visit_date.strftime('%B %d, %Y at %I:%M %p')}
+                </p>
+            </div>
+            <button 
+                class="btn btn-sm btn-success"
+                hx-get="/admin/htmx/prescription/create-form/{record_id}/"
+                hx-target="#prescriptionsModalBody"
+                hx-swap="innerHTML"
+            >
+                <i class="fas fa-plus me-2"></i>Add Prescription
+            </button>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-success">
+                    <tr>
+                        <th><i class="fas fa-pills me-2"></i>Medication</th>
+                        <th><i class="fas fa-prescription-bottle me-2"></i>Dosage</th>
+                        <th><i class="fas fa-clock me-2"></i>Duration</th>
+                        <th><i class="fas fa-dollar-sign me-2"></i>Price</th>
+                        <th><i class="fas fa-info-circle me-2"></i>Instructions</th>
+                        <th class="text-center"><i class="fas fa-cog me-2"></i>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+        '''
+        
+        total_price = 0
+        for prescription in prescriptions:
+            total_price += prescription.total_price
+            instructions = prescription.instructions or 'Follow standard dosing instructions'
+            html += f'''
+                <tr>
+                    <td>
+                        <strong>{prescription.medicine.name}</strong>
+                        <br><small class="text-muted">Qty: {prescription.quantity}</small>
+                    </td>
+                    <td>{prescription.dosage}</td>
+                    <td>{prescription.duration or 'As needed'}</td>
+                    <td>₱{prescription.total_price:,.2f}</td>
+                    <td><small>{instructions}</small></td>
+                    <td class="text-center">
+                        <button 
+                            class="btn btn-sm btn-danger"
+                            hx-delete="/admin/htmx/prescription/{prescription.id}/delete/"
+                            hx-target="#prescriptionsModalBody"
+                            hx-confirm="Are you sure you want to delete this prescription for {prescription.medicine.name}?"
+                        >
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            '''
+        
+        html += f'''
+                </tbody>
+                <tfoot class="table-light">
+                    <tr>
+                        <th colspan="3" class="text-end">Total:</th>
+                        <th>₱{total_price:,.2f}</th>
+                        <th colspan="2"></th>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+        <div class="mt-3">
+            <small class="text-muted">
+                <i class="fas fa-user-md me-2"></i>
+                Prescribed by: {record.created_by.get_full_name() if record.created_by else 'N/A'}
+                on {record.created_at.strftime('%B %d, %Y')}
+            </small>
+        </div>
+        '''
+        
+        return HttpResponse(html)
+    except MedicalRecord.DoesNotExist:
+        return HttpResponse(
+            '<div class="alert alert-danger">Medical record not found</div>',
+            status=404
+        )
+
+
+@login_required
+@require_http_methods(["GET"])
+def htmx_prescription_create_form(request, record_id):
+    """Return HTML fragment with prescription creation form"""
+    if not request.user.is_staff:
+        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
+    
+    try:
+        record = MedicalRecord.objects.select_related('patient__user').get(id=record_id)
+        # Get all medicines from inventory
+        medicines = Inventory.objects.filter(
+            category='Medicine',
+            status__in=['In Stock', 'Low Stock']
+        ).order_by('name')
+        
+        return render(request, 'bookings_v2/htmx_partials/prescription_create_form.html', {
+            'record': record,
+            'medicines': medicines
+        })
+    except MedicalRecord.DoesNotExist:
+        return HttpResponse(
+            '<div class="alert alert-danger">Medical record not found</div>',
+            status=404
+        )
+
+
+@login_required
+@require_http_methods(["POST"])
+def htmx_prescription_create(request, record_id):
+    """Create prescription and return updated prescription list"""
+    if not request.user.is_staff:
+        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
+    
+    try:
+        record = MedicalRecord.objects.get(id=record_id)
+        medicine = Inventory.objects.get(id=request.POST.get('medicine_id'))
+        
+        # Create prescription
+        prescription = Prescription.objects.create(
+            medical_record=record,
+            medicine=medicine,
+            quantity=int(request.POST.get('quantity', 1)),
+            dosage=request.POST.get('dosage'),
+            duration=request.POST.get('duration', ''),
+            instructions=request.POST.get('instructions', ''),
+            unit_price=medicine.price,
+            prescribed_by=request.user
+        )
+        
+        # Return updated prescription list
+        return htmx_prescriptions(request, record_id)
+        
+    except (MedicalRecord.DoesNotExist, Inventory.DoesNotExist):
+        return HttpResponse(
+            '<div class="alert alert-danger">Record or medicine not found</div>',
+            status=404
+        )
+    except Exception as e:
+        import traceback
+        error_msg = f'<div class="alert alert-danger">Error creating prescription: {str(e)}<br><pre>{traceback.format_exc()}</pre></div>'
+        return HttpResponse(error_msg, status=500)
+
+
+@login_required
+@require_http_methods(["DELETE"])
+def htmx_prescription_delete(request, prescription_id):
+    """Delete prescription and return updated list"""
+    if not request.user.is_staff:
+        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
+    
+    try:
+        prescription = Prescription.objects.select_related('medical_record').get(id=prescription_id)
+        record_id = prescription.medical_record.id
+        prescription.delete()
+        
+        # Return updated prescription list
+        return htmx_prescriptions(request, record_id)
+        
+    except Prescription.DoesNotExist:
+        return HttpResponse(
+            '<div class="alert alert-danger">Prescription not found</div>',
+            status=404
+        )
+
+
+# ========================================
+# MEDICAL IMAGE MANAGEMENT
+# ========================================
+
+@login_required
+@require_http_methods(["GET"])
+def htmx_medical_images(request, record_id):
+    """Return HTML fragment showing medical images for a specific record"""
+    if not request.user.is_staff:
+        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
+    
+    try:
+        record = MedicalRecord.objects.select_related('patient__user').prefetch_related('images').get(id=record_id)
+        images = record.images.all()
+        
+        html = f'''
+        <div class="mb-3 d-flex justify-content-between align-items-center">
+            <div>
+                <h6><strong>Patient:</strong> {record.patient.user.get_full_name()}</h6>
+                <p class="text-muted mb-0">
+                    <strong>Visit Date:</strong> {record.visit_date.strftime('%B %d, %Y')}
+                </p>
+            </div>
+            <button 
+                class="btn btn-sm btn-info"
+                hx-get="/admin/htmx/medical-image/upload-form/{record_id}/"
+                hx-target="#medicalImagesModalBody"
+                hx-swap="innerHTML"
+            >
+                <i class="fas fa-plus me-2"></i>Upload Image
+            </button>
+        </div>
+        '''
+        
+        if not images:
+            html += '<div class="alert alert-info">No medical images found for this record. Click "Upload Image" to add one.</div>'
+        else:
+            html += '<div class="row g-3">'
+            for image in images:
+                html += f'''
+                <div class="col-md-4">
+                    <div class="card">
+                        <img src="{image.image.url}" class="card-img-top" alt="{image.title}" 
+                             style="height: 250px; object-fit: cover; cursor: pointer;"
+                             onclick="window.open('{image.image.url}', '_blank')">
+                        <div class="card-body">
+                            <h6 class="card-title">{image.title or "Medical Image"}</h6>
+                            <p class="card-text">
+                                <small class="text-muted">
+                                    <strong>Type:</strong> {image.get_image_type_display()}<br>
+                                    {f"<strong>Description:</strong> {image.description}" if image.description else ""}
+                                </small>
+                            </p>
+                            <button 
+                                class="btn btn-sm btn-danger w-100"
+                                hx-delete="/admin/htmx/medical-image/{image.id}/delete/"
+                                hx-target="#medicalImagesModalBody"
+                                hx-confirm="Are you sure you want to delete this image: {image.title}?"
+                            >
+                                <i class="fas fa-trash me-2"></i>Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                '''
+            html += '</div>'
+        
+        return HttpResponse(html)
+    except MedicalRecord.DoesNotExist:
+        return HttpResponse(
+            '<div class="alert alert-danger">Medical record not found</div>',
+            status=404
+        )
+
+
+@login_required
+@require_http_methods(["GET"])
+def htmx_medical_image_upload_form(request, record_id):
+    """Return HTML fragment with medical image upload form"""
+    if not request.user.is_staff:
+        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
+    
+    try:
+        record = MedicalRecord.objects.select_related('patient__user').get(id=record_id)
+        
+        return render(request, 'bookings_v2/htmx_partials/medical_image_upload_form.html', {
+            'record': record
+        })
+    except MedicalRecord.DoesNotExist:
+        return HttpResponse(
+            '<div class="alert alert-danger">Medical record not found</div>',
+            status=404
+        )
+
+
+@login_required
+@require_http_methods(["POST"])
+def htmx_medical_image_upload(request, record_id):
+    """Upload medical image and return updated image list"""
+    if not request.user.is_staff:
+        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
+    
+    try:
+        record = MedicalRecord.objects.get(id=record_id)
+        
+        # Handle file upload
+        image_file = request.FILES.get('image')
+        if not image_file:
+            return HttpResponse(
+                '<div class="alert alert-danger">No image file provided</div>',
+                status=400
+            )
+        
+        # Create medical image
+        medical_image = MedicalImage.objects.create(
+            medical_record=record,
+            image=image_file,
+            title=request.POST.get('title', 'Medical Image'),
+            description=request.POST.get('description', ''),
+            image_type=request.POST.get('image_type', 'clinical'),
+            uploaded_by=request.user
+        )
+        
+        # Return updated image list
+        return htmx_medical_images(request, record_id)
+        
+    except MedicalRecord.DoesNotExist:
+        return HttpResponse(
+            '<div class="alert alert-danger">Medical record not found</div>',
+            status=404
+        )
+    except Exception as e:
+        import traceback
+        error_msg = f'<div class="alert alert-danger">Error uploading image: {str(e)}<br><pre>{traceback.format_exc()}</pre></div>'
+        return HttpResponse(error_msg, status=500)
+
+
+@login_required
+@require_http_methods(["DELETE"])
+def htmx_medical_image_delete(request, image_id):
+    """Delete medical image and return updated list"""
+    if not request.user.is_staff:
+        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
+    
+    try:
+        image = MedicalImage.objects.select_related('medical_record').get(id=image_id)
+        record_id = image.medical_record.id
+        
+        # Delete the file
+        if image.image:
+            image.image.delete()
+        
+        image.delete()
+        
+        # Return updated image list
+        return htmx_medical_images(request, record_id)
+        
+    except MedicalImage.DoesNotExist:
+        return HttpResponse(
+            '<div class="alert alert-danger">Image not found</div>',
+            status=404
+        )
