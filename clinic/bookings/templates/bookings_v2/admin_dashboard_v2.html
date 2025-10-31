@@ -5,8 +5,17 @@
 
 {% block extra_css %}
 <style>
-    body {
-        background-color: #f8f9fa;
+    /* Override global background image */
+    body,
+    body::before,
+    body::after {
+        background: #f8f9fa !important;
+        background-image: none !important;
+        background-attachment: initial !important;
+    }
+    
+    html {
+        background: #f8f9fa !important;
     }
     
     .dashboard-container {
@@ -262,13 +271,35 @@
     
     /* Modal Styles */
     .modal-header {
-        background: linear-gradient(135deg, var(--primary-color) 0%, var(--dark-green) 100%);
-        color: white;
-        border-radius: 8px 8px 0 0;
+        background: white;  /* White background for readability */
+        color: #212529;  /* Dark text */
+        border-bottom: 3px solid var(--primary-color);  /* Colored border instead */
+        border-radius: 0;
+    }
+    
+    .modal-title {
+        color: #212529 !important;  /* Dark color for visibility */
+        font-weight: 600;
+    }
+    
+    /* Special styling for modals with specifically colored headers */
+    .modal-header.bg-success {
+        background: linear-gradient(135deg, #28a745 0%, #34ce57 100%) !important;
+        color: white !important;
+        border-bottom: none;
+    }
+    
+    .modal-header.bg-success .modal-title {
+        color: white !important;
     }
     
     .modal-header .btn-close {
+        opacity: 0.8;
+    }
+    
+    .modal-header.bg-success .btn-close {
         filter: invert(1);
+        opacity: 1;
     }
     
     .modal-body {
@@ -671,7 +702,12 @@
                     <span>Create User</span>
                 </button>
                 
-                <!-- Pending Bookings Management -->
+                <!-- Booking Management - GROUPED -->
+                <a href="{% url 'bookings_v2:booking' %}" class="quick-action-btn">
+                    <i class="fas fa-plus"></i>
+                    <span>New Booking</span>
+                </a>
+                
                 <button type="button" class="quick-action-btn" 
                         hx-get="{% url 'bookings_v2:htmx_pending_bookings' %}" 
                         hx-target="#pendingBookingsContainer"
@@ -681,16 +717,7 @@
                     <span>Pending Bookings</span>
                 </button>
                 
-                <!-- Django Admin Links (fallback) -->
-                <button type="button" class="quick-action-btn"
-                        hx-get="{% url 'bookings_v2:htmx_appointments_list' %}" 
-                        hx-target="#appointmentsModalBody"
-                        data-bs-toggle="modal" 
-                        data-bs-target="#appointmentsModal">
-                    <i class="fas fa-calendar-plus"></i>
-                    <span>View Appointments</span>
-                </button>
-                
+                <!-- Patient Management - GROUPED -->
                 <button type="button" class="quick-action-btn"
                         hx-get="{% url 'bookings_v2:htmx_patients_list' %}" 
                         hx-target="#patientsModalBody"
@@ -698,67 +725,6 @@
                         data-bs-target="#patientsModal">
                     <i class="fas fa-clipboard-list"></i>
                     <span>Patient Profiles</span>
-                </button>
-                
-                <button type="button" class="quick-action-btn"
-                        hx-get="{% url 'bookings_v2:htmx_medical_records_list' %}" 
-                        hx-target="#medicalRecordsModalBody"
-                        data-bs-toggle="modal" 
-                        data-bs-target="#medicalRecordsModal">
-                    <i class="fas fa-notes-medical"></i>
-                    <span>Medical Records</span>
-                </button>
-                
-                <button type="button" class="quick-action-btn"
-                        hx-get="{% url 'bookings_v2:htmx_all_billings' %}" 
-                        hx-target="#billingsModalBody"
-                        data-bs-toggle="modal" 
-                        data-bs-target="#billingsModal">
-                    <i class="fas fa-file-invoice-dollar"></i>
-                    <span>All Bills</span>
-                </button>
-                
-                <button type="button" class="quick-action-btn"
-                        hx-get="{% url 'bookings_v2:htmx_inventory_list' %}" 
-                        hx-target="#inventoryModalBody"
-                        data-bs-toggle="modal" 
-                        data-bs-target="#inventoryModal">
-                    <i class="fas fa-boxes"></i>
-                    <span>View Inventory</span>
-                </button>
-                
-                <button type="button" class="quick-action-btn"
-                        hx-get="{% url 'bookings_v2:htmx_pos_interface' %}" 
-                        hx-target="#posModalBody"
-                        data-bs-toggle="modal" 
-                        data-bs-target="#posModal"
-                        style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
-                    <i class="fas fa-cash-register"></i>
-                    <span>Point of Sale</span>
-                </button>
-                
-                <button type="button" class="quick-action-btn"
-                        hx-get="{% url 'bookings_v2:htmx_pos_sales_list' %}" 
-                        hx-target="#posModalBody"
-                        data-bs-toggle="modal" 
-                        data-bs-target="#posModal">
-                    <i class="fas fa-receipt"></i>
-                    <span>View All Sales</span>
-                </button>
-                
-                <a href="{% url 'bookings_v2:booking' %}" class="quick-action-btn">
-                    <i class="fas fa-plus"></i>
-                    <span>New Booking</span>
-                </a>
-                
-                <!-- V2 Create Forms -->
-                <button type="button" class="quick-action-btn"
-                        hx-get="{% url 'bookings_v2:htmx_appointment_create_form' %}" 
-                        hx-target="#appointmentsModalBody"
-                        data-bs-toggle="modal" 
-                        data-bs-target="#appointmentsModal">
-                    <i class="fas fa-calendar-plus"></i>
-                    <span>New Appointment</span>
                 </button>
                 
                 <button type="button" class="quick-action-btn"
@@ -770,15 +736,45 @@
                     <span>New Patient</span>
                 </button>
                 
+                <!-- Medical Records - GROUPED -->
                 <button type="button" class="quick-action-btn"
-                        hx-get="{% url 'bookings_v2:htmx_payment_create_form' %}" 
-                        hx-target="#billingsModalBody"
+                        hx-get="{% url 'bookings_v2:htmx_medical_records_list' %}" 
+                        hx-target="#medicalRecordsModalBody"
                         data-bs-toggle="modal" 
-                        data-bs-target="#billingsModal">
-                    <i class="fas fa-money-bill-wave"></i>
-                    <span>Record Payment</span>
+                        data-bs-target="#medicalRecordsModal">
+                    <i class="fas fa-notes-medical"></i>
+                    <span>Medical Records</span>
                 </button>
                 
+                <button type="button" class="quick-action-btn"
+                        hx-get="{% url 'bookings_v2:htmx_medical_record_create_form' %}" 
+                        hx-target="#medicalRecordsModalBody"
+                        data-bs-toggle="modal" 
+                        data-bs-target="#medicalRecordsModal">
+                    <i class="fas fa-file-medical-alt"></i>
+                    <span>New Record</span>
+                </button>
+                
+                <!-- Appointments -->
+                <button type="button" class="quick-action-btn"
+                        hx-get="{% url 'bookings_v2:htmx_appointments_list' %}" 
+                        hx-target="#appointmentsModalBody"
+                        data-bs-toggle="modal" 
+                        data-bs-target="#appointmentsModal">
+                    <i class="fas fa-calendar-plus"></i>
+                    <span>View Appointments</span>
+                </button>
+                
+                <button type="button" class="quick-action-btn"
+                        hx-get="{% url 'bookings_v2:htmx_appointment_create_form' %}" 
+                        hx-target="#appointmentsModalBody"
+                        data-bs-toggle="modal" 
+                        data-bs-target="#appointmentsModal">
+                    <i class="fas fa-calendar-plus"></i>
+                    <span>New Appointment</span>
+                </button>
+                
+                <!-- Services Management - GROUPED -->
                 <button type="button" class="quick-action-btn"
                         hx-get="{% url 'bookings_v2:htmx_services_list' %}" 
                         hx-target="#servicesModalBody"
@@ -797,6 +793,16 @@
                     <span>New Service</span>
                 </button>
                 
+                <!-- Inventory Management - GROUPED -->
+                <button type="button" class="quick-action-btn"
+                        hx-get="{% url 'bookings_v2:htmx_inventory_list' %}" 
+                        hx-target="#inventoryModalBody"
+                        data-bs-toggle="modal" 
+                        data-bs-target="#inventoryModal">
+                    <i class="fas fa-boxes"></i>
+                    <span>View Inventory</span>
+                </button>
+                
                 <button type="button" class="quick-action-btn"
                         hx-get="{% url 'bookings_v2:htmx_inventory_create_form' %}" 
                         hx-target="#inventoryModalBody"
@@ -806,22 +812,43 @@
                     <span>Add Inventory</span>
                 </button>
                 
+                <!-- Billing -->
                 <button type="button" class="quick-action-btn"
-                        hx-get="{% url 'bookings_v2:htmx_medical_record_create_form' %}" 
-                        hx-target="#medicalRecordsModalBody"
+                        hx-get="{% url 'bookings_v2:htmx_all_billings' %}" 
+                        hx-target="#billingsModalBody"
                         data-bs-toggle="modal" 
-                        data-bs-target="#medicalRecordsModal">
-                    <i class="fas fa-file-medical-alt"></i>
-                    <span>New Record</span>
+                        data-bs-target="#billingsModal">
+                    <i class="fas fa-file-invoice-dollar"></i>
+                    <span>All Bills</span>
                 </button>
                 
                 <button type="button" class="quick-action-btn"
-                        hx-get="{% url 'bookings_v2:htmx_services_list' %}" 
-                        hx-target="#servicesModalBody"
+                        hx-get="{% url 'bookings_v2:htmx_payment_create_form' %}" 
+                        hx-target="#billingsModalBody"
                         data-bs-toggle="modal" 
-                        data-bs-target="#servicesModal">
-                    <i class="fas fa-cogs"></i>
-                    <span>Manage Services</span>
+                        data-bs-target="#billingsModal">
+                    <i class="fas fa-money-bill-wave"></i>
+                    <span>Record Payment</span>
+                </button>
+                
+                <!-- Point of Sale -->
+                <button type="button" class="quick-action-btn"
+                        hx-get="{% url 'bookings_v2:htmx_pos_interface' %}" 
+                        hx-target="#posModalBody"
+                        data-bs-toggle="modal" 
+                        data-bs-target="#posModal"
+                        style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
+                    <i class="fas fa-cash-register"></i>
+                    <span>Point of Sale</span>
+                </button>
+                
+                <button type="button" class="quick-action-btn"
+                        hx-get="{% url 'bookings_v2:htmx_pos_sales_list' %}" 
+                        hx-target="#posModalBody"
+                        data-bs-toggle="modal" 
+                        data-bs-target="#posModal">
+                    <i class="fas fa-receipt"></i>
+                    <span>View All Sales</span>
                 </button>
             </div>
         </div>
@@ -863,12 +890,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body" id="patientsModalBody">
-                <div class="loading-state">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Loading...</span>
-                    </div>
-                    <p>Loading patients...</p>
-                </div>
+                <!-- Content loaded via HTMX -->
             </div>
         </div>
     </div>
@@ -964,12 +986,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body" id="inventoryAdjustModalBody">
-                <div class="loading-state">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Loading...</span>
-                    </div>
-                    <p>Loading...</p>
-                </div>
+                <!-- Content loaded via HTMX -->
             </div>
         </div>
     </div>
@@ -1232,20 +1249,9 @@
 
 {% block extra_js %}
 <script>
-    // HTMX event listeners for better UX
+    // HTMX event listeners for better UX - No loading buffer
     document.body.addEventListener('htmx:beforeRequest', function(event) {
-        // Show loading spinner in the target element
-        const target = event.detail.target;
-        if (target) {
-            target.innerHTML = `
-                <div class="loading-state">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Loading...</span>
-                    </div>
-                    <p>Loading...</p>
-                </div>
-            `;
-        }
+        // No loading buffer - HTMX handles transitions smoothly
     });
     
     document.body.addEventListener('htmx:afterSwap', function(event) {

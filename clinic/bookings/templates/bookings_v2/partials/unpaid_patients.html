@@ -13,7 +13,7 @@
             </thead>
             <tbody>
                 {% for billing in unpaid_billings %}
-                <tr id="billing-{{ billing.id }}">
+                <tr id="billing-row-{{ billing.id }}">
                     <td>
                         <strong>{{ billing.booking.patient_name }}</strong><br>
                         <small class="text-muted">{{ billing.booking.patient_email }}</small>
@@ -26,7 +26,7 @@
                     <td class="text-center">
                         <button class="btn btn-sm btn-success"
                                 hx-post="{% url 'bookings_v2:htmx_mark_paid' billing.id %}"
-                                hx-target="#billing-{{ billing.id }}"
+                                hx-target="#billing-row-{{ billing.id }}"
                                 hx-swap="outerHTML"
                                 hx-confirm="Mark this billing as paid?">
                             <i class="fas fa-check"></i> Mark Paid

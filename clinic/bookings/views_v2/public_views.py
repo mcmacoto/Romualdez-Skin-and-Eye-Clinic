@@ -134,7 +134,18 @@ def htmx_time_slots(request):
 
 @require_http_methods(["POST"])
 def htmx_submit_booking(request):
-    """Handle HTMX booking form submission"""
+    """Handle HTMX booking form submission - REQUIRES AUTHENTICATION"""
+    # Block unauthenticated users
+    if not request.user.is_authenticated:
+        return HttpResponse(
+            '<div class="alert alert-danger">'
+            '<i class="fas fa-exclamation-circle"></i> '
+            'You must be logged in to book an appointment. '
+            'Please visit the clinic in person to create an account.'
+            '</div>',
+            status=403
+        )
+    
     try:
         # Extract form data
         service_id = request.POST.get('service')
@@ -203,12 +214,12 @@ def htmx_submit_booking(request):
             service=service,
             notes=notes,
             status='Pending',
-            created_by=request.user if request.user.is_authenticated else None
+            created_by=request.user  # Always authenticated at this point
         )
         
         # Redirect to success page using HX-Redirect
         response = HttpResponse()
-        response['HX-Redirect'] = f'/v2/success/?booking_id={booking.id}'
+        response['HX-Redirect'] = f'/admin/success/?booking_id={booking.id}'
         return response
         
     except Exception as e:

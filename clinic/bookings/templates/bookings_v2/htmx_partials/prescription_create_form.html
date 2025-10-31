@@ -1,7 +1,8 @@
 <!-- HTMX Partial: Prescription Create Form -->
 <form hx-post="{% url 'bookings_v2:htmx_prescription_create' record.id %}" 
       hx-target="#prescriptionsModalBody"
-      hx-swap="innerHTML">
+      hx-swap="innerHTML"
+      id="prescriptionForm">
     {% csrf_token %}
     
     <div class="mb-3">
@@ -15,14 +16,45 @@
     <!-- Medicine Selection -->
     <div class="mb-3">
         <label class="form-label required">Medicine</label>
-        <select class="form-select" name="medicine_id" required id="medicineSelect">
+        <select class="form-select" name="medicine_id" id="medicineSelect" required>
             <option value="">Select medicine...</option>
             {% for medicine in medicines %}
-            <option value="{{ medicine.id }}" data-price="{{ medicine.price }}" data-stock="{{ medicine.quantity }}">
+            <option value="{{ medicine.item_id }}" data-price="{{ medicine.price }}" data-stock="{{ medicine.quantity }}">
                 {{ medicine.name }} - ₱{{ medicine.price }} (Stock: {{ medicine.quantity }})
             </option>
             {% endfor %}
+            <option value="other" data-price="0" data-stock="0">
+                Other (Not in inventory)
+            </option>
         </select>
+    </div>
+
+    <!-- Custom Medicine Name (shown when "Other" is selected) -->
+    <div class="mb-3" id="customMedicineDiv" style="display: none;">
+        <label class="form-label required">Medicine Name</label>
+        <input 
+            type="text" 
+            class="form-control" 
+            name="custom_medicine_name"
+            id="customMedicineInput"
+            placeholder="Enter medicine name (not in inventory)"
+        >
+        <small class="text-muted">This medicine is not tracked in inventory.</small>
+    </div>
+
+    <!-- Custom Price (shown when "Other" is selected) -->
+    <div class="mb-3" id="customPriceDiv" style="display: none;">
+        <label class="form-label">Unit Price (Optional)</label>
+        <input 
+            type="number" 
+            class="form-control" 
+            name="custom_price"
+            id="customPriceInput"
+            placeholder="0.00"
+            step="0.01"
+            min="0"
+        >
+        <small class="text-muted">Leave blank if price is not applicable.</small>
     </div>
 
     <!-- Quantity -->
@@ -91,15 +123,69 @@
         >
             <i class="fas fa-times me-2"></i>Cancel
         </button>
-        <button type="submit" class="btn btn-success">
+        <button type="submit" class="btn btn-success" id="submitBtn">
             <i class="fas fa-save me-2"></i>Add Prescription
         </button>
     </div>
 </form>
 
 <script>
-// Calculate total price based on medicine and quantity
+// Intercept HTMX request before it's sent
+document.getElementById('prescriptionForm').addEventListener('htmx:configRequest', function(evt) {
+    const medicineSelect = document.getElementById('medicineSelect');
+    const customMedicineInput = document.getElementById('customMedicineInput');
+    
+    console.log('Medicine selected:', medicineSelect.value);
+    
+    // Validate medicine selection
+    if (!medicineSelect.value || medicineSelect.value === '') {
+        evt.preventDefault();
+        alert('Please select a medicine from the dropdown');
+        medicineSelect.focus();
+        return false;
+    }
+    
+    // Validate custom medicine name if "Other" is selected
+    if (medicineSelect.value === 'other' && !customMedicineInput.value.trim()) {
+        evt.preventDefault();
+        alert('Please enter the medicine name');
+        customMedicineInput.focus();
+        return false;
+    }
+});
+
+// Handle medicine selection changes
 document.getElementById('medicineSelect').addEventListener('change', function() {
+    const selectedValue = this.value;
+    console.log('Medicine changed to:', selectedValue);
+    
+    const customMedicineDiv = document.getElementById('customMedicineDiv');
+    const customPriceDiv = document.getElementById('customPriceDiv');
+    const customMedicineInput = document.getElementById('customMedicineInput');
+    const customPriceInput = document.getElementById('customPriceInput');
+    const quantityInput = document.getElementById('quantityInput');
+    
+    if (selectedValue === 'other') {
+        // Show custom fields
+        customMedicineDiv.style.display = 'block';
+        customPriceDiv.style.display = 'block';
+        customMedicineInput.required = true;
+        
+        // Remove stock validation for custom medicine
+        quantityInput.setCustomValidity('');
+        document.getElementById('pricePreview').style.display = 'none';
+        
+        // Update price when custom price changes
+        customPriceInput.addEventListener('input', updatePrice);
+    } else {
+        // Hide custom fields
+        customMedicineDiv.style.display = 'none';
+        customPriceDiv.style.display = 'none';
+        customMedicineInput.required = false;
+        customMedicineInput.value = '';
+        customPriceInput.value = '';
+    }
+    
     updatePrice();
 });
 
@@ -110,9 +196,23 @@ document.getElementById('quantityInput').addEventListener('input', function() {
 function updatePrice() {
     const select = document.getElementById('medicineSelect');
     const quantity = parseInt(document.getElementById('quantityInput').value) || 0;
-    const option = select.options[select.selectedIndex];
+    const selectedValue = select.value;
     
-    if (option && option.value) {
+    if (selectedValue === 'other') {
+        // Custom medicine - use custom price
+        const customPrice = parseFloat(document.getElementById('customPriceInput').value) || 0;
+        if (customPrice > 0) {
+            const total = customPrice * quantity;
+            document.getElementById('totalPrice').textContent = total.toFixed(2);
+            document.getElementById('pricePreview').style.display = 'block';
+            document.getElementById('pricePreview').classList.remove('alert-warning');
+            document.getElementById('pricePreview').classList.add('alert-info');
+        } else {
+            document.getElementById('pricePreview').style.display = 'none';
+        }
+    } else if (selectedValue) {
+        // Inventory medicine - use inventory data
+        const option = select.options[select.selectedIndex];
         const price = parseFloat(option.dataset.price) || 0;
         const stock = parseInt(option.dataset.stock) || 0;
         const total = price * quantity;
@@ -121,12 +221,13 @@ function updatePrice() {
         document.getElementById('pricePreview').style.display = 'block';
         
         // Validate stock
+        const quantityInput = document.getElementById('quantityInput');
         if (quantity > stock) {
-            document.getElementById('quantityInput').setCustomValidity(`Only ${stock} units available in stock`);
+            quantityInput.setCustomValidity(`Only ${stock} units available in stock`);
             document.getElementById('pricePreview').classList.remove('alert-info');
             document.getElementById('pricePreview').classList.add('alert-warning');
         } else {
-            document.getElementById('quantityInput').setCustomValidity('');
+            quantityInput.setCustomValidity('');
             document.getElementById('pricePreview').classList.remove('alert-warning');
             document.getElementById('pricePreview').classList.add('alert-info');
         }

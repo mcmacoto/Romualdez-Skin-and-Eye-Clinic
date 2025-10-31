@@ -4,8 +4,8 @@
         <div class="card h-100 product-card {% if item.quantity <= 0 %}out-of-stock{% endif %}" 
              style="cursor: pointer;"
              hx-post="{% url 'bookings_v2:htmx_pos_add_to_cart' item.item_id %}"
-             hx-target="#posCartBody"
-             hx-swap="innerHTML">
+             hx-target="#cartItemsContainer"
+             hx-swap="outerHTML">
             <div class="card-body p-2">
                 <div class="text-center">
                     <div class="product-icon mb-2">

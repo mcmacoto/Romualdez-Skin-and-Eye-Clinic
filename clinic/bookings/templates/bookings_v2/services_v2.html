@@ -3,8 +3,25 @@
 
 {% block title %}Our Services - V2{% endblock %}
 
+{% block extra_css %}
+<style>
+    /* Override global background image */
+    body,
+    body::before,
+    body::after {
+        background: #f8f9fa !important;
+        background-image: none !important;
+        background-attachment: initial !important;
+    }
+    
+    html {
+        background: #f8f9fa !important;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container py-5">
+<div class="container py-5" x-data="servicesFilter()">
     <!-- Header Section -->
     <div class="text-center mb-5">
         <h1 class="display-4 fw-bold">Our Services</h1>
@@ -12,7 +29,7 @@
     </div>
 
     <!-- Search and Filter Section with Alpine.js -->
-    <div class="row mb-4" x-data="servicesFilter()">
+    <div class="row mb-4">
         <div class="col-md-6 mb-3">
             <div class="input-group">
                 <span class="input-group-text bg-primary text-white">
@@ -38,7 +55,7 @@
     </div>
 
     <!-- Services Count -->
-    <div class="mb-3" x-data="servicesFilter()">
+    <div class="mb-3">
         <p class="text-muted">
             <i class="fas fa-info-circle"></i> 
             Showing <strong x-text="visibleCount"></strong> of <strong>{{ services.count }}</strong> services
@@ -46,7 +63,7 @@
     </div>
 
     <!-- Services Grid with Alpine.js filtering -->
-    <div class="row g-4" x-data="servicesFilter()">
+    <div class="row g-4">
         {% for service in services %}
         <div 
             class="col-md-6 col-lg-4 service-card"
@@ -209,46 +226,40 @@ function servicesFilter() {
         priceFilter: 'all',
         visibleCount: {{ services.count }},
         
+        init() {
+            // Update visible count on init
+            this.$nextTick(() => {
+                this.updateVisibleCount();
+            });
+        },
+        
         filterServices() {
+            this.$nextTick(() => {
+                this.updateVisibleCount();
+            });
+        },
+        
+        updateVisibleCount() {
             const cards = document.querySelectorAll('.service-card');
             let count = 0;
-            
             cards.forEach(card => {
-                const name = card.dataset.serviceName;
-                const description = card.dataset.serviceDescription;
-                const price = parseFloat(card.dataset.servicePrice);
-                
-                // Search filter
-                const matchesSearch = !this.searchQuery || 
-                    name.includes(this.searchQuery.toLowerCase()) || 
-                    description.includes(this.searchQuery.toLowerCase());
-                
-                // Price filter
-                let matchesPrice = true;
-                if (this.priceFilter === 'low') {
-                    matchesPrice = price <= 2000;
-                } else if (this.priceFilter === 'medium') {
-                    matchesPrice = price > 2000 && price <= 5000;
-                } else if (this.priceFilter === 'high') {
-                    matchesPrice = price > 5000;
+                if (this.isVisible(card)) {
+                    count++;
                 }
-                
-                const visible = matchesSearch && matchesPrice;
-                if (visible) count++;
             });
-            
             this.visibleCount = count;
         },
         
         isVisible(element) {
-            const name = element.dataset.serviceName;
-            const description = element.dataset.serviceDescription;
-            const price = parseFloat(element.dataset.servicePrice);
+            const name = element.dataset.serviceName || '';
+            const description = element.dataset.serviceDescription || '';
+            const price = parseFloat(element.dataset.servicePrice) || 0;
             
             // Search filter
+            const searchLower = this.searchQuery.toLowerCase();
             const matchesSearch = !this.searchQuery || 
-                name.includes(this.searchQuery.toLowerCase()) || 
-                description.includes(this.searchQuery.toLowerCase());
+                name.includes(searchLower) || 
+                description.includes(searchLower);
             
             // Price filter
             let matchesPrice = true;

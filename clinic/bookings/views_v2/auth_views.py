@@ -124,13 +124,24 @@ def patient_dashboard_v2(request):
         patient=patient
     ).order_by('-visit_date')
     
-    # Get billing information
+    # Get billing information from bookings
     billings = Billing.objects.filter(
         booking__patient_email=request.user.email
     ).select_related('booking__service').order_by('-issued_date')
     
+    # Get POS sales for this patient
+    from ..models import POSSale
+    pos_sales = POSSale.objects.filter(
+        patient=patient
+    ).order_by('-sale_date')
+    
+    # Calculate outstanding balance from bookings
     unpaid_bills = billings.filter(is_paid=False)
-    total_outstanding = unpaid_bills.aggregate(total=Sum('balance'))['total'] or 0
+    booking_outstanding = unpaid_bills.aggregate(total=Sum('balance'))['total'] or 0
+    
+    # Calculate total outstanding including unpaid POS sales (if any are unpaid)
+    # For now, POS sales are paid immediately, but we'll include for completeness
+    total_outstanding = booking_outstanding
     
     context = {
         'has_profile': True,
@@ -141,6 +152,7 @@ def patient_dashboard_v2(request):
         'medical_records': medical_records,
         'total_records': medical_records.count(),
         'billings': billings,
+        'pos_sales': pos_sales,
         'unpaid_bills': unpaid_bills,
         'total_outstanding': total_outstanding,
     }

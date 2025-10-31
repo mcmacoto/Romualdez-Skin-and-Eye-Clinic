@@ -22,7 +22,15 @@ class Prescription(models.Model):
         Inventory,
         on_delete=models.PROTECT,
         limit_choices_to={'category': 'Medicine'},
-        help_text="Medicine from inventory"
+        help_text="Medicine from inventory",
+        null=True,
+        blank=True
+    )
+    # Custom medicine name for medicines not in inventory
+    custom_medicine_name = models.CharField(
+        max_length=255,
+        blank=True,
+        help_text="Medicine name if not in inventory"
     )
     quantity = models.IntegerField(default=1, help_text="Quantity prescribed")
     dosage = models.CharField(max_length=100, help_text="e.g., '1 tablet twice daily'")
@@ -57,13 +65,18 @@ class Prescription(models.Model):
         verbose_name_plural = 'Prescriptions'
     
     def __str__(self):
-        return f"{self.medicine.name} x{self.quantity} - {self.medical_record.patient.user.get_full_name()}"
+        medicine_name = self.custom_medicine_name if self.custom_medicine_name else self.medicine.name
+        return f"{medicine_name} x{self.quantity} - {self.medical_record.patient.user.get_full_name()}"
     
     def save(self, *args, **kwargs):
         """Calculate total price and update inventory"""
-        # Set unit price from current medicine price if not set
-        if not self.unit_price:
+        # Set unit price from current medicine price if not set and using inventory medicine
+        if self.medicine and not self.unit_price:
             self.unit_price = self.medicine.price
+        
+        # If custom medicine and no price set, default to 0
+        if not self.medicine and not self.unit_price:
+            self.unit_price = 0
         
         # Calculate total
         self.total_price = self.unit_price * self.quantity
@@ -72,8 +85,8 @@ class Prescription(models.Model):
         is_new = self.pk is None
         super().save(*args, **kwargs)
         
-        # If new prescription, deduct from inventory
-        if is_new:
+        # If new prescription with inventory medicine, deduct from inventory
+        if is_new and self.medicine:
             if self.medicine.quantity >= self.quantity:
                 self.medicine.quantity -= self.quantity
                 self.medicine.save()

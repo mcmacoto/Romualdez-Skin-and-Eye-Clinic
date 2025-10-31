@@ -64,9 +64,9 @@ def htmx_mark_consultation_done(request, booking_id):
         booking.status = 'Completed'
         booking.save()
         
-        # Return the updated row
-        return render(request, 'bookings_v2/partials/appointments_list.html', {
-            'appointments': [booking]
+        # Return just the updated row
+        return render(request, 'bookings_v2/partials/appointment_row.html', {
+            'appointment': booking
         })
     except Booking.DoesNotExist:
         return HttpResponse(
@@ -102,9 +102,9 @@ def htmx_update_consultation_status(request, booking_id):
         
         booking.save()
         
-        # Return the updated row
-        return render(request, 'bookings_v2/partials/appointments_list.html', {
-            'appointments': [booking]
+        # Return just the updated row
+        return render(request, 'bookings_v2/partials/appointment_row.html', {
+            'appointment': booking
         })
     except Booking.DoesNotExist:
         return HttpResponse(

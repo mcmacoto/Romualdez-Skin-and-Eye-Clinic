@@ -65,6 +65,49 @@
 }
 
 /* ========================================
+   GLOBAL BODY STYLES
+   ======================================== */
+
+body {
+    position: relative;
+    min-height: 100vh;
+}
+
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('../images/BGImage1.jpg') center center / cover no-repeat fixed;
+    filter: blur(3px);
+    z-index: -2;
+}
+
+body::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(rgba(240, 248, 255, 0.4), rgba(230, 240, 250, 0.5));
+    z-index: -1;
+}
+
+/* Make containers and cards semi-transparent to show background */
+.container,
+main {
+    background: transparent !important;
+}
+
+.card {
+    background: rgba(255, 255, 255, 0.95) !important;
+    backdrop-filter: blur(10px);
+}
+
+/* ========================================
    BOOTSTRAP PRIMARY COLOR OVERRIDES
    ======================================== */
 

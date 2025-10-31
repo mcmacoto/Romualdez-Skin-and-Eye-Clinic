@@ -490,13 +490,14 @@
             Billing & Payments
         </h3>
         
-        {% if billings %}
+        {% if billings or pos_sales %}
             <div class="table-responsive">
                 <table class="table billing-table">
                     <thead>
                         <tr>
                             <th>Date</th>
-                            <th>Service</th>
+                            <th>Type</th>
+                            <th>Service/Item</th>
                             <th>Amount</th>
                             <th>Paid</th>
                             <th>Balance</th>
@@ -507,6 +508,7 @@
                         {% for billing in billings|slice:":10" %}
                         <tr>
                             <td>{{ billing.issued_date|date:"M d, Y" }}</td>
+                            <td><span class="badge bg-info">Consultation</span></td>
                             <td>
                                 {% if billing.booking.service %}
                                     {{ billing.booking.service.name }}
@@ -530,11 +532,43 @@
                             </td>
                         </tr>
                         {% endfor %}
+                        
+                        {% for sale in pos_sales|slice:":10" %}
+                        <tr>
+                            <td>{{ sale.sale_date|date:"M d, Y" }}</td>
+                            <td><span class="badge bg-success">POS Sale</span></td>
+                            <td>
+                                <div>
+                                    <strong>Receipt #{{ sale.receipt_number }}</strong>
+                                    <br>
+                                    <small class="text-muted">{{ sale.items.count }} item(s)</small>
+                                </div>
+                            </td>
+                            <td>₱{{ sale.total_amount|floatformat:2 }}</td>
+                            <td>₱{{ sale.amount_received|floatformat:2 }}</td>
+                            <td class="fw-bold">₱0.00</td>
+                            <td>
+                                {% if sale.status == 'Completed' %}
+                                    <span class="badge badge-paid">
+                                        <i class="fas fa-check-circle"></i> {{ sale.status }}
+                                    </span>
+                                {% elif sale.status == 'Cancelled' %}
+                                    <span class="badge bg-secondary">
+                                        <i class="fas fa-times-circle"></i> {{ sale.status }}
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-warning">
+                                        <i class="fas fa-hourglass-half"></i> {{ sale.status }}
+                                    </span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
                     </tbody>
                     {% if unpaid_bills %}
                     <tfoot>
                         <tr class="table-warning">
-                            <td colspan="4" class="text-end fw-bold">Total Outstanding:</td>
+                            <td colspan="5" class="text-end fw-bold">Total Outstanding:</td>
                             <td colspan="2" class="fw-bold text-danger">₱{{ total_outstanding|floatformat:2 }}</td>
                         </tr>
                     </tfoot>
@@ -544,7 +578,7 @@
             
             {% if billings.count > 10 %}
             <div class="text-center mt-3">
-                <small class="text-muted">Showing 10 of {{ billings.count }} billing records</small>
+                <small class="text-muted">Showing recent billing and purchase records</small>
             </div>
             {% endif %}
         {% else %}

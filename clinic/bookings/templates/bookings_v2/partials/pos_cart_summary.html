@@ -1,0 +1,13 @@
+        {% if current_sale.discount_amount > 0 %}
+        <div class="d-flex justify-content-between mb-1 text-success">
+            <span>Discount:</span>
+            <strong>-₱{{ current_sale.discount_amount }}</strong>
+        </div>
+        {% endif %}
+        
+        <hr>
+        
+        <div class="d-flex justify-content-between mb-2">
+            <h5 class="mb-0">Total:</h5>
+            <h5 class="mb-0 text-primary">₱{{ current_sale.total_amount }}</h5>
+        </div>

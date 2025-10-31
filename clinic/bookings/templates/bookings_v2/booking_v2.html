@@ -12,6 +12,7 @@
                     <h3 class="mb-0"><i class="fas fa-calendar-check"></i> Book an Appointment</h3>
                 </div>
                 <div class="card-body" id="booking-form-container">
+                    {% if user.is_authenticated %}
                     <form 
                         hx-post="/admin/htmx/submit-booking/" 
                         hx-target="#booking-form-container"
@@ -172,6 +173,32 @@
                             </a>
                         </div>
                     </form>
+                    {% else %}
+                    <!-- Guest User Restriction Message -->
+                    <div class="alert alert-warning d-flex align-items-center" role="alert">
+                        <i class="fas fa-exclamation-triangle fa-2x me-3"></i>
+                        <div>
+                            <h5 class="alert-heading mb-2">Account Required</h5>
+                            <p class="mb-2">
+                                You must have an account to book online. Please visit the clinic in person to create an account.
+                            </p>
+                            <hr>
+                            <p class="mb-0">
+                                <strong>Clinic Address:</strong> 140 Juan Luna St., Koronadal City, South Cotabato 9506, Philippines<br>
+                                <strong>Contact:</strong> +63 976 152 | analizaromualdez@gmail.com<br>
+                                <strong>Hours:</strong> Monday to Saturday, 9:00 AM - 5:00 PM
+                            </p>
+                        </div>
+                    </div>
+                    <div class="d-grid gap-2 mt-3">
+                        <a href="/admin/contact/" class="btn btn-primary">
+                            <i class="fas fa-phone"></i> Contact Us
+                        </a>
+                        <a href="/admin/login/" class="btn btn-outline-secondary">
+                            <i class="fas fa-sign-in-alt"></i> Already have an account? Login
+                        </a>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
 

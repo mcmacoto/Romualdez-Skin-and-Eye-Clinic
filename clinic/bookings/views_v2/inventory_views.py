@@ -4,7 +4,7 @@ Handles inventory tracking, stock adjustments, and POS sales
 """
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.views.decorators.http import require_http_methods
 from django.db.models import Q, Sum
 from datetime import datetime, date, timedelta
@@ -570,7 +570,7 @@ def htmx_pos_add_to_cart(request, item_id):
             'patients': patients,
         }
         
-        return render(request, 'bookings_v2/partials/pos_cart.html', context)
+        return render(request, 'bookings_v2/partials/pos_cart_items.html', context)
         
     except Inventory.DoesNotExist:
         return HttpResponse(
@@ -599,7 +599,7 @@ def htmx_pos_remove_from_cart(request, item_id):
             'patients': patients,
         }
         
-        return render(request, 'bookings_v2/partials/pos_cart.html', context)
+        return render(request, 'bookings_v2/partials/pos_cart_items.html', context)
         
     except POSSaleItem.DoesNotExist:
         return HttpResponse('<div class="alert alert-danger">Item not found</div>', status=404)
@@ -634,7 +634,7 @@ def htmx_pos_update_quantity(request, item_id):
             'patients': patients,
         }
         
-        return render(request, 'bookings_v2/partials/pos_cart.html', context)
+        return render(request, 'bookings_v2/partials/pos_cart_items.html', context)
         
     except POSSaleItem.DoesNotExist:
         return HttpResponse('<div class="alert alert-danger">Item not found</div>', status=404)
@@ -645,7 +645,7 @@ def htmx_pos_update_quantity(request, item_id):
 def htmx_pos_update_discount(request, sale_id):
     """Update sale discount"""
     if not request.user.is_staff:
-        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
+        return JsonResponse({'success': False, 'error': 'Permission denied'}, status=403)
     
     try:
         current_sale = POSSale.objects.get(id=sale_id, status='Pending')
@@ -655,19 +655,21 @@ def htmx_pos_update_discount(request, sale_id):
         if 0 <= discount_percent <= 100:
             current_sale.discount_percent = discount_percent
             current_sale.save()
-        
-        patients = Patient.objects.select_related('user').all()
-        
-        context = {
-            'current_sale': current_sale,
-            'cart_items': current_sale.items.all(),
-            'patients': patients,
-        }
-        
-        return render(request, 'bookings_v2/partials/pos_cart.html', context)
+            
+            return JsonResponse({
+                'success': True,
+                'discount_percent': current_sale.discount_percent,
+                'discount_amount': float(current_sale.discount_amount),
+                'total_amount': float(current_sale.total_amount),
+                'subtotal': float(current_sale.subtotal)
+            })
+        else:
+            return JsonResponse({'success': False, 'error': 'Invalid discount'}, status=400)
         
     except POSSale.DoesNotExist:
-        return HttpResponse('<div class="alert alert-danger">Sale not found</div>', status=404)
+        return JsonResponse({'success': False, 'error': 'Sale not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 
 @login_required
@@ -691,15 +693,29 @@ def htmx_pos_complete_sale(request, sale_id):
         sale_type = request.POST.get('sale_type', 'Walk-in')
         current_sale.sale_type = sale_type
         
+        print(f"DEBUG: sale_type = {sale_type}")  # DEBUG
+        print(f"DEBUG: POST data = {request.POST}")  # DEBUG
+        print(f"DEBUG: BEFORE - current_sale.customer_name = {current_sale.customer_name}")  # DEBUG
+        
         if sale_type == 'Patient':
             patient_id = request.POST.get('patient_id')
+            print(f"DEBUG: patient_id = {patient_id}")  # DEBUG
             if patient_id:
                 try:
-                    patient = Patient.objects.get(patient_id=patient_id)
+                    patient = Patient.objects.get(id=patient_id)
                     current_sale.patient = patient
-                    current_sale.customer_name = patient.user.get_full_name()
+                    # Use full name if available, otherwise username
+                    full_name = patient.user.get_full_name()
+                    customer_name = full_name if full_name.strip() else patient.user.username
+                    current_sale.customer_name = customer_name
+                    print(f"DEBUG: Set patient to {customer_name}")  # DEBUG
+                    print(f"DEBUG: AFTER SET - current_sale.customer_name = {current_sale.customer_name}")  # DEBUG
                 except Patient.DoesNotExist:
+                    print(f"DEBUG: Patient {patient_id} not found")  # DEBUG
                     current_sale.customer_name = request.POST.get('customer_name', 'Walk-in Customer')
+            else:
+                print(f"DEBUG: No patient_id provided")  # DEBUG
+                current_sale.customer_name = 'Walk-in Customer'
         else:
             customer_name = request.POST.get('customer_name', '').strip()
             if not customer_name:
@@ -708,9 +724,18 @@ def htmx_pos_complete_sale(request, sale_id):
                     status=400
                 )
             current_sale.customer_name = customer_name
+            print(f"DEBUG: Walk-in customer name = {customer_name}")  # DEBUG
         
         # Update payment info
         current_sale.payment_method = request.POST.get('payment_method', 'Cash')
+        
+        # Update discount if provided
+        discount_percent = request.POST.get('discount_percent', '')
+        if discount_percent:
+            try:
+                current_sale.discount_percent = Decimal(str(discount_percent))
+            except (ValueError, TypeError):
+                pass
         
         try:
             amount_received = request.POST.get('amount_received', '')

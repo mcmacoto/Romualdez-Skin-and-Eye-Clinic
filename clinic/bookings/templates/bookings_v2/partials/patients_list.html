@@ -91,6 +91,15 @@
                             <i class="fas fa-eye"></i>
                         </button>
                         <button 
+                            class="btn btn-sm btn-warning"
+                            hx-get="{% url 'bookings_v2:htmx_patient_edit_form' patient.id %}"
+                            hx-target="#patientsModalBody"
+                            hx-swap="innerHTML"
+                            title="Edit Patient"
+                        >
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button 
                             class="btn btn-sm btn-danger"
                             hx-delete="{% url 'bookings_v2:htmx_delete_patient' patient.id %}"
                             hx-target="#patient-row-{{ patient.id }}"

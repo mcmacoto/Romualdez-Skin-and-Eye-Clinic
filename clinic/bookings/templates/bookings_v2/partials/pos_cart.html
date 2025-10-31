@@ -3,22 +3,24 @@
     <div class="mb-2">
         <label class="form-label small">Customer Type</label>
         <select class="form-select form-select-sm" name="sale_type" id="saleType">
-            <option value="Walk-in">Walk-in Customer</option>
-            <option value="Patient">Registered Patient</option>
+            <option value="Walk-in" {% if not current_sale.patient %}selected{% endif %}>Walk-in Customer</option>
+            <option value="Patient" {% if current_sale.patient %}selected{% endif %}>Registered Patient</option>
         </select>
     </div>
     
-    <div class="mb-2" id="customerNameField">
+    <div class="mb-2 {% if current_sale.patient %}d-none{% endif %}" id="customerNameField">
         <label class="form-label small">Customer Name</label>
-        <input type="text" class="form-control form-control-sm" name="customer_name" required>
+        <input type="text" class="form-control form-control-sm" name="customer_name" id="customerName" value="{% if current_sale.customer_name and current_sale.customer_name != 'Walk-in Customer' %}{{ current_sale.customer_name }}{% endif %}" placeholder="Walk-in Customer" readonly>
     </div>
     
-    <div class="mb-2 d-none" id="patientSelectField">
+    <div class="mb-2 {% if not current_sale.patient %}d-none{% endif %}" id="patientSelectField">
         <label class="form-label small">Select Patient</label>
-        <select class="form-select form-select-sm" name="patient_id">
+        <select class="form-select form-select-sm" name="patient_id" id="patientSelect">
             <option value="">Select patient...</option>
             {% for patient in patients %}
-            <option value="{{ patient.patient_id }}">{{ patient.user.get_full_name }} ({{ patient.user.username }})</option>
+            <option value="{{ patient.id }}" {% if current_sale.patient and current_sale.patient.id == patient.id %}selected{% endif %}>
+                {{ patient.user.get_full_name }} ({{ patient.user.username }})
+            </option>
             {% endfor %}
         </select>
     </div>
@@ -26,6 +28,8 @@
 
 <hr>
 
+<!-- Cart Items Container - This is what gets updated when adding products -->
+<div id="cartItemsContainer">
 <!-- Cart Items -->
 <div class="cart-items mb-3" style="max-height: 250px; overflow-y: auto;">
     {% if cart_items %}
@@ -39,8 +43,8 @@
                 <button 
                     class="btn btn-sm btn-outline-danger"
                     hx-post="{% url 'bookings_v2:htmx_pos_remove_from_cart' item.id %}"
-                    hx-target="#posCartBody"
-                    hx-swap="innerHTML"
+                    hx-target="#cartItemsContainer"
+                    hx-swap="outerHTML"
                     title="Remove"
                 >
                     <i class="fas fa-times"></i>
@@ -51,8 +55,8 @@
                     <button 
                         class="btn btn-outline-secondary"
                         hx-post="{% url 'bookings_v2:htmx_pos_update_quantity' item.id %}?action=decrease"
-                        hx-target="#posCartBody"
-                        hx-swap="innerHTML"
+                        hx-target="#cartItemsContainer"
+                        hx-swap="outerHTML"
                     >
                         <i class="fas fa-minus"></i>
                     </button>
@@ -60,8 +64,8 @@
                     <button 
                         class="btn btn-outline-secondary"
                         hx-post="{% url 'bookings_v2:htmx_pos_update_quantity' item.id %}?action=increase"
-                        hx-target="#posCartBody"
-                        hx-swap="innerHTML"
+                        hx-target="#cartItemsContainer"
+                        hx-swap="outerHTML"
                     >
                         <i class="fas fa-plus"></i>
                     </button>
@@ -97,8 +101,8 @@
             max="100" 
             step="0.01"
             hx-post="{% url 'bookings_v2:htmx_pos_update_discount' current_sale.id %}"
-            hx-target="#posCartBody"
-            hx-swap="innerHTML"
+            hx-target="#cartItemsContainer"
+            hx-swap="outerHTML"
             hx-trigger="change"
         >
     </div>
@@ -155,8 +159,9 @@
         <button 
             type="button"
             class="btn btn-success"
+            id="completeSaleBtn"
             hx-post="{% url 'bookings_v2:htmx_pos_complete_sale' current_sale.id %}"
-            hx-include="#customerInfoForm input, #customerInfoForm select, [name='payment_method'], [name='amount_received'], [name='reference_number']"
+            hx-include="#customerInfoForm, #paymentMethod, #amountReceived, [name='reference_number']"
             hx-target="#posModalBody"
             hx-swap="innerHTML"
             hx-indicator="#completeSaleSpinner"
@@ -177,6 +182,8 @@
     </div>
 </div>
 {% endif %}
+</div>
+<!-- End Cart Items Container -->
 
 <style>
 .htmx-indicator {

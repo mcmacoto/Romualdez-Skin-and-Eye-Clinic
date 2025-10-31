@@ -1,0 +1,82 @@
+<div class="text-center">
+    <div class="alert alert-info">
+        <i class="fas fa-receipt fa-3x mb-3"></i>
+        <h4>Sale Receipt</h4>
+        <p class="mb-0">Receipt: <strong>#{{ sale.receipt_number }}</strong></p>
+    </div>
+    
+    <div class="card mb-3">
+        <div class="card-body">
+            <h5 class="card-title">Receipt #{{ sale.receipt_number }}</h5>
+            <hr>
+            <p class="mb-1"><strong>Customer:</strong> {{ sale.customer_name }}</p>
+            <p class="mb-1"><strong>Date:</strong> {{ sale.sale_date|date:"F d, Y h:i A" }}</p>
+            <p class="mb-3"><strong>Payment:</strong> {{ sale.payment_method }}</p>
+            
+            <table class="table table-sm">
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th class="text-end">Qty</th>
+                        <th class="text-end">Price</th>
+                        <th class="text-end">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                    <tr>
+                        <td>{{ item.inventory_item.name }}</td>
+                        <td class="text-end">{{ item.quantity }}</td>
+                        <td class="text-end">₱{{ item.unit_price }}</td>
+                        <td class="text-end">₱{{ item.line_total }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            
+            <hr>
+            <div class="d-flex justify-content-between mb-1">
+                <span>Subtotal:</span>
+                <strong>₱{{ sale.subtotal }}</strong>
+            </div>
+            
+            {% if sale.discount_amount > 0 %}
+            <div class="d-flex justify-content-between mb-1 text-success">
+                <span>Discount ({{ sale.discount_percent }}%):</span>
+                <strong>-₱{{ sale.discount_amount }}</strong>
+            </div>
+            {% endif %}
+            
+            <div class="d-flex justify-content-between mb-2">
+                <h5>Total:</h5>
+                <h5 class="text-primary">₱{{ sale.total_amount }}</h5>
+            </div>
+            
+            <div class="d-flex justify-content-between mb-1">
+                <span>Amount Received:</span>
+                <strong>₱{{ sale.amount_received }}</strong>
+            </div>
+            <div class="d-flex justify-content-between">
+                <span>Change:</span>
+                <strong>₱{{ sale.change_amount }}</strong>
+            </div>
+        </div>
+    </div>
+    
+    <div class="d-grid gap-2">
+        <button 
+            class="btn btn-primary"
+            onclick="window.print()"
+        >
+            <i class="fas fa-print"></i> Print Receipt
+        </button>
+        <button 
+            class="btn btn-secondary"
+            hx-get="{% url 'bookings_v2:htmx_pos_sales_list' %}"
+            hx-target="#posModalBody"
+            hx-swap="innerHTML"
+        >
+            <i class="fas fa-arrow-left"></i> Back to Sales List
+        </button>
+    </div>
+</div>
