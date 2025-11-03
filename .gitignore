@@ -59,3 +59,25 @@ coverage.xml
 .mypy_cache/
 .dmypy.json
 dmypy.json
+
+# Django Debug Toolbar
+.djdebug/
+
+# Django migration conflicts
+*.pyc.CONFLICT
+**/migrations/*.py.CONFLICT
+
+# Backup files
+*.bak
+*.backup
+*.sql
+*.dump
+
+# Docker (if added in future)
+docker-compose.override.yml
+.dockerignore
+
+# Node/NPM (if added in future)
+node_modules/
+package-lock.json
+yarn.lock

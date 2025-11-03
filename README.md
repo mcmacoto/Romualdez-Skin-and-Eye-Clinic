@@ -1,16 +1,33 @@
 # Romualdez Skin and Eye Clinic Management System
 
-A comprehensive clinic management system built with Django for managing appointments, patients, medical records, inventory, and billing.
+A comprehensive clinic management system built with Django for managing appointments, patients, medical records, inventory, and billing. Features a modern V2 dashboard with HTMX for dynamic interactions and enhanced user experience.
 
 ## Features
 
-- **Patient Management**: Track patient information and medical history
-- **Appointment Scheduling**: Manage appointments with status tracking
-- **Medical Records**: Store and manage patient medical records and images
-- **Inventory Management**: Track clinic inventory and stock transactions
-- **Billing System**: Handle billing, payments, and invoices
+### Core Functionality
+- **Patient Management**: Track patient information, medical history, and demographics
+- **Appointment Scheduling**: Manage appointments with real-time status tracking
+- **Medical Records**: Store and manage patient medical records with image support
+- **Inventory Management**: Track clinic inventory, stock levels, and transactions
+- **Billing System**: Handle billing, payments, and invoice generation
 - **POS System**: Point-of-sale functionality for clinic services and products
-- **Staff Portal**: Admin interface for staff to manage clinic operations
+- **Prescription Management**: Create and manage patient prescriptions
+
+### V2 Modern Dashboard
+- **HTMX Integration**: Dynamic content loading without page refreshes
+- **Modal-Based CRUD**: Create, read, update, delete operations in modals
+- **Image Cropper**: Professional image cropping for service photos with aspect ratio controls
+- **Toast Notifications**: Real-time feedback for user actions
+- **Enhanced UI/UX**: Modern, responsive design with improved navigation
+- **Template Tags**: Custom formatting for service descriptions with bullet points
+- **Performance Optimized**: Database query optimization with prefetch_related
+
+### Admin Features
+- **Staff Portal**: Comprehensive admin interface for clinic operations
+- **User Management**: Create and manage staff and patient accounts
+- **Role-Based Access**: Permission system for different user types
+- **Service Management**: Add and edit clinic services with image upload
+- **Dashboard Analytics**: Quick overview of appointments, patients, and billing
 
 ## Prerequisites
 
@@ -90,9 +107,39 @@ The application will be available at: **http://127.0.0.1:8000/**
 
 ## Access Points
 
+- **Landing Page**: http://127.0.0.1:8000/landing/
 - **Main Site**: http://127.0.0.1:8000/
-- **Admin Portal**: http://127.0.0.1:8000/admin/
-- **Staff Dashboard**: http://127.0.0.1:8000/admin/ (login required)
+- **Services Page**: http://127.0.0.1:8000/services/
+- **Admin Dashboard (V2)**: http://127.0.0.1:8000/admin/admin-dashboard/
+- **Staff Login**: http://127.0.0.1:8000/admin/staff-login/
+- **Django Admin**: http://127.0.0.1:8000/admin/
+
+## Environment Configuration
+
+### 1. Copy the example environment file
+
+```bash
+cp .env.example .env
+```
+
+### 2. Edit .env and configure:
+
+```bash
+# Generate a new SECRET_KEY (required)
+SECRET_KEY=your-secret-key-here-use-python-get-random-secret-key
+
+# Set DEBUG (False for production)
+DEBUG=True
+
+# Add your domain for production
+ALLOWED_HOSTS=localhost,127.0.0.1,yourdomain.com
+```
+
+### 3. Generate a SECRET_KEY
+
+```python
+python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
+```
 
 ## Quick Start Commands
 
@@ -118,21 +165,64 @@ Romualdez-Skin-and-Eye-Clinic/
 ├── .venv/                      # Virtual environment (not in git)
 ├── clinic/                     # Main project directory
 │   ├── bookings/               # Main application
-│   │   ├── models.py           # Database models
-│   │   ├── views.py            # View logic
-│   │   ├── admin.py            # Admin configurations
+│   │   ├── models/             # Database models (modular)
+│   │   │   ├── appointments.py # Appointment & Booking models
+│   │   │   ├── patients.py     # Patient & MedicalRecord models
+│   │   │   ├── billing.py      # Billing & Payment models
+│   │   │   ├── inventory.py    # Inventory & Stock models
+│   │   │   ├── prescriptions.py# Prescription models
+│   │   │   ├── pos.py          # POS Sale models
+│   │   │   └── base.py         # Service model
+│   │   ├── views_v2/           # V2 view logic (modular)
+│   │   │   ├── admin_management_views.py
+│   │   │   ├── patient_views.py
+│   │   │   ├── appointment_views.py
+│   │   │   ├── billing_views.py
+│   │   │   └── inventory_views.py
 │   │   ├── templates/          # HTML templates
-│   │   └── management/         # Custom management commands
+│   │   │   └── bookings_v2/    # V2 templates
+│   │   │       ├── admin_dashboard_v2.html
+│   │   │       └── htmx_partials/  # HTMX partial templates
+│   │   ├── static/             # Static files (CSS, JS, images)
+│   │   │   ├── css/            # Stylesheets
+│   │   │   ├── js/             # JavaScript files
+│   │   │   │   └── global_cropper.js  # Image cropper module
+│   │   │   └── images/         # Static images
+│   │   ├── templatetags/       # Custom template tags
+│   │   │   └── description_filters.py
+│   │   ├── utils/              # Utility functions
+│   │   ├── management/         # Custom management commands
+│   │   │   └── commands/       # Django commands
+│   │   ├── migrations/         # Database migrations
+│   │   ├── middleware.py       # Custom middleware
+│   │   ├── signals.py          # Django signals
+│   │   └── urls_v2.py          # V2 URL configurations
 │   ├── clinic/                 # Project settings
 │   │   ├── settings.py         # Django settings
-│   │   ├── urls.py             # URL configurations
+│   │   ├── urls.py             # Main URL configurations
 │   │   └── wsgi.py             # WSGI config
-│   ├── static/                 # Static files (CSS, JS, images)
+│   ├── media/                  # User uploaded files
+│   │   ├── services/           # Service images
+│   │   └── medical_records/    # Patient medical images
+│   ├── static/                 # Additional static files
 │   ├── staticfiles/            # Collected static files (generated)
 │   ├── templates/              # Base templates
-│   ├── db.sqlite3              # SQLite database
-│   └── manage.py               # Django management script
+│   ├── db.sqlite3              # SQLite database (development)
+│   ├── manage.py               # Django management script
+│   ├── test_filter.py          # Template filter tests
+│   ├── test_workflow.py        # Workflow tests
+│   └── verify_database.py      # Database verification script
+├── docs/                       # Documentation
+│   ├── QUICKSTART.md           # Quick start guide
+│   └── CONTRIBUTING.md         # Contribution guidelines
+├── tools/                      # Development tools
+│   └── test_description_format.py
+├── .env.example                # Environment variables template
+├── .gitignore                  # Git ignore rules
 ├── requirements.txt            # Python dependencies
+├── setup.ps1                   # Windows PowerShell setup script
+├── setup.bat                   # Windows CMD setup script
+├── setup.sh                    # macOS/Linux setup script
 └── README.md                   # This file
 ```
 
@@ -261,4 +351,5 @@ For issues or questions, please contact the development team or create an issue 
 
 ---
 
-**Last Updated**: October 15, 2025
+**Last Updated**: November 3, 2025
+**Version**: 2.0.0

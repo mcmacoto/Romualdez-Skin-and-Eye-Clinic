@@ -112,6 +112,25 @@ def calculate_total_bill(patient_id, services):
 - Close all tags
 - Use semantic HTML
 - Include comments for complex sections
+- **Use HTMX partials** for dynamic content loading
+- Place HTMX partials in `templates/bookings_v2/htmx_partials/`
+
+**Example HTMX Partial:**
+
+```html
+<!-- templates/bookings_v2/htmx_partials/user_row.html -->
+<tr class="table-row" id="user-row-{{ user.id }}">
+    <td>{{ user.username }}</td>
+    <td>{{ user.email }}</td>
+    <td>
+        <button class="btn btn-sm btn-primary" 
+                hx-get="{% url 'admin_user_detail' user.id %}"
+                hx-target="#modal-container">
+            View
+        </button>
+    </td>
+</tr>
+```
 
 ### CSS
 
@@ -126,6 +145,27 @@ def calculate_total_bill(patient_id, services):
 - Add comments for complex logic
 - Handle errors appropriately
 - Test in multiple browsers
+- **For reusable functionality**, create modules in `static/js/`
+- **Use GlobalCropper** for image cropping features (see `global_cropper.js`)
+
+**Example GlobalCropper Usage:**
+
+```javascript
+// Import GlobalCropper
+import GlobalCropper from '/static/js/global_cropper.js';
+
+// Initialize with image and callback
+GlobalCropper.openCropper(imageUrl, (croppedBlob) => {
+    // Handle cropped image blob
+    const formData = new FormData();
+    formData.append('image', croppedBlob, 'cropped_image.jpg');
+    // Submit to server
+}, {
+    aspectRatio: 1, // 1:1 square crop
+    maxWidth: 1200,
+    maxHeight: 1200
+});
+```
 
 ## Database Migrations
 
@@ -148,26 +188,35 @@ When making model changes:
 ## Adding New Features
 
 ### Models
-- Add to `bookings/models.py`
+
+- Add to `bookings/models/` (modular structure)
+- Place in appropriate model file (e.g., `patient_models.py`, `billing_models.py`)
 - Include proper field types and validations
 - Add `__str__` method for better admin display
 - Add help_text for clarity
 
 ### Views
+
+- Add to `bookings/views_v2/` (modular structure)
 - Keep views simple and focused
 - Use class-based views where appropriate
 - Handle errors gracefully
 - Add proper authentication/authorization
+- Return HTMX partials for dynamic updates
 
 ### Admin Interface
-- Register new models in `bookings/admin.py`
+
+- Customize in `bookings/admin.py`
+- Register new models with appropriate admin classes
 - Customize list_display, search_fields, etc.
 - Add filters and actions where helpful
 
 ### Templates
+
 - Use template inheritance
 - Keep templates DRY (Don't Repeat Yourself)
 - Use template tags and filters appropriately
+- **Custom filters**: See `templatetags/description_filters.py` for examples
 
 ## Testing Checklist
 
@@ -175,12 +224,16 @@ Before submitting a PR, ensure:
 
 - [ ] Code runs without errors
 - [ ] All migrations are applied
-- [ ] Static files are collected
-- [ ] Admin interface works correctly
+- [ ] Static files are collected (`python manage.py collectstatic`)
+- [ ] Admin dashboard V2 works correctly
+- [ ] HTMX dynamic loading functions properly
+- [ ] GlobalCropper image functionality works
 - [ ] Forms validate properly
 - [ ] Responsive design works on mobile
 - [ ] No console errors in browser
 - [ ] All existing features still work
+- [ ] Cross-browser testing (Chrome, Firefox, Safari, Edge)
+- [ ] Tested with different user roles/permissions
 
 ## Questions or Problems?
 

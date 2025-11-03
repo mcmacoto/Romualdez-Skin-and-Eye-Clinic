@@ -176,9 +176,27 @@ python manage.py collectstatic --clear --noinput
 
 ## Access Points
 
-- **Main Site**: http://127.0.0.1:8000/
-- **Admin Portal**: http://127.0.0.1:8000/admin/
+### Public Pages
 - **Landing Page**: http://127.0.0.1:8000/landing/
+- **Services Page**: http://127.0.0.1:8000/services/
+- **About Page**: http://127.0.0.1:8000/about/
+- **Contact Page**: http://127.0.0.1:8000/contact/
+
+### Staff/Admin Pages
+- **Admin Dashboard V2**: http://127.0.0.1:8000/admin_dashboard/ (Modern interface with HTMX)
+- **Staff Login**: http://127.0.0.1:8000/login/
+- **Django Admin**: http://127.0.0.1:8000/admin/ (Legacy admin interface)
+
+## V2 Dashboard Features
+
+The new V2 dashboard includes:
+
+- **HTMX Dynamic Loading**: Page updates without full refresh
+- **Modal-Based CRUD**: Create, read, update, delete operations in modals
+- **Global Image Cropper**: Reusable image cropping for service images
+- **Toast Notifications**: User-friendly success/error messages
+- **Responsive Design**: Works on desktop, tablet, and mobile
+- **Role-Based Access**: Permissions-based feature visibility
 
 ## Default Admin Credentials (if using sample data)
 
