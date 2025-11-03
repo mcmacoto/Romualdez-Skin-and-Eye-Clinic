@@ -226,15 +226,44 @@
     </div>
 
     {% if not has_profile %}
-    <!-- No Profile Found -->
-    <div class="no-profile-card">
-        <i class="fas fa-exclamation-triangle"></i>
-        <h2>No Patient Profile Found</h2>
-        <p class="lead mb-4">Your account doesn't have an associated patient profile yet.</p>
-        <p>This profile is created automatically when your booking is accepted by our staff.</p>
-        <a href="{% url 'bookings_v2:booking' %}" class="btn btn-warning btn-lg">
-            <i class="fas fa-calendar-plus"></i> Book Your First Appointment
-        </a>
+    <!-- No Profile Found - Show Limited Dashboard -->
+    <div class="alert alert-info mb-4">
+        <div class="d-flex align-items-start">
+            <i class="fas fa-info-circle fs-3 me-3 mt-1"></i>
+            <div>
+                <h5 class="alert-heading mb-2">Welcome to Your Patient Dashboard!</h5>
+                <p class="mb-2">Your full patient profile will be created automatically after your first consultation is completed.</p>
+                <p class="mb-0">You can still book appointments and view your booking history below.</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Stats Overview - Limited for non-profile users -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-calendar-alt"></i>
+            </div>
+            <div class="stat-number">{{ total_bookings }}</div>
+            <div class="stat-label">Total Appointments</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-file-medical"></i>
+            </div>
+            <div class="stat-number">0</div>
+            <div class="stat-label">Medical Records</div>
+            <small class="text-muted d-block mt-2">Available after consultation</small>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-money-bill-wave"></i>
+            </div>
+            <div class="stat-number">₱0.00</div>
+            <div class="stat-label">Outstanding Balance</div>
+        </div>
     </div>
     {% else %}
     <!-- Stats Overview -->
@@ -263,8 +292,10 @@
             <div class="stat-label">Outstanding Balance</div>
         </div>
     </div>
-
-    <!-- Personal Information -->
+    {% endif %}
+    
+    <!-- Personal Information - Only shown if profile exists -->
+    {% if has_profile %}
     <div class="section-card">
         <h3 class="section-title">
             <i class="fas fa-user"></i>
@@ -319,8 +350,9 @@
         </div>
         {% endif %}
     </div>
+    {% endif %}
 
-    <!-- Upcoming Appointments -->
+    <!-- Upcoming Appointments - Shown for all users -->
     <div class="section-card">
         <h3 class="section-title">
             <i class="fas fa-calendar-check"></i>
@@ -444,8 +476,8 @@
     </div>
     {% endif %}
 
-    <!-- Medical Records -->
-    {% if medical_records %}
+    <!-- Medical Records - Only shown if profile exists -->
+    {% if has_profile and medical_records %}
     <div class="section-card" id="medical-records-section">
         <h3 class="section-title">
             <i class="fas fa-notes-medical"></i>
@@ -603,6 +635,5 @@
             </a>
         </div>
     </div>
-    {% endif %}
 </div>
 {% endblock %}

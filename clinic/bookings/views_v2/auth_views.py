@@ -4,12 +4,15 @@ Handles user authentication (login/logout) and dashboard pages
 """
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
+from ..decorators import staff_required
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
-from datetime import date
-from django.db.models import Q, Sum
+from datetime import date, timedelta
+from django.db.models import Q, Sum, Count
+from django.db.models.functions import TruncMonth
+import json
 
-from ..models import Billing, Booking, Patient, MedicalRecord, Inventory
+from ..models import Billing, Booking, Patient, MedicalRecord, Inventory, POSSale
 
 
 def landing_v2(request):
@@ -96,16 +99,16 @@ def patient_dashboard_v2(request):
         return redirect('bookings_v2:admin_dashboard')
     
     # Check if user has a patient profile
-    try:
-        patient = request.user.patient_profile
-    except Patient.DoesNotExist:
-        # User logged in but no patient record - show message
-        messages.warning(request, 'No patient profile found. Please contact the clinic.')
-        return render(request, 'bookings_v2/patient_dashboard_v2.html', {
-            'has_profile': False
-        })
+    has_profile = hasattr(request.user, 'patient_profile')
+    patient = None
     
-    # Get patient's bookings
+    if has_profile:
+        try:
+            patient = request.user.patient_profile
+        except Patient.DoesNotExist:
+            has_profile = False
+    
+    # Get patient's bookings by email - works even without Patient profile
     bookings = Booking.objects.filter(
         patient_email=request.user.email
     ).select_related('service').order_by('-date', '-time')
@@ -119,32 +122,40 @@ def patient_dashboard_v2(request):
         Q(date__lt=date.today()) | Q(status='Completed')
     ).exclude(status='Cancelled')
     
-    # Get medical records
-    medical_records = MedicalRecord.objects.filter(
-        patient=patient
-    ).order_by('-visit_date')
+    # Initialize profile-specific data
+    medical_records = MedicalRecord.objects.none()
+    billings = Billing.objects.none()
+    pos_sales = POSSale.objects.none()
+    unpaid_bills = Billing.objects.none()
+    booking_outstanding = 0
     
-    # Get billing information from bookings
-    billings = Billing.objects.filter(
-        booking__patient_email=request.user.email
-    ).select_related('booking__service').order_by('-issued_date')
-    
-    # Get POS sales for this patient
-    from ..models import POSSale
-    pos_sales = POSSale.objects.filter(
-        patient=patient
-    ).order_by('-sale_date')
-    
-    # Calculate outstanding balance from bookings
-    unpaid_bills = billings.filter(is_paid=False)
-    booking_outstanding = unpaid_bills.aggregate(total=Sum('balance'))['total'] or 0
+    # Only fetch patient-specific records if profile exists
+    if has_profile and patient:
+        # Get medical records
+        medical_records = MedicalRecord.objects.filter(
+            patient=patient
+        ).order_by('-visit_date')
+        
+        # Get billing information from bookings
+        billings = Billing.objects.filter(
+            booking__patient_email=request.user.email
+        ).select_related('booking__service').order_by('-issued_date')
+        
+        # Get POS sales for this patient
+        pos_sales = POSSale.objects.filter(
+            patient=patient
+        ).order_by('-sale_date')
+        
+        # Calculate outstanding balance from bookings
+        unpaid_bills = billings.filter(is_paid=False)
+        booking_outstanding = unpaid_bills.aggregate(total=Sum('balance'))['total'] or 0
     
     # Calculate total outstanding including unpaid POS sales (if any are unpaid)
     # For now, POS sales are paid immediately, but we'll include for completeness
     total_outstanding = booking_outstanding
     
     context = {
-        'has_profile': True,
+        'has_profile': has_profile,
         'patient': patient,
         'upcoming_bookings': upcoming_bookings,
         'past_bookings': past_bookings,
@@ -161,12 +172,9 @@ def patient_dashboard_v2(request):
 
 
 @login_required(login_url='bookings_v2:staff_login')
+@staff_required
 def admin_dashboard_v2(request):
     """Admin Dashboard - V2 with Bootstrap/HTMX/Alpine - Staff Only"""
-    # Require staff access
-    if not request.user.is_staff:
-        messages.error(request, 'Access denied. You do not have staff permissions.')
-        return redirect('bookings_v2:home')
     
     # Get statistics - Total Appointments shows bookings with consultation_status "Not Yet" or "Ongoing"
     total_appointments = Booking.objects.filter(
@@ -212,6 +220,29 @@ def admin_dashboard_v2(request):
         total=Sum('balance')
     )['total'] or 0
     
+    # Chart Data - Monthly Appointments (Last 6 months)
+    six_months_ago = date.today() - timedelta(days=180)
+    monthly_appointments = Booking.objects.filter(
+        date__gte=six_months_ago
+    ).annotate(
+        month=TruncMonth('date')
+    ).values('month').annotate(
+        count=Count('id')
+    ).order_by('month')
+    
+    # Format for Chart.js
+    months_labels = [item['month'].strftime('%B %Y') for item in monthly_appointments]
+    months_data = [item['count'] for item in monthly_appointments]
+    
+    # Chart Data - Services Distribution
+    from ..models import Service
+    services_distribution = Service.objects.annotate(
+        booking_count=Count('bookings')  # Note: 'bookings' is the related name
+    ).order_by('-booking_count')[:6]  # Top 6 services
+    
+    services_labels = [service.name for service in services_distribution]
+    services_data = [service.booking_count for service in services_distribution]
+    
     context = {
         'total_appointments': total_appointments,
         'total_bookings': total_bookings,
@@ -232,6 +263,11 @@ def admin_dashboard_v2(request):
         'total_amount_billed': total_amount_billed,
         'total_amount_paid': total_amount_paid,
         'total_balance_outstanding': total_balance_outstanding,
+        # Chart data (JSON serialized for JavaScript)
+        'months_labels_json': json.dumps(months_labels),
+        'months_data_json': json.dumps(months_data),
+        'services_labels_json': json.dumps(services_labels),
+        'services_data_json': json.dumps(services_data),
     }
     
     return render(request, 'bookings_v2/admin_dashboard_v2.html', context)

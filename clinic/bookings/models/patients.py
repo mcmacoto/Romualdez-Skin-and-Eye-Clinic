@@ -63,6 +63,10 @@ class Patient(models.Model):
     
     class Meta:
         ordering = ['user__last_name', 'user__first_name']
+        indexes = [
+            models.Index(fields=['user', 'created_at']),
+            models.Index(fields=['phone']),  # For phone number lookups
+        ]
     
     def __str__(self):
         return f"{self.user.get_full_name() or self.user.username} - {self.user.email}"
@@ -100,6 +104,10 @@ class MedicalRecord(models.Model):
     
     class Meta:
         ordering = ['-visit_date']
+        indexes = [
+            models.Index(fields=['patient', 'visit_date']),
+            models.Index(fields=['visit_date', 'created_at']),
+        ]
     
     def __str__(self):
         return f"{self.patient.user.get_full_name()} - {self.visit_date.strftime('%Y-%m-%d')} - {self.chief_complaint[:50]}"

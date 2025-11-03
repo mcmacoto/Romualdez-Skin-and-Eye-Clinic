@@ -10,26 +10,32 @@ from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib import messages
 from django.db.models import Q
+from django.core.paginator import Paginator
 from datetime import datetime, date
+import logging
+import traceback
 
 from ..models import (
     Patient, MedicalRecord, Billing, Booking, Inventory,
     Prescription, MedicalImage
 )
+from ..decorators import staff_required
+from ..utils.responses import htmx_error, htmx_success
+
+logger = logging.getLogger(__name__)
 
 
 @login_required
+@staff_required
 @require_http_methods(["GET"])
 def htmx_patients_list(request):
-    """Return HTML fragment of all patients with optional search"""
-    if not request.user.is_staff:
-        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
+    """Return HTML fragment of all patients with optional search and pagination"""
     
     try:
-        # Start with all patients
+        # Start with all patients - optimize query
         patients = Patient.objects.select_related('user').prefetch_related('medical_records')
         
-        # Handle search - only filter if search query is not empty
+        # Handle multi-field search
         search_query = request.GET.get('search', '').strip()
         if search_query:  # Only apply filter if search_query has content
             patients = patients.filter(
@@ -37,33 +43,63 @@ def htmx_patients_list(request):
                 Q(user__last_name__icontains=search_query) |
                 Q(user__username__icontains=search_query) |
                 Q(user__email__icontains=search_query) |
-                Q(phone__icontains=search_query)
+                Q(phone__icontains=search_query) |
+                Q(address__icontains=search_query)
             )
-        # If search_query is empty, return all patients (no filter applied)
+            logger.info(f"Patient search query: '{search_query}' by {request.user.username}")
+        
+        # Filter by gender
+        gender = request.GET.get('gender', '').strip()
+        if gender and gender in ['M', 'F', 'O']:
+            patients = patients.filter(gender=gender)
+        
+        # Filter by blood type
+        blood_type = request.GET.get('blood_type', '').strip()
+        if blood_type:
+            patients = patients.filter(blood_type=blood_type)
+        
+        # Filter by age range (approximate)
+        age_min = request.GET.get('age_min', '').strip()
+        age_max = request.GET.get('age_max', '').strip()
+        
+        if age_min:
+            try:
+                from datetime import timedelta
+                years_ago = date.today() - timedelta(days=int(age_min) * 365)
+                patients = patients.filter(date_of_birth__lte=years_ago)
+            except (ValueError, TypeError):
+                pass
+        
+        if age_max:
+            try:
+                from datetime import timedelta
+                years_ago = date.today() - timedelta(days=int(age_max) * 365)
+                patients = patients.filter(date_of_birth__gte=years_ago)
+            except (ValueError, TypeError):
+                pass
         
         patients = patients.order_by('-created_at')
         
+        # Add pagination
+        paginator = Paginator(patients, 25)
+        page_number = request.GET.get('page', 1)
+        page_obj = paginator.get_page(page_number)
+        
         return render(request, 'bookings_v2/partials/patients_list.html', {
-            'patients': patients
+            'patients': page_obj,
+            'paginator': paginator,
+            'page_obj': page_obj,
         })
     except Exception as e:
-        # Log the error for debugging
-        print(f"ERROR in htmx_patients_list: {str(e)}")
-        import traceback
-        traceback.print_exc()
-        return HttpResponse(
-            f'<div class="alert alert-danger">Error loading patients: {str(e)}</div>',
-            status=500
-        )
+        logger.error(f"Error in patients list view: {str(e)}", exc_info=True)
+        return htmx_error(f"Error loading patients: {str(e)}", status=500)
 
 
 @login_required
+@staff_required
 @require_http_methods(["GET"])
 def htmx_patient_records(request, patient_id):
     """Return HTML fragment of medical records for a specific patient"""
-    if not request.user.is_staff:
-        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
-    
     try:
         patient = Patient.objects.get(id=patient_id)
         records = MedicalRecord.objects.filter(
@@ -84,11 +120,9 @@ def htmx_patient_records(request, patient_id):
 
 
 @login_required
+@staff_required
 def htmx_patient_detail(request, patient_id):
     """Return HTML fragment with detailed patient profile"""
-    if not request.user.is_staff:
-        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
-    
     try:
         patient = Patient.objects.select_related('user').get(id=patient_id)
         
@@ -152,12 +186,10 @@ def htmx_patient_detail(request, patient_id):
 
 
 @login_required
+@staff_required
 @require_http_methods(["DELETE"])
 def htmx_delete_patient(request, patient_id):
     """Delete patient - handles cascade and returns empty response"""
-    if not request.user.is_staff:
-        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
-    
     try:
         patient = Patient.objects.select_related('user').get(id=patient_id)
         
@@ -195,24 +227,20 @@ def htmx_delete_patient(request, patient_id):
 
 
 @login_required
+@staff_required
 @require_http_methods(["GET"])
 def htmx_patient_create_form(request):
     """Return HTML form for creating a new patient"""
-    if not request.user.is_staff:
-        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
-    
     return render(request, 'bookings_v2/htmx_partials/patient_form.html', {
         'today': date.today().isoformat()
     })
 
 
 @login_required
+@staff_required
 @require_http_methods(["POST"])
 def htmx_patient_create(request):
     """Create a new patient with user account"""
-    if not request.user.is_staff:
-        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
-    
     try:
         # Check if username already exists
         username = request.POST.get('username')
@@ -268,12 +296,10 @@ def htmx_patient_create(request):
 
 
 @login_required
+@staff_required
 @require_http_methods(["GET"])
 def htmx_patient_edit_form(request, patient_id):
     """Return HTML form for editing a patient"""
-    if not request.user.is_staff:
-        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
-    
     try:
         patient = Patient.objects.select_related('user').get(id=patient_id)
         return render(request, 'bookings_v2/htmx_partials/patient_form.html', {
@@ -285,12 +311,10 @@ def htmx_patient_edit_form(request, patient_id):
 
 
 @login_required
+@staff_required
 @require_http_methods(["POST"])
 def htmx_patient_update(request, patient_id):
     """Update an existing patient"""
-    if not request.user.is_staff:
-        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
-    
     try:
         patient = Patient.objects.select_related('user').get(id=patient_id)
         user = patient.user
@@ -333,12 +357,10 @@ def htmx_patient_update(request, patient_id):
 # ========================================
 
 @login_required
+@staff_required
 @require_http_methods(["GET"])
 def htmx_medical_records_list(request):
     """Return HTML fragment of all medical records with optional search"""
-    if not request.user.is_staff:
-        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
-    
     # Start with all medical records
     records = MedicalRecord.objects.select_related(
         'patient__user', 'created_by'
@@ -366,12 +388,10 @@ def htmx_medical_records_list(request):
 
 
 @login_required
+@staff_required
 @require_http_methods(["GET"])
 def htmx_medical_record_edit_form(request, record_id):
     """Return HTML fragment with medical record edit form"""
-    if not request.user.is_staff:
-        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
-    
     try:
         record = MedicalRecord.objects.select_related(
             'patient__user'
@@ -394,12 +414,10 @@ def htmx_medical_record_edit_form(request, record_id):
 
 
 @login_required
+@staff_required
 @require_http_methods(["PUT", "POST"])
 def htmx_medical_record_update(request, record_id):
     """Update medical record and return updated list"""
-    if not request.user.is_staff:
-        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
-    
     try:
         record = MedicalRecord.objects.get(id=record_id)
         
@@ -480,12 +498,10 @@ def htmx_medical_record_update(request, record_id):
 
 
 @login_required
+@staff_required
 @require_http_methods(["GET"])
 def htmx_medical_record_create_form(request):
     """Return HTML fragment with medical record creation form"""
-    if not request.user.is_staff:
-        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
-    
     # Get all patients for the dropdown
     patients = Patient.objects.select_related('user').order_by('user__last_name', 'user__first_name')
     
@@ -495,12 +511,10 @@ def htmx_medical_record_create_form(request):
 
 
 @login_required
+@staff_required
 @require_http_methods(["POST"])
 def htmx_medical_record_create(request):
     """Create new medical record and return updated list"""
-    if not request.user.is_staff:
-        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
-    
     try:
         # Get patient
         patient_id = request.POST.get('patient_id')
@@ -551,7 +565,7 @@ def htmx_medical_record_create(request):
     except Exception as e:
         import traceback
         error_msg = f'<div class="alert alert-danger">Error creating record: {str(e)}<br><pre>{traceback.format_exc()}</pre></div>'
-        print(f"Error in htmx_medical_record_create: {traceback.format_exc()}")
+        logger.error(f"Error creating medical record: {traceback.format_exc()}")
         return HttpResponse(error_msg, status=500)
 
 
@@ -560,12 +574,10 @@ def htmx_medical_record_create(request):
 # ========================================
 
 @login_required
+@staff_required
 @require_http_methods(["GET"])
 def htmx_prescriptions(request, record_id):
     """Return HTML fragment showing prescriptions for a specific record"""
-    if not request.user.is_staff:
-        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
-    
     try:
         record = MedicalRecord.objects.prefetch_related(
             'prescriptions__medicine'
@@ -668,7 +680,7 @@ def htmx_prescriptions(request, record_id):
                     </tr>
                 '''
             except Exception as e:
-                print(f"ERROR rendering prescription {prescription.id}: {str(e)}")
+                logger.error(f"Error rendering prescription {prescription.id}: {str(e)}", exc_info=True)
                 import traceback
                 traceback.print_exc()
                 # Skip this prescription if there's an error
@@ -707,12 +719,10 @@ def htmx_prescriptions(request, record_id):
 
 
 @login_required
+@staff_required
 @require_http_methods(["GET"])
 def htmx_prescription_create_form(request, record_id):
     """Return HTML fragment with prescription creation form"""
-    if not request.user.is_staff:
-        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
-    
     try:
         record = MedicalRecord.objects.select_related('patient__user').get(id=record_id)
         
@@ -724,9 +734,9 @@ def htmx_prescription_create_form(request, record_id):
         ).order_by('name')
         
         # Debug: Log available medicines
-        print(f"DEBUG - Available medicines count: {medicines.count()}")
+        logger.debug(f"Available medicines count: {medicines.count()}")
         for med in medicines:
-            print(f"  - {med.name} | Category: {med.category} | Status: {med.status} | Qty: {med.quantity}")
+            logger.debug(f"  Medicine: {med.name} | Category: {med.category} | Status: {med.status} | Qty: {med.quantity}")
         
         return render(request, 'bookings_v2/htmx_partials/prescription_create_form.html', {
             'record': record,
@@ -744,17 +754,14 @@ def htmx_prescription_create_form(request, record_id):
 @require_http_methods(["POST"])
 def htmx_prescription_create(request, record_id):
     """Create prescription and return updated prescription list"""
-    if not request.user.is_staff:
-        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
-    
     try:
         # Debug: Log POST data
-        print(f"DEBUG - POST data: {dict(request.POST)}")
+        logger.debug(f"POST data: {dict(request.POST)}")
         
         record = MedicalRecord.objects.get(id=record_id)
         medicine_id = request.POST.get('medicine_id', '').strip()
         
-        print(f"DEBUG - medicine_id: '{medicine_id}'")
+        logger.debug(f"medicine_id: '{medicine_id}'")
         
         # Validate that a medicine was selected
         if not medicine_id:
@@ -808,7 +815,7 @@ def htmx_prescription_create(request, record_id):
                 prescribed_by=request.user
             )
         
-        print(f"DEBUG - Prescription created successfully: ID={prescription.id}")
+        logger.info(f"Prescription created successfully: ID={prescription.id}")
         
         # Return success message and trigger reload of prescription list via HTMX GET request
         # We can't call htmx_prescriptions() directly because it requires GET method
@@ -848,12 +855,10 @@ def htmx_prescription_create(request, record_id):
 
 
 @login_required
+@staff_required
 @require_http_methods(["DELETE"])
 def htmx_prescription_delete(request, prescription_id):
     """Delete prescription and return updated list"""
-    if not request.user.is_staff:
-        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
-    
     try:
         prescription = Prescription.objects.select_related('medical_record').get(id=prescription_id)
         record_id = prescription.medical_record.id
@@ -891,12 +896,10 @@ def htmx_prescription_delete(request, prescription_id):
 # ========================================
 
 @login_required
+@staff_required
 @require_http_methods(["GET"])
 def htmx_medical_images(request, record_id):
     """Return HTML fragment showing medical images for a specific record"""
-    if not request.user.is_staff:
-        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
-    
     try:
         record = MedicalRecord.objects.select_related('patient__user').prefetch_related('images').get(id=record_id)
         images = record.images.all()
@@ -975,12 +978,10 @@ def htmx_medical_images(request, record_id):
 
 
 @login_required
+@staff_required
 @require_http_methods(["GET"])
 def htmx_medical_image_upload_form(request, record_id):
     """Return HTML fragment with medical image upload form"""
-    if not request.user.is_staff:
-        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
-    
     try:
         record = MedicalRecord.objects.select_related('patient__user').get(id=record_id)
         
@@ -995,12 +996,10 @@ def htmx_medical_image_upload_form(request, record_id):
 
 
 @login_required
+@staff_required
 @require_http_methods(["POST"])
 def htmx_medical_image_upload(request, record_id):
     """Upload medical image and return updated image list"""
-    if not request.user.is_staff:
-        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
-    
     try:
         record = MedicalRecord.objects.get(id=record_id)
         
@@ -1037,12 +1036,10 @@ def htmx_medical_image_upload(request, record_id):
 
 
 @login_required
+@staff_required
 @require_http_methods(["DELETE"])
 def htmx_medical_image_delete(request, image_id):
     """Delete medical image and return updated list"""
-    if not request.user.is_staff:
-        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
-    
     try:
         image = MedicalImage.objects.select_related('medical_record').get(id=image_id)
         record_id = image.medical_record.id
@@ -1064,12 +1061,10 @@ def htmx_medical_image_delete(request, image_id):
 
 
 @login_required
+@staff_required
 @require_http_methods(["GET"])
 def htmx_medical_record_detail(request, record_id):
     """Display detailed view of a medical record"""
-    if not request.user.is_staff:
-        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
-    
     try:
         record = MedicalRecord.objects.select_related(
             'patient__user'
@@ -1094,12 +1089,10 @@ def htmx_medical_record_detail(request, record_id):
 
 
 @login_required
+@staff_required
 @require_http_methods(["DELETE"])
 def htmx_delete_medical_record(request, record_id):
     """Delete a medical record and all associated data"""
-    if not request.user.is_staff:
-        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
-    
     try:
         record = MedicalRecord.objects.get(id=record_id)
         

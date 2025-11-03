@@ -4,6 +4,7 @@ Handles billing lists, payment recording, and financial operations
 """
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
+from ..decorators import staff_required
 from django.http import HttpResponse
 from django.views.decorators.http import require_http_methods
 from django.contrib import messages
@@ -13,12 +14,10 @@ from ..models import Billing, Payment
 
 
 @login_required
+@staff_required
 @require_http_methods(["GET"])
 def htmx_unpaid_patients(request):
     """Return HTML fragment of unpaid patients for HTMX"""
-    if not request.user.is_staff:
-        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
-    
     unpaid_billings = Billing.objects.filter(
         is_paid=False
     ).select_related('booking__service').order_by('-issued_date')
@@ -29,12 +28,10 @@ def htmx_unpaid_patients(request):
 
 
 @login_required
+@staff_required
 @require_http_methods(["GET"])
 def htmx_all_billings(request):
     """Return HTML fragment of all billings for HTMX with optional search"""
-    if not request.user.is_staff:
-        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
-    
     billings = Billing.objects.select_related('booking__service')
     
     # Handle search
@@ -71,25 +68,29 @@ def htmx_all_billings(request):
 
 
 @login_required
+@staff_required
 @require_http_methods(["POST"])
 def htmx_mark_paid(request, billing_id):
-    """Mark billing as paid - returns updated row HTML"""
-    if not request.user.is_staff:
-        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
-    
+    """Mark billing as paid - creates Payment record and returns updated row HTML"""
     try:
         # Billing only has booking relationship, not patient
         billing = Billing.objects.select_related('booking__service').get(id=billing_id)
         
-        # Use update() to directly modify database, bypassing save() method
-        # This ensures the values are actually saved
-        Billing.objects.filter(pk=billing.id).update(
-            is_paid=True,
-            amount_paid=billing.total_amount,
-            balance=0
+        # Calculate remaining balance
+        remaining_balance = billing.balance
+        
+        # Create a Payment record for the full balance
+        # This triggers the signal that updates billing.amount_paid, billing.balance, and billing.is_paid
+        payment = Payment.objects.create(
+            billing=billing,
+            amount_paid=remaining_balance,
+            payment_method='Cash',  # Default to Cash, can be changed in Payment management
+            reference_number='',
+            notes=f'Full payment marked by {request.user.get_full_name()}',
+            recorded_by=request.user
         )
         
-        # Refresh from database to get updated values
+        # Refresh from database to get updated values (updated by signal)
         billing.refresh_from_db()
         
         # Get patient name and other details from booking
@@ -155,12 +156,10 @@ def htmx_mark_paid(request, billing_id):
 
 
 @login_required
+@staff_required
 @require_http_methods(["GET"])
 def htmx_paid_billings(request):
     """Return HTML fragment of paid billings"""
-    if not request.user.is_staff:
-        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
-    
     billings = Billing.objects.select_related(
         'booking__service', 'booking__created_by'
     ).filter(is_paid=True).order_by('-issued_date')
@@ -189,12 +188,10 @@ def htmx_paid_billings(request):
 
 
 @login_required
+@staff_required
 @require_http_methods(["GET"])
 def htmx_unpaid_billings(request):
     """Return HTML fragment of unpaid billings"""
-    if not request.user.is_staff:
-        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
-    
     billings = Billing.objects.select_related(
         'booking__service', 'booking__created_by'
     ).filter(is_paid=False).order_by('-issued_date')
@@ -223,12 +220,10 @@ def htmx_unpaid_billings(request):
 
 
 @login_required
+@staff_required
 @require_http_methods(["GET"])
 def htmx_payment_create_form(request):
     """Return HTML form for recording a new payment"""
-    if not request.user.is_staff:
-        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
-    
     # Get unpaid billings
     unpaid_billings = Billing.objects.filter(
         Q(is_paid=False) | Q(balance__gt=0)
@@ -240,12 +235,10 @@ def htmx_payment_create_form(request):
 
 
 @login_required
+@staff_required
 @require_http_methods(["POST"])
 def htmx_payment_create(request):
     """Record a new payment"""
-    if not request.user.is_staff:
-        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
-    
     try:
         billing_id = request.POST.get('billing_id')
         billing = Billing.objects.get(id=billing_id)

@@ -11,6 +11,8 @@ from .views_v2 import (
     # Public views  
     home_v2, booking_v2, services_v2, about_v2, contact_v2, success_v2,
     htmx_services_preview, htmx_time_slots, htmx_submit_booking, htmx_submit_contact,
+    # Dashboard views
+    htmx_dashboard_stats,
     # Billing views
     htmx_unpaid_patients, htmx_all_billings, htmx_mark_paid,
     htmx_paid_billings, htmx_unpaid_billings,
@@ -50,6 +52,9 @@ from .views_v2 import (
     htmx_user_update, htmx_user_delete,
     htmx_services_list, htmx_service_create_form, htmx_service_create,
     htmx_service_edit_form, htmx_service_update, htmx_service_delete,
+    # Report views
+    download_appointments_pdf, download_patients_csv,
+    download_billing_csv, download_services_pdf,
 )
 
 app_name = 'bookings_v2'
@@ -78,6 +83,9 @@ urlpatterns = [
     path('patient-dashboard/', patient_dashboard_v2, name='patient_dashboard'),
     
     # HTMX partial endpoints (return HTML fragments)
+    # Dashboard stats refresh endpoint
+    path('htmx/dashboard-stats/', htmx_dashboard_stats, name='htmx_dashboard_stats'),
+    
     path('htmx/unpaid-patients/', htmx_unpaid_patients, name='htmx_unpaid_patients'),
     path('htmx/all-billings/', htmx_all_billings, name='htmx_all_billings'),
     path('htmx/all-billings-list/', htmx_all_billings, name='htmx_all_billings_list'),
@@ -180,5 +188,10 @@ urlpatterns = [
     path('htmx/user/create/', htmx_user_create, name='htmx_user_create'),
     path('htmx/user/<int:user_id>/update/', htmx_user_update, name='htmx_user_update'),
     path('htmx/user/<int:user_id>/delete/', htmx_user_delete, name='htmx_user_delete'),
+    
+    # Reports - Download endpoints
+    path('reports/appointments-pdf/', download_appointments_pdf, name='download_appointments_pdf'),
+    path('reports/patients-csv/', download_patients_csv, name='download_patients_csv'),
+    path('reports/billing-csv/', download_billing_csv, name='download_billing_csv'),
+    path('reports/services-pdf/', download_services_pdf, name='download_services_pdf'),
 ]
-

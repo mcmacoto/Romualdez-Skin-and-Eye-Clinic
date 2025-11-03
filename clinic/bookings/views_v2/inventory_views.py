@@ -4,6 +4,7 @@ Handles inventory tracking, stock adjustments, and POS sales
 """
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
+from ..decorators import staff_required
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.http import require_http_methods
 from django.db.models import Q, Sum
@@ -14,12 +15,10 @@ from ..models import Inventory, StockTransaction, POSSale, POSSaleItem, Patient
 
 
 @login_required
+@staff_required
 @require_http_methods(["GET"])
 def htmx_inventory_list(request):
     """Return HTML fragment of inventory items with optional search and filters"""
-    if not request.user.is_staff:
-        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
-    
     # Get filter parameters
     filter_status = request.GET.get('status', '')
     filter_category = request.GET.get('category', '')
@@ -67,12 +66,10 @@ def htmx_inventory_list(request):
 
 
 @login_required
+@staff_required
 @require_http_methods(["GET"])
 def htmx_inventory_adjust(request, item_id):
     """Return HTML form for adjusting inventory stock"""
-    if not request.user.is_staff:
-        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
-    
     try:
         from django.urls import reverse
         item = Inventory.objects.get(item_id=item_id)
@@ -120,12 +117,10 @@ def htmx_inventory_adjust(request, item_id):
 
 
 @login_required
+@staff_required
 @require_http_methods(["POST"])
 def htmx_inventory_adjust_submit(request, item_id):
     """Process inventory adjustment with validation"""
-    if not request.user.is_staff:
-        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
-    
     try:
         from django.db import transaction
         
@@ -204,24 +199,20 @@ def htmx_inventory_adjust_submit(request, item_id):
 
 
 @login_required
+@staff_required
 @require_http_methods(["GET"])
 def htmx_inventory_create_form(request):
     """Return HTML form for creating a new inventory item"""
-    if not request.user.is_staff:
-        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
-    
     return render(request, 'bookings_v2/htmx_partials/inventory_form.html', {
         'today': date.today().isoformat()
     })
 
 
 @login_required
+@staff_required
 @require_http_methods(["POST"])
 def htmx_inventory_create(request):
     """Create a new inventory item"""
-    if not request.user.is_staff:
-        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
-    
     try:
         # Get form data
         name = request.POST.get('name', '').strip()
@@ -285,12 +276,10 @@ def htmx_inventory_create(request):
 
 
 @login_required
+@staff_required
 @require_http_methods(["GET"])
 def htmx_inventory_edit_form(request, item_id):
     """Return HTML form for editing an inventory item"""
-    if not request.user.is_staff:
-        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
-    
     try:
         item = Inventory.objects.get(item_id=item_id)
         return render(request, 'bookings_v2/htmx_partials/inventory_form.html', {
@@ -302,12 +291,10 @@ def htmx_inventory_edit_form(request, item_id):
 
 
 @login_required
+@staff_required
 @require_http_methods(["POST"])
 def htmx_inventory_update(request, item_id):
     """Update an existing inventory item"""
-    if not request.user.is_staff:
-        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
-    
     try:
         item = Inventory.objects.get(item_id=item_id)
         
@@ -369,12 +356,10 @@ def htmx_inventory_update(request, item_id):
 
 
 @login_required
+@staff_required
 @require_http_methods(["DELETE", "POST"])
 def htmx_inventory_delete(request, item_id):
     """Delete an inventory item"""
-    if not request.user.is_staff:
-        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
-    
     try:
         item = Inventory.objects.get(item_id=item_id)
         item_name = item.name
@@ -408,12 +393,10 @@ def htmx_inventory_delete(request, item_id):
 # ========================================
 
 @login_required
+@staff_required
 @require_http_methods(["GET"])
 def htmx_stock_transactions_list(request):
     """HTMX endpoint to list all stock transactions with filtering"""
-    if not request.user.is_staff:
-        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
-    
     # Get filter parameters
     transaction_type = request.GET.get('transaction_type', '')
     item_id = request.GET.get('item_id', '')
@@ -478,12 +461,10 @@ def htmx_stock_transactions_list(request):
 # ========================================
 
 @login_required
+@staff_required
 @require_http_methods(["GET"])
 def htmx_pos_interface(request):
     """POS Interface - Main sales screen"""
-    if not request.user.is_staff:
-        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
-    
     # Get or create pending sale for current user
     current_sale, created = POSSale.objects.get_or_create(
         created_by=request.user,
@@ -508,12 +489,10 @@ def htmx_pos_interface(request):
 
 
 @login_required
+@staff_required
 @require_http_methods(["GET"])
 def htmx_pos_product_search(request):
     """Search/filter products for POS"""
-    if not request.user.is_staff:
-        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
-    
     search = request.GET.get('search', '')
     category = request.GET.get('category', '')
     
@@ -540,12 +519,10 @@ def htmx_pos_product_search(request):
 
 
 @login_required
+@staff_required
 @require_http_methods(["POST"])
 def htmx_pos_add_to_cart(request, item_id):
     """Add product to cart"""
-    if not request.user.is_staff:
-        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
-    
     try:
         inventory_item = Inventory.objects.get(item_id=item_id)
         
@@ -598,12 +575,10 @@ def htmx_pos_add_to_cart(request, item_id):
 
 
 @login_required
+@staff_required
 @require_http_methods(["POST"])
 def htmx_pos_remove_from_cart(request, item_id):
     """Remove item from cart"""
-    if not request.user.is_staff:
-        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
-    
     try:
         cart_item = POSSaleItem.objects.get(id=item_id)
         current_sale = cart_item.sale
@@ -624,12 +599,10 @@ def htmx_pos_remove_from_cart(request, item_id):
 
 
 @login_required
+@staff_required
 @require_http_methods(["POST"])
 def htmx_pos_update_quantity(request, item_id):
     """Update cart item quantity"""
-    if not request.user.is_staff:
-        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
-    
     try:
         cart_item = POSSaleItem.objects.get(id=item_id)
         action = request.GET.get('action', 'increase')
@@ -659,12 +632,10 @@ def htmx_pos_update_quantity(request, item_id):
 
 
 @login_required
+@staff_required
 @require_http_methods(["POST"])
 def htmx_pos_update_discount(request, sale_id):
     """Update sale discount"""
-    if not request.user.is_staff:
-        return JsonResponse({'success': False, 'error': 'Permission denied'}, status=403)
-    
     try:
         current_sale = POSSale.objects.get(id=sale_id, status='Pending')
         discount_percent = float(request.POST.get('discount_percent', 0))
@@ -691,12 +662,10 @@ def htmx_pos_update_discount(request, sale_id):
 
 
 @login_required
+@staff_required
 @require_http_methods(["POST"])
 def htmx_pos_complete_sale(request, sale_id):
     """Complete the sale and generate receipt"""
-    if not request.user.is_staff:
-        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
-    
     try:
         current_sale = POSSale.objects.get(id=sale_id, status='Pending')
         
@@ -899,12 +868,10 @@ def htmx_pos_complete_sale(request, sale_id):
 
 
 @login_required
+@staff_required
 @require_http_methods(["POST"])
 def htmx_pos_cancel_sale(request, sale_id):
     """Cancel current sale"""
-    if not request.user.is_staff:
-        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
-    
     try:
         current_sale = POSSale.objects.get(id=sale_id, status='Pending')
         current_sale.status = 'Cancelled'
@@ -932,12 +899,10 @@ def htmx_pos_cancel_sale(request, sale_id):
 
 
 @login_required
+@staff_required
 @require_http_methods(["GET"])
 def htmx_pos_sales_list(request):
     """List all POS sales with filtering"""
-    if not request.user.is_staff:
-        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
-    
     # Get filter parameters
     status = request.GET.get('status', '')
     payment_method = request.GET.get('payment_method', '')
@@ -1000,12 +965,10 @@ def htmx_pos_sales_list(request):
 
 
 @login_required
+@staff_required
 @require_http_methods(["GET"])
 def htmx_pos_sale_detail(request, sale_id):
     """View detailed receipt for a sale"""
-    if not request.user.is_staff:
-        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
-    
     try:
         sale = POSSale.objects.get(id=sale_id)
         

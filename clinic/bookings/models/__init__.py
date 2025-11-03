@@ -17,6 +17,9 @@ from .billing import Billing, Payment
 # Inventory models
 from .inventory import Inventory, StockTransaction
 
+# Activity logging
+from .activity_log import ActivityLog
+
 # Prescription models
 from .prescriptions import Prescription
 

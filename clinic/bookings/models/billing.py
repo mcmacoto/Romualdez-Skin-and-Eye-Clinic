@@ -4,6 +4,7 @@ Handles billing records and payment transactions
 """
 from django.db import models
 from django.contrib.auth.models import User
+from decimal import Decimal
 
 from .appointments import Booking
 
@@ -23,25 +24,25 @@ class Billing(models.Model):
     service_fee = models.DecimalField(
         max_digits=10, 
         decimal_places=2,
-        default=500.00,
+        default=Decimal('500.00'),
         help_text="Fee for the service provided"
     )
     medicine_fee = models.DecimalField(
         max_digits=10, 
         decimal_places=2, 
-        default=0.00,
+        default=Decimal('0.00'),
         help_text="Cost of medicines used"
     )
     additional_fee = models.DecimalField(
         max_digits=10, 
         decimal_places=2, 
-        default=0.00,
+        default=Decimal('0.00'),
         help_text="Any additional charges"
     )
     discount = models.DecimalField(
         max_digits=10, 
         decimal_places=2, 
-        default=0.00,
+        default=Decimal('0.00'),
         help_text="Discount amount"
     )
     
@@ -62,14 +63,14 @@ class Billing(models.Model):
     amount_paid = models.DecimalField(
         max_digits=10, 
         decimal_places=2, 
-        default=0.00,
+        default=Decimal('0.00'),
         editable=False,
         help_text="Total amount paid (auto-calculated)"
     )
     balance = models.DecimalField(
         max_digits=10, 
         decimal_places=2,
-        default=0.00,
+        default=Decimal('0.00'),
         editable=False,
         help_text="Remaining balance (auto-calculated)"
     )
@@ -91,6 +92,11 @@ class Billing(models.Model):
         ordering = ['-issued_date']
         verbose_name = 'Billing'
         verbose_name_plural = 'Billings'
+        indexes = [
+            models.Index(fields=['is_paid', 'issued_date']),
+            models.Index(fields=['booking', 'is_paid']),
+            models.Index(fields=['issued_date', 'is_paid']),
+        ]
     
     def __str__(self):
         return f"Bill #{self.id} - {self.booking.patient_name} - ₱{self.total_amount}"

@@ -7,7 +7,13 @@ from django.shortcuts import render
 from django.http import HttpResponse
 from django.views.decorators.http import require_http_methods
 from datetime import datetime, date
+import logging
+
 from ..models import Service, Booking
+from ..utils.responses import htmx_error, htmx_success
+from ..utils.email_utils import send_booking_confirmation_email
+
+logger = logging.getLogger(__name__)
 
 
 def home_v2(request):
@@ -217,6 +223,11 @@ def htmx_submit_booking(request):
             created_by=request.user  # Always authenticated at this point
         )
         
+        # Send confirmation email
+        email_sent = send_booking_confirmation_email(booking)
+        if email_sent:
+            logger.info(f"Booking confirmation email sent for booking #{booking.id}")
+        
         # Redirect to success page using HX-Redirect
         response = HttpResponse()
         response['HX-Redirect'] = f'/admin/success/?booking_id={booking.id}'
@@ -224,7 +235,7 @@ def htmx_submit_booking(request):
         
     except Exception as e:
         # Log the error (in production, use proper logging)
-        print(f"Booking error: {str(e)}")
+        logger.error(f"Booking creation failed: {str(e)}", exc_info=True)
         return HttpResponse(
             '<div class="alert alert-danger">'
             f'<i class="fas fa-exclamation-circle"></i> An error occurred: {str(e)}'
@@ -272,10 +283,10 @@ def htmx_submit_contact(request):
         # 3. Send confirmation email to user
         
         # For now, we'll just log it and return success
-        print(f"Contact form submission from {name} ({email})")
-        print(f"Subject: {subject}")
-        print(f"Phone: {phone}")
-        print(f"Message: {message}")
+        logger.info(f"Contact form submission from {name} ({email})")
+        logger.debug(f"Subject: {subject}")
+        logger.debug(f"Phone: {phone}")
+        logger.debug(f"Message: {message}")
         
         # Return success message
         success_html = f'''
@@ -307,7 +318,7 @@ def htmx_submit_contact(request):
         return HttpResponse(success_html)
         
     except Exception as e:
-        print(f"Contact form error: {str(e)}")
+        logger.error(f"Contact form submission failed: {str(e)}", exc_info=True)
         return HttpResponse(
             '<div class="alert alert-danger">'
             '<i class="fas fa-exclamation-circle"></i> '

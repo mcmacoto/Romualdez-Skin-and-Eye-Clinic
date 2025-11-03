@@ -4,6 +4,7 @@ Handles POS sales transactions and sale items
 """
 from django.db import models
 from django.contrib.auth.models import User
+from decimal import Decimal
 
 from .patients import Patient
 from .inventory import Inventory, StockTransaction
@@ -65,40 +66,40 @@ class POSSale(models.Model):
     subtotal = models.DecimalField(
         max_digits=10,
         decimal_places=2,
-        default=0.00,
+        default=Decimal('0.00'),
         editable=False,
         help_text="Subtotal before discount"
     )
     discount_percent = models.DecimalField(
         max_digits=5,
         decimal_places=2,
-        default=0.00,
+        default=Decimal('0.00'),
         help_text="Discount percentage (0-100)"
     )
     discount_amount = models.DecimalField(
         max_digits=10,
         decimal_places=2,
-        default=0.00,
+        default=Decimal('0.00'),
         editable=False,
         help_text="Discount amount (auto-calculated)"
     )
     tax_percent = models.DecimalField(
         max_digits=5,
         decimal_places=2,
-        default=0.00,
+        default=Decimal('0.00'),
         help_text="Tax percentage (0-100)"
     )
     tax_amount = models.DecimalField(
         max_digits=10,
         decimal_places=2,
-        default=0.00,
+        default=Decimal('0.00'),
         editable=False,
         help_text="Tax amount (auto-calculated)"
     )
     total_amount = models.DecimalField(
         max_digits=10,
         decimal_places=2,
-        default=0.00,
+        default=Decimal('0.00'),
         editable=False,
         help_text="Final total amount"
     )
@@ -112,13 +113,13 @@ class POSSale(models.Model):
     amount_received = models.DecimalField(
         max_digits=10,
         decimal_places=2,
-        default=0.00,
+        default=Decimal('0.00'),
         help_text="Amount received from customer"
     )
     change_amount = models.DecimalField(
         max_digits=10,
         decimal_places=2,
-        default=0.00,
+        default=Decimal('0.00'),
         editable=False,
         help_text="Change given to customer"
     )
@@ -152,6 +153,12 @@ class POSSale(models.Model):
         ordering = ['-sale_date']
         verbose_name = 'POS Sale'
         verbose_name_plural = 'POS Sales'
+        indexes = [
+            models.Index(fields=['sale_date', 'status']),
+            models.Index(fields=['status', 'sale_date']),
+            models.Index(fields=['patient', 'sale_date']),
+            models.Index(fields=['receipt_number']),  # Already unique, but explicit index
+        ]
     
     def __str__(self):
         return f"Receipt #{self.receipt_number} - {self.customer_name} - ₱{self.total_amount}"

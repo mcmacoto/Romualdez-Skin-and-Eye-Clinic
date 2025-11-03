@@ -19,6 +19,10 @@ from .auth_views import (
     admin_dashboard_v2,
 )
 
+from .dashboard_views import (
+    htmx_dashboard_stats,
+)
+
 from .public_views import (
     home_v2,
     booking_v2,
@@ -123,6 +127,11 @@ from .admin_management_views import (
     htmx_service_edit_form,
     htmx_service_update,
     htmx_service_delete,
+    # Report views
+    download_appointments_pdf,
+    download_patients_csv,
+    download_billing_csv,
+    download_services_pdf,
 )
 
 # All views have been modularized! No more legacy imports needed.
@@ -231,5 +240,10 @@ __all__ = [
     'htmx_service_edit_form',
     'htmx_service_update',
     'htmx_service_delete',
+    
+    # Report views
+    'download_appointments_pdf',
+    'download_patients_csv',
+    'download_billing_csv',
+    'download_services_pdf',
 ]
-

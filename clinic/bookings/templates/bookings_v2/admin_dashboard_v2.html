@@ -256,7 +256,7 @@
     }
     
     .quick-action-btn:hover {
-        background: linear-gradient(135deg, var(--primary-color) 0%, var(--dark-green) 100%);
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
         color: white;
         border-color: var(--primary-color);
         transform: translateY(-3px);
@@ -657,109 +657,23 @@
                 Key Statistics
             </h3>
             
-            <div class="stats-grid">
-                <!-- Total Appointments -->
-                <div class="stat-card" hx-get="{% url 'bookings_v2:htmx_appointments_list' %}" hx-target="#appointmentsModalBody" hx-trigger="click" data-bs-toggle="modal" data-bs-target="#appointmentsModal">
-                    <div class="stat-icon">
-                        <i class="fas fa-calendar-check"></i>
+            <!-- Auto-refreshable stats grid container -->
+            <div id="dashboard-stats-container" 
+                 hx-get="{% url 'bookings_v2:htmx_dashboard_stats' %}" 
+                 hx-trigger="refreshStats from:body"
+                 hx-swap="innerHTML"
+                 hx-indicator="#stats-loading">
+                {% include 'bookings_v2/htmx_partials/dashboard_stats.html' %}
+            </div>
+            
+            <!-- Loading indicator -->
+            <div id="stats-loading" class="htmx-indicator" style="display: none;">
+                <div class="text-center py-3">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
                     </div>
-                    <div class="stat-number">{{ total_appointments }}</div>
-                    <div class="stat-label">Total Appointments</div>
-                    <div class="stat-hint">Click to view all</div>
+                    <p class="text-muted mt-2">Updating statistics...</p>
                 </div>
-                
-                <!-- Pending Bookings -->
-                <div class="stat-card warning" hx-get="{% url 'bookings_v2:htmx_pending_bookings' %}" hx-target="#pendingBookingsContainer" hx-trigger="click" data-bs-toggle="modal" data-bs-target="#pendingBookingsModal">
-                    <div class="stat-icon">
-                        <i class="fas fa-clock"></i>
-                    </div>
-                    <div class="stat-number">{{ pending_bookings }}</div>
-                    <div class="stat-label">Pending Bookings</div>
-                    <div class="stat-hint">Click to manage</div>
-                </div>
-                
-                <!-- Today's Appointments -->
-                <div class="stat-card" hx-get="{% url 'bookings_v2:htmx_appointments_list' %}?status=today" hx-target="#appointmentsModalBody" hx-trigger="click" data-bs-toggle="modal" data-bs-target="#appointmentsModal">
-                    <div class="stat-icon">
-                        <i class="fas fa-calendar-day"></i>
-                    </div>
-                    <div class="stat-number">{{ today_bookings }}</div>
-                    <div class="stat-label">Today's Appointments</div>
-                    <div class="stat-hint">Click to view</div>
-                </div>
-                
-                <!-- Total Bookings -->
-                <div class="stat-card">
-                    <div class="stat-icon">
-                        <i class="fas fa-calendar-alt"></i>
-                    </div>
-                    <div class="stat-number">{{ total_bookings }}</div>
-                    <div class="stat-label">Total Bookings</div>
-                </div>
-                
-                <!-- Unpaid Bills -->
-                <div class="stat-card warning" hx-get="{% url 'bookings_v2:htmx_unpaid_patients' %}" hx-target="#billingsModalBody" hx-trigger="click" data-bs-toggle="modal" data-bs-target="#billingsModal">
-                    <div class="stat-icon">
-                        <i class="fas fa-exclamation-triangle"></i>
-                    </div>
-                    <div class="stat-number">{{ unpaid_bills }}</div>
-                    <div class="stat-label">Unpaid Bills</div>
-                    <div class="stat-hint">Click to view</div>
-                </div>
-                
-                <!-- Patient Profiles -->
-                <div class="stat-card" hx-get="{% url 'bookings_v2:htmx_patients_list' %}" hx-target="#patientsModalBody" hx-trigger="click" data-bs-toggle="modal" data-bs-target="#patientsModal">
-                    <div class="stat-icon">
-                        <i class="fas fa-users"></i>
-                    </div>
-                    <div class="stat-number">{{ total_patient_profiles }}</div>
-                    <div class="stat-label">Patient Profiles</div>
-                    <div class="stat-hint">Click to view</div>
-                </div>
-                
-                <!-- Medical Records -->
-                <div class="stat-card" hx-get="{% url 'bookings_v2:htmx_medical_records_list' %}" hx-target="#medicalRecordsModalBody" hx-trigger="click" data-bs-toggle="modal" data-bs-target="#medicalRecordsModal">
-                    <div class="stat-icon">
-                        <i class="fas fa-file-medical"></i>
-                    </div>
-                    <div class="stat-number">{{ total_medical_records }}</div>
-                    <div class="stat-label">Medical Records</div>
-                    <div class="stat-hint">Click to view</div>
-                </div>
-                
-                <!-- Inventory Items -->
-                <div class="stat-card" hx-get="{% url 'bookings_v2:htmx_inventory_list' %}" hx-target="#inventoryModalBody" hx-trigger="click" data-bs-toggle="modal" data-bs-target="#inventoryModal">
-                    <div class="stat-icon">
-                        <i class="fas fa-boxes"></i>
-                    </div>
-                    <div class="stat-number">{{ total_inventory_items }}</div>
-                    <div class="stat-label">Inventory Items</div>
-                    <div class="stat-hint">Click to manage</div>
-                </div>
-                
-                <!-- Low Stock Items -->
-                {% if low_stock_items > 0 %}
-                <div class="stat-card warning" hx-get="{% url 'bookings_v2:htmx_inventory_list' %}?status=low_stock" hx-target="#inventoryModalBody" hx-trigger="click" data-bs-toggle="modal" data-bs-target="#inventoryModal">
-                    <div class="stat-icon">
-                        <i class="fas fa-exclamation-circle"></i>
-                    </div>
-                    <div class="stat-number">{{ low_stock_items }}</div>
-                    <div class="stat-label">Low Stock Items</div>
-                    <div class="stat-hint">Action required</div>
-                </div>
-                {% endif %}
-                
-                <!-- Out of Stock Items -->
-                {% if out_of_stock_items > 0 %}
-                <div class="stat-card danger" hx-get="{% url 'bookings_v2:htmx_inventory_list' %}?status=out_of_stock" hx-target="#inventoryModalBody" hx-trigger="click" data-bs-toggle="modal" data-bs-target="#inventoryModal">
-                    <div class="stat-icon">
-                        <i class="fas fa-times-circle"></i>
-                    </div>
-                    <div class="stat-number">{{ out_of_stock_items }}</div>
-                    <div class="stat-label">Out of Stock</div>
-                    <div class="stat-hint">Urgent action needed</div>
-                </div>
-                {% endif %}
             </div>
             
             <!-- Financial Overview -->
@@ -1019,8 +933,7 @@
                         hx-get="{% url 'bookings_v2:htmx_pos_interface' %}" 
                         hx-target="#posModalBody"
                         data-bs-toggle="modal" 
-                        data-bs-target="#posModal"
-                        style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
+                        data-bs-target="#posModal">
                     <i class="fas fa-cash-register"></i>
                     <span>Point of Sale</span>
                 </button>
@@ -1035,6 +948,13 @@
                 </button>
             </div>
         </div>
+    </div>
+</div>
+
+<!-- Analytics Charts Section -->
+<div class="row mt-4">
+    <div class="col-12">
+        {% include 'bookings_v2/partials/dashboard_charts.html' %}
     </div>
 </div>
 

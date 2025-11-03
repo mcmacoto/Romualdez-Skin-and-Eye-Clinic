@@ -36,6 +36,11 @@ class Inventory(models.Model):
         ordering = ['-date_stock_in']
         verbose_name = 'Inventory Item'
         verbose_name_plural = 'Inventory Items'
+        indexes = [
+            models.Index(fields=['category', 'status']),
+            models.Index(fields=['status', 'quantity']),
+            models.Index(fields=['expiry_date']),  # For expiry alerts
+        ]
     
     def __str__(self):
         return f"{self.name} ({self.category}) - Qty: {self.quantity} - ₱{self.price}"

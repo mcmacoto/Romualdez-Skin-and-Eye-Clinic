@@ -8,33 +8,69 @@ from django.http import HttpResponse
 from django.views.decorators.http import require_http_methods
 from django.contrib import messages
 from django.db.models import Q
+from django.core.paginator import Paginator
 from datetime import date
+import logging
 
 from ..models import Booking, Service
+from ..decorators import staff_required
+from ..utils.responses import htmx_error, htmx_success
+from ..utils.email_utils import send_booking_confirmation_email, send_booking_status_update_email
+
+logger = logging.getLogger(__name__)
 
 
 @login_required
+@staff_required
 @require_http_methods(["GET"])
 def htmx_appointments_list(request):
     """Return HTML fragment of all appointments with optional search and filter"""
-    if not request.user.is_staff:
-        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
     
-    # Get filter parameter
+    # Get filter parameters
     filter_status = request.GET.get('status', 'all')
+    start_date = request.GET.get('start_date', '').strip()
+    end_date = request.GET.get('end_date', '').strip()
+    service_id = request.GET.get('service', '').strip()
     
-    appointments = Booking.objects.select_related('service')
+    # Optimize query with select_related
+    appointments = Booking.objects.select_related('service', 'created_by')
     
-    # Handle search
+    # Handle search (multi-field)
     search_query = request.GET.get('search', '').strip()
     if search_query:
         appointments = appointments.filter(
             Q(patient_name__icontains=search_query) |
             Q(patient_email__icontains=search_query) |
-            Q(patient_phone__icontains=search_query)
+            Q(patient_phone__icontains=search_query) |
+            Q(service__name__icontains=search_query)
         )
+        logger.info(f"Appointments search query: '{search_query}' by user {request.user.username}")
     
-    # Apply filters
+    # Apply date range filter
+    if start_date:
+        try:
+            from datetime import datetime
+            start = datetime.strptime(start_date, '%Y-%m-%d').date()
+            appointments = appointments.filter(date__gte=start)
+        except ValueError:
+            pass
+    
+    if end_date:
+        try:
+            from datetime import datetime
+            end = datetime.strptime(end_date, '%Y-%m-%d').date()
+            appointments = appointments.filter(date__lte=end)
+        except ValueError:
+            pass
+    
+    # Apply service filter
+    if service_id:
+        try:
+            appointments = appointments.filter(service_id=int(service_id))
+        except ValueError:
+            pass
+    
+    # Apply status filters
     if filter_status == 'confirmed':
         appointments = appointments.filter(status='Confirmed')
     elif filter_status == 'pending':
@@ -46,17 +82,23 @@ def htmx_appointments_list(request):
     
     appointments = appointments.order_by('-date', '-time')
     
+    # Add pagination (25 items per page)
+    paginator = Paginator(appointments, 25)
+    page_number = request.GET.get('page', 1)
+    page_obj = paginator.get_page(page_number)
+    
     return render(request, 'bookings_v2/partials/appointments_list.html', {
-        'appointments': appointments
+        'appointments': page_obj,
+        'paginator': paginator,
+        'page_obj': page_obj,
     })
 
 
 @login_required
+@staff_required
 @require_http_methods(["POST"])
 def htmx_mark_consultation_done(request, booking_id):
     """Mark consultation as done - returns updated HTML fragment"""
-    if not request.user.is_staff:
-        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
     
     try:
         booking = Booking.objects.select_related('service').get(id=booking_id)
@@ -64,23 +106,25 @@ def htmx_mark_consultation_done(request, booking_id):
         booking.status = 'Completed'
         booking.save()
         
+        logger.info(f"Consultation marked as done for booking #{booking_id} by {request.user.username}")
+        
         # Return just the updated row
         return render(request, 'bookings_v2/partials/appointment_row.html', {
             'appointment': booking
         })
     except Booking.DoesNotExist:
-        return HttpResponse(
-            '<tr><td colspan="7" class="text-center text-danger">Booking not found</td></tr>',
-            status=404
-        )
+        logger.warning(f"Attempted to mark non-existent booking #{booking_id} as done")
+        return htmx_error("Booking not found", status=404)
+    except Exception as e:
+        logger.error(f"Error marking consultation done for booking #{booking_id}: {str(e)}", exc_info=True)
+        return htmx_error("An error occurred while updating the consultation status")
 
 
 @login_required
+@staff_required
 @require_http_methods(["POST"])
 def htmx_update_consultation_status(request, booking_id):
     """Update consultation status via dropdown - returns updated row"""
-    if not request.user.is_staff:
-        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
     
     try:
         booking = Booking.objects.select_related('service').get(id=booking_id)
@@ -89,10 +133,8 @@ def htmx_update_consultation_status(request, booking_id):
         # Validate status
         valid_statuses = ['Not Yet', 'Ongoing', 'Done']
         if new_status not in valid_statuses:
-            return HttpResponse(
-                '<tr><td colspan="7" class="text-center text-danger">Invalid status</td></tr>',
-                status=400
-            )
+            logger.warning(f"Invalid consultation status '{new_status}' attempted for booking #{booking_id}")
+            return htmx_error("Invalid status", status=400)
         
         booking.consultation_status = new_status
         
@@ -102,23 +144,25 @@ def htmx_update_consultation_status(request, booking_id):
         
         booking.save()
         
+        logger.info(f"Consultation status updated to '{new_status}' for booking #{booking_id} by {request.user.username}")
+        
         # Return just the updated row
         return render(request, 'bookings_v2/partials/appointment_row.html', {
             'appointment': booking
         })
     except Booking.DoesNotExist:
-        return HttpResponse(
-            '<tr><td colspan="7" class="text-center text-danger">Booking not found</td></tr>',
-            status=404
-        )
+        logger.warning(f"Attempted to update non-existent booking #{booking_id}")
+        return htmx_error("Booking not found", status=404)
+    except Exception as e:
+        logger.error(f"Error updating consultation status for booking #{booking_id}: {str(e)}", exc_info=True)
+        return htmx_error("An error occurred while updating the status")
 
 
 @login_required
+@staff_required
 @require_http_methods(["DELETE"])
 def htmx_delete_appointment(request, booking_id):
     """Delete appointment - returns empty response to remove row"""
-    if not request.user.is_staff:
-        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
     
     try:
         booking = Booking.objects.get(id=booking_id)
@@ -130,30 +174,35 @@ def htmx_delete_appointment(request, booking_id):
             # Soft delete: just mark as cancelled instead of hard delete
             booking.status = 'Cancelled'
             booking.save()
-            message = 'Appointment cancelled (has medical records)'
+            logger.info(f"Booking #{booking_id} cancelled (has medical records) by {request.user.username}")
         else:
             # Hard delete: completely remove the appointment
+            logger.info(f"Booking #{booking_id} deleted by {request.user.username}")
             booking.delete()
-            message = 'Appointment deleted successfully'
         
         # Return empty response - HTMX will swap and remove the row
-        return HttpResponse('', status=200)
+        response = HttpResponse('', status=200)
+        # Trigger dashboard stats refresh
+        response['HX-Trigger'] = 'refreshStats'
+        return response
         
     except Booking.DoesNotExist:
-        return HttpResponse(
-            '<tr><td colspan="7" class="text-center text-danger">Appointment not found</td></tr>',
-            status=404
-        )
+        logger.warning(f"Attempted to delete non-existent booking #{booking_id}")
+        return htmx_error("Appointment not found", status=404)
+    except Exception as e:
+        logger.error(f"Error deleting booking #{booking_id}: {str(e)}", exc_info=True)
+        return htmx_error("An error occurred while deleting the appointment")
 
 
 @login_required
+@staff_required
 @require_http_methods(["GET"])
 def htmx_pending_bookings(request):
     """HTMX endpoint to list all pending bookings"""
-    if not request.user.is_staff:
-        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
     
-    pending_bookings = Booking.objects.filter(status='Pending').select_related('service').order_by('date', 'time')
+    pending_bookings = Booking.objects.filter(
+        status='Pending'
+    ).select_related('service').order_by('date', 'time')
     
     return render(request, 'bookings_v2/htmx_partials/pending_bookings.html', {
         'bookings': pending_bookings
@@ -161,27 +210,34 @@ def htmx_pending_bookings(request):
 
 
 @login_required
+@staff_required
 @require_http_methods(["POST"])
 def htmx_accept_booking(request, booking_id):
     """Accept a pending booking and create patient records"""
-    if not request.user.is_staff:
-        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
-    
     try:
         booking = Booking.objects.get(id=booking_id, status='Pending')
+        
+        # Store old status for email
+        old_status = booking.status
         
         # Update booking status to Confirmed
         booking.status = 'Confirmed'
         booking.save()  # This triggers signals that create Patient, MedicalRecord, Billing
         
+        # Send confirmation email
+        email_sent = send_booking_status_update_email(booking, old_status, 'Confirmed')
+        if email_sent:
+            logger.info(f"Confirmation email sent for booking #{booking_id}")
+        
         # Return success message (row will be removed)
-        return HttpResponse(
+        response = HttpResponse(
             f'''<tr id="booking-row-{booking_id}">
                 <td colspan="7" class="text-center py-3">
                     <div class="alert alert-success mb-0">
                         <i class="fas fa-check-circle"></i> 
                         Booking for <strong>{booking.patient_name}</strong> has been accepted! 
                         Patient records created automatically.
+                        {' <small>(Confirmation email sent)</small>' if email_sent else ''}
                     </div>
                 </td>
             </tr>
@@ -207,6 +263,9 @@ def htmx_accept_booking(request, booking_id):
                 }}, 2000);
             </script>'''
         )
+        # Trigger dashboard stats refresh
+        response['HX-Trigger'] = 'refreshStats'
+        return response
         
     except Booking.DoesNotExist:
         return HttpResponse(
@@ -221,12 +280,10 @@ def htmx_accept_booking(request, booking_id):
 
 
 @login_required
+@staff_required
 @require_http_methods(["POST"])
 def htmx_decline_booking(request, booking_id):
     """Decline a pending booking"""
-    if not request.user.is_staff:
-        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
-    
     try:
         booking = Booking.objects.get(id=booking_id, status='Pending')
         patient_name = booking.patient_name
@@ -236,7 +293,7 @@ def htmx_decline_booking(request, booking_id):
         booking.save()
         
         # Return success message (row will be removed)
-        return HttpResponse(
+        response = HttpResponse(
             f'''<tr id="booking-row-{booking_id}">
                 <td colspan="7" class="text-center py-3">
                     <div class="alert alert-warning mb-0">
@@ -267,6 +324,9 @@ def htmx_decline_booking(request, booking_id):
                 }}, 2000);
             </script>'''
         )
+        # Trigger dashboard stats refresh
+        response['HX-Trigger'] = 'refreshStats'
+        return response
         
     except Booking.DoesNotExist:
         return HttpResponse(
@@ -281,12 +341,10 @@ def htmx_decline_booking(request, booking_id):
 
 
 @login_required
+@staff_required
 @require_http_methods(["GET"])
 def htmx_appointment_create_form(request):
     """Return HTML form for creating a new appointment"""
-    if not request.user.is_staff:
-        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
-    
     services = Service.objects.all()
     return render(request, 'bookings_v2/htmx_partials/appointment_form.html', {
         'today': date.today().isoformat(),
@@ -295,12 +353,10 @@ def htmx_appointment_create_form(request):
 
 
 @login_required
+@staff_required
 @require_http_methods(["POST"])
 def htmx_appointment_create(request):
     """Create a new appointment"""
-    if not request.user.is_staff:
-        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
-    
     try:
         service_id = request.POST.get('service')
         service = Service.objects.get(id=service_id)
@@ -331,12 +387,10 @@ def htmx_appointment_create(request):
 
 
 @login_required
+@staff_required
 @require_http_methods(["GET"])
 def htmx_appointment_edit_form(request, appointment_id):
     """Return HTML form for editing an appointment"""
-    if not request.user.is_staff:
-        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
-    
     try:
         appointment = Booking.objects.select_related('service').get(id=appointment_id)
         services = Service.objects.all()
@@ -350,12 +404,10 @@ def htmx_appointment_edit_form(request, appointment_id):
 
 
 @login_required
+@staff_required
 @require_http_methods(["POST"])
 def htmx_appointment_update(request, appointment_id):
     """Update an existing appointment"""
-    if not request.user.is_staff:
-        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
-    
     try:
         appointment = Booking.objects.get(id=appointment_id)
         

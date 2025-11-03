@@ -1,0 +1,118 @@
+{% load static %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h3 class="section-title">
+            <i class="fas fa-chart-bar"></i>
+            Analytics Dashboard
+        </h3>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Monthly Appointments Chart -->
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-calendar-alt"></i> Appointments Trend (Last 6 Months)</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="monthlyAppointmentsChart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Services Distribution Chart -->
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-chart-pie"></i> Top Services</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="servicesDistributionChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<script>
+    // Monthly Appointments Chart
+    const monthlyCtx = document.getElementById('monthlyAppointmentsChart').getContext('2d');
+    const monthlyChart = new Chart(monthlyCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ months_labels_json|safe }},
+            datasets: [{
+                label: 'Appointments',
+                data: {{ months_data_json|safe }},
+                backgroundColor: 'rgba(13, 110, 253, 0.7)',
+                borderColor: 'rgba(13, 110, 253, 1)',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                title: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            }
+        }
+    });
+    
+    // Services Distribution Chart
+    const servicesCtx = document.getElementById('servicesDistributionChart').getContext('2d');
+    const servicesChart = new Chart(servicesCtx, {
+        type: 'doughnut',
+        data: {
+            labels: {{ services_labels_json|safe }},
+            datasets: [{
+                label: 'Bookings',
+                data: {{ services_data_json|safe }},
+                backgroundColor: [
+                    'rgba(13, 110, 253, 0.8)',
+                    'rgba(25, 135, 84, 0.8)',
+                    'rgba(255, 193, 7, 0.8)',
+                    'rgba(220, 53, 69, 0.8)',
+                    'rgba(13, 202, 240, 0.8)',
+                    'rgba(108, 117, 125, 0.8)'
+                ],
+                borderColor: [
+                    'rgba(13, 110, 253, 1)',
+                    'rgba(25, 135, 84, 1)',
+                    'rgba(255, 193, 7, 1)',
+                    'rgba(220, 53, 69, 1)',
+                    'rgba(13, 202, 240, 1)',
+                    'rgba(108, 117, 125, 1)'
+                ],
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                },
+                title: {
+                    display: false
+                }
+            }
+        }
+    });
+</script>

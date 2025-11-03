@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booking Confirmation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: #0d6efd;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 5px 5px 0 0;
+        }
+        .content {
+            background-color: #f8f9fa;
+            padding: 30px;
+            border: 1px solid #dee2e6;
+        }
+        .booking-details {
+            background-color: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+            border-left: 4px solid #0d6efd;
+        }
+        .detail-row {
+            margin: 10px 0;
+            padding: 5px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+        .label {
+            font-weight: bold;
+            color: #0d6efd;
+            display: inline-block;
+            width: 120px;
+        }
+        .value {
+            color: #495057;
+        }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #6c757d;
+            font-size: 0.9em;
+            border-top: 1px solid #dee2e6;
+            margin-top: 20px;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 0.85em;
+        }
+        .status-pending {
+            background-color: #ffc107;
+            color: #000;
+        }
+        .status-confirmed {
+            background-color: #28a745;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Romualdez Skin and Eye Clinic</h1>
+        <p>Booking Confirmation</p>
+    </div>
+    
+    <div class="content">
+        <h2>Hello {{ patient.first_name }} {{ patient.last_name }},</h2>
+        
+        <p>Thank you for booking an appointment with us. Your booking has been received and is currently being processed.</p>
+        
+        <div class="booking-details">
+            <h3>Booking Details</h3>
+            
+            <div class="detail-row">
+                <span class="label">Booking ID:</span>
+                <span class="value">#{{ booking.id }}</span>
+            </div>
+            
+            <div class="detail-row">
+                <span class="label">Service:</span>
+                <span class="value">{{ service.name }}</span>
+            </div>
+            
+            <div class="detail-row">
+                <span class="label">Date:</span>
+                <span class="value">{{ booking.date|date:"F d, Y" }}</span>
+            </div>
+            
+            <div class="detail-row">
+                <span class="label">Time:</span>
+                <span class="value">{{ booking.time|time:"h:i A" }}</span>
+            </div>
+            
+            <div class="detail-row">
+                <span class="label">Status:</span>
+                <span class="status-badge status-{{ booking.status|lower }}">{{ booking.get_status_display }}</span>
+            </div>
+            
+            {% if booking.notes %}
+            <div class="detail-row">
+                <span class="label">Notes:</span>
+                <span class="value">{{ booking.notes }}</span>
+            </div>
+            {% endif %}
+        </div>
+        
+        <h3>What's Next?</h3>
+        <ul>
+            <li>Our staff will review your booking request</li>
+            <li>You will receive a confirmation email once your appointment is confirmed</li>
+            <li>Please arrive 10 minutes before your scheduled time</li>
+            <li>Bring a valid ID and any relevant medical records</li>
+        </ul>
+        
+        <p><strong>Need to make changes?</strong> Please contact us as soon as possible.</p>
+    </div>
+    
+    <div class="footer">
+        <p><strong>Romualdez Skin and Eye Clinic</strong></p>
+        <p>Email: clinic@romualdez.com | Phone: (123) 456-7890</p>
+        <p>&copy; 2025 Romualdez Skin and Eye Clinic. All rights reserved.</p>
+    </div>
+</body>
+</html>

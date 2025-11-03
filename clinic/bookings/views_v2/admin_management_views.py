@@ -4,13 +4,21 @@ Handles user management and service CRUD operations
 """
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
+from ..decorators import staff_required
 from django.contrib.auth.models import User, Group
 from django.http import HttpResponse
 from django.views.decorators.http import require_http_methods
 from django.contrib import messages
 from django.db.models import Q
+from datetime import datetime
 
 from ..models import Service
+from ..utils.reports import (
+    generate_appointments_pdf,
+    export_patients_csv,
+    export_billing_csv,
+    generate_services_pdf
+)
 
 
 # ========================================
@@ -18,12 +26,10 @@ from ..models import Service
 # ========================================
 
 @login_required
+@staff_required
 @require_http_methods(["GET"])
 def htmx_users_list(request):
     """HTMX endpoint to list all users"""
-    if not request.user.is_staff:
-        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
-    
     # Get filter parameters
     role = request.GET.get('role', 'all')
     search = request.GET.get('search', '')
@@ -58,12 +64,10 @@ def htmx_users_list(request):
 
 
 @login_required
+@staff_required
 @require_http_methods(["GET"])
 def htmx_user_detail(request, user_id):
     """HTMX endpoint to show user details"""
-    if not request.user.is_staff:
-        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
-    
     try:
         user = User.objects.get(id=user_id)
         
@@ -80,12 +84,10 @@ def htmx_user_detail(request, user_id):
 
 
 @login_required
+@staff_required
 @require_http_methods(["GET"])
 def htmx_user_edit(request, user_id):
     """HTMX endpoint to show user edit form"""
-    if not request.user.is_staff:
-        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
-    
     try:
         edit_user = User.objects.get(id=user_id)
         
@@ -106,23 +108,19 @@ def htmx_user_edit(request, user_id):
 
 
 @login_required
+@staff_required
 @require_http_methods(["GET"])
 def htmx_user_create_form(request):
     """HTMX endpoint to show user creation form"""
-    if not request.user.is_staff:
-        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
-    
     # Pass empty context to ensure no edit_user variable exists
     return render(request, 'bookings_v2/htmx_partials/user_form.html', {'edit_user': None})
 
 
 @login_required
+@staff_required
 @require_http_methods(["POST"])
 def htmx_user_create(request):
     """HTMX endpoint to create a new user"""
-    if not request.user.is_staff:
-        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
-    
     try:
         username = request.POST.get('username')
         email = request.POST.get('email')
@@ -188,12 +186,10 @@ def htmx_user_create(request):
 
 
 @login_required
+@staff_required
 @require_http_methods(["POST"])
 def htmx_user_update(request, user_id):
     """HTMX endpoint to update user"""
-    if not request.user.is_staff:
-        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
-    
     try:
         user = User.objects.get(id=user_id)
         
@@ -238,12 +234,10 @@ def htmx_user_update(request, user_id):
 
 
 @login_required
+@staff_required
 @require_http_methods(["DELETE"])
 def htmx_user_delete(request, user_id):
     """HTMX endpoint to deactivate user"""
-    if not request.user.is_staff:
-        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
-    
     try:
         user = User.objects.get(id=user_id)
         
@@ -273,12 +267,10 @@ def htmx_user_delete(request, user_id):
 # ========================================
 
 @login_required
+@staff_required
 @require_http_methods(["GET"])
 def htmx_services_list(request):
     """Return HTML fragment of all services"""
-    if not request.user.is_staff:
-        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
-    
     services = Service.objects.all().order_by('name')
     
     return render(request, 'bookings_v2/partials/services_list.html', {
@@ -287,22 +279,18 @@ def htmx_services_list(request):
 
 
 @login_required
+@staff_required
 @require_http_methods(["GET"])
 def htmx_service_create_form(request):
     """Return HTML form for creating a new service"""
-    if not request.user.is_staff:
-        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
-    
     return render(request, 'bookings_v2/htmx_partials/service_form.html')
 
 
 @login_required
+@staff_required
 @require_http_methods(["POST"])
 def htmx_service_create(request):
     """Create a new service"""
-    if not request.user.is_staff:
-        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
-    
     try:
         service = Service.objects.create(
             name=request.POST.get('name'),
@@ -324,12 +312,10 @@ def htmx_service_create(request):
 
 
 @login_required
+@staff_required
 @require_http_methods(["GET"])
 def htmx_service_edit_form(request, service_id):
     """Return HTML form for editing a service"""
-    if not request.user.is_staff:
-        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
-    
     try:
         service = Service.objects.get(id=service_id)
         return render(request, 'bookings_v2/htmx_partials/service_form.html', {
@@ -340,12 +326,10 @@ def htmx_service_edit_form(request, service_id):
 
 
 @login_required
+@staff_required
 @require_http_methods(["POST"])
 def htmx_service_update(request, service_id):
     """Update an existing service"""
-    if not request.user.is_staff:
-        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
-    
     try:
         service = Service.objects.get(id=service_id)
         service.name = request.POST.get('name')
@@ -373,12 +357,10 @@ def htmx_service_update(request, service_id):
 
 
 @login_required
+@staff_required
 @require_http_methods(["DELETE"])
 def htmx_service_delete(request, service_id):
     """Delete a service"""
-    if not request.user.is_staff:
-        return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
-    
     try:
         service = Service.objects.get(id=service_id)
         
@@ -402,3 +384,54 @@ def htmx_service_delete(request, service_id):
         return HttpResponse('<tr><td colspan="5" class="text-center text-danger">Service not found</td></tr>', status=404)
     except Exception as e:
         return HttpResponse(f'<tr><td colspan="5" class="text-center text-danger">Error: {str(e)}</td></tr>', status=400)
+
+
+# ========================================
+# REPORTS
+# ========================================
+
+@login_required
+@staff_required
+@require_http_methods(["GET"])
+def download_appointments_pdf(request):
+    """Download appointments report as PDF"""
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
+    status = request.GET.get('status')
+    
+    # Parse dates if provided
+    start = datetime.strptime(start_date, '%Y-%m-%d').date() if start_date else None
+    end = datetime.strptime(end_date, '%Y-%m-%d').date() if end_date else None
+    
+    return generate_appointments_pdf(start, end, status)
+
+
+@login_required
+@staff_required
+@require_http_methods(["GET"])
+def download_patients_csv(request):
+    """Download patients export as CSV"""
+    return export_patients_csv()
+
+
+@login_required
+@staff_required
+@require_http_methods(["GET"])
+def download_billing_csv(request):
+    """Download billing records as CSV"""
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
+    
+    # Parse dates if provided
+    start = datetime.strptime(start_date, '%Y-%m-%d').date() if start_date else None
+    end = datetime.strptime(end_date, '%Y-%m-%d').date() if end_date else None
+    
+    return export_billing_csv(start, end)
+
+
+@login_required
+@staff_required
+@require_http_methods(["GET"])
+def download_services_pdf(request):
+    """Download services report as PDF"""
+    return generate_services_pdf()
