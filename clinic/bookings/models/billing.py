@@ -77,6 +77,14 @@ class Billing(models.Model):
     # System Fields
     issued_date = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    updated_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='billing_updates',
+        help_text="Last user who modified this billing"
+    )
     notes = models.TextField(blank=True, help_text="Billing notes")
     
     class Meta:
