@@ -100,6 +100,23 @@ class Booking(models.Model):
         null=True, 
         related_name='created_bookings'
     )
+    cancelled_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="When this booking was cancelled"
+    )
+    cancelled_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='cancelled_bookings',
+        help_text="User who cancelled this booking"
+    )
+    cancellation_reason = models.TextField(
+        blank=True,
+        help_text="Reason for cancellation"
+    )
     
     class Meta:
         ordering = ['-date', '-time']

@@ -207,6 +207,31 @@ class Payment(models.Model):
         related_name='recorded_payments'
     )
     
+    # Payment Authorization and Verification
+    is_verified = models.BooleanField(
+        default=False,
+        help_text="Whether this payment has been verified",
+        db_index=True
+    )
+    verified_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='verified_payments',
+        help_text="User who verified this payment"
+    )
+    verified_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="When this payment was verified"
+    )
+    authorization_code = models.CharField(
+        max_length=100,
+        blank=True,
+        help_text="Payment authorization code (for card/online payments)"
+    )
+    
     class Meta:
         ordering = ['-payment_date']
         verbose_name = 'Payment'

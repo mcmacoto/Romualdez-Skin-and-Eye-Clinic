@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'axes',  # Rate limiting and account lockout
     'bookings',
 ]
 
@@ -48,6 +49,7 @@ MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+    'axes.middleware.AxesMiddleware',  # Must be after AuthenticationMiddleware
     'bookings.middleware.StaffPermissionMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -157,3 +159,28 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = config('SESSION_EXPIRE_AT_BROWSER_CLOSE', defa
 
 # Default Service Fee
 DEFAULT_SERVICE_FEE = config('DEFAULT_SERVICE_FEE', default=500.00, cast=float)
+
+# ========================================
+# Django Axes Configuration (Rate Limiting & Account Lockout)
+# ========================================
+AUTHENTICATION_BACKENDS = [
+    'axes.backends.AxesStandaloneBackend',  # Must be first
+    'django.contrib.auth.backends.ModelBackend',
+]
+
+# Axes Settings
+AXES_FAILURE_LIMIT = 5  # Lock account after 5 failed login attempts
+AXES_COOLOFF_TIME = 1  # Lockout for 1 hour (in hours)
+AXES_LOCK_OUT_AT_FAILURE = True
+AXES_RESET_ON_SUCCESS = True  # Reset failed attempts after successful login
+AXES_LOCKOUT_TEMPLATE = None  # Use default lockout message
+AXES_LOCKOUT_PARAMETERS = ["username", "ip_address"]  # Track by both username and IP
+AXES_ENABLE_ADMIN = True  # Enable axes in admin panel
+AXES_VERBOSE = True  # Detailed logging
+AXES_ONLY_ADMIN_SITE = False  # Protect both admin and user login
+AXES_IPWARE_PROXY_COUNT = 1  # Number of reverse proxies
+AXES_IPWARE_META_PRECEDENCE_ORDER = [
+    'HTTP_X_FORWARDED_FOR',
+    'X_FORWARDED_FOR',
+    'REMOTE_ADDR',
+]

@@ -66,6 +66,35 @@ class StockTransaction(models.Model):
     performed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='stock_transactions')
     notes = models.TextField(blank=True, help_text="Optional notes about this transaction")
     
+    # Approval workflow for stock adjustments
+    requires_approval = models.BooleanField(
+        default=False,
+        help_text="Whether this transaction needs supervisor approval",
+        db_index=True
+    )
+    is_approved = models.BooleanField(
+        default=False,
+        help_text="Whether this transaction has been approved",
+        db_index=True
+    )
+    approved_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='approved_stock_transactions',
+        help_text="Supervisor who approved this transaction"
+    )
+    approved_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="When this transaction was approved"
+    )
+    rejection_reason = models.TextField(
+        blank=True,
+        help_text="Reason if transaction was rejected"
+    )
+    
     class Meta:
         ordering = ['-transaction_date']
         verbose_name = 'Stock Transaction'

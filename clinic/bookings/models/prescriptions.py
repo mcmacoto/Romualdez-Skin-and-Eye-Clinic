@@ -58,6 +58,30 @@ class Prescription(models.Model):
         null=True,
         related_name='prescribed_medications'
     )
+    expiry_date = models.DateField(
+        null=True,
+        blank=True,
+        help_text="Date when this prescription expires",
+        db_index=True
+    )
+    is_filled = models.BooleanField(
+        default=False,
+        help_text="Whether this prescription has been dispensed",
+        db_index=True
+    )
+    filled_date = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="When this prescription was dispensed"
+    )
+    filled_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='filled_prescriptions',
+        help_text="User who dispensed this prescription"
+    )
     
     class Meta:
         ordering = ['-prescribed_date']
