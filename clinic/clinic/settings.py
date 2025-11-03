@@ -152,6 +152,26 @@ SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = 'DENY'
 
+# Additional Security Headers
+SECURE_REFERRER_POLICY = 'same-origin'  # Referrer policy for privacy
+SECURE_CROSS_ORIGIN_OPENER_POLICY = 'same-origin-allow-popups'  # COOP header
+CSRF_USE_SESSIONS = False  # Store CSRF token in cookie (default)
+CSRF_COOKIE_SAMESITE = 'Strict'  # Prevent CSRF via cross-site requests
+SESSION_COOKIE_SAMESITE = 'Strict'  # Prevent session fixation attacks
+CSRF_FAILURE_VIEW = 'django.views.csrf.csrf_failure'  # Custom CSRF failure page
+
+# Content Security Policy (CSP) - Restrictive policy
+# Note: Adjust as needed for your specific requirements
+CSP_DEFAULT_SRC = ("'self'",)
+CSP_SCRIPT_SRC = ("'self'", "'unsafe-inline'")  # Consider removing unsafe-inline in production
+CSP_STYLE_SRC = ("'self'", "'unsafe-inline'")  # Consider removing unsafe-inline in production
+CSP_IMG_SRC = ("'self'", "data:", "https:")
+CSP_FONT_SRC = ("'self'", "data:")
+CSP_CONNECT_SRC = ("'self'",)
+CSP_FRAME_ANCESTORS = ("'none'",)  # Prevents clickjacking
+CSP_BASE_URI = ("'self'",)
+CSP_FORM_ACTION = ("'self'",)
+
 # Session Security
 SESSION_COOKIE_AGE = config('SESSION_COOKIE_AGE', default=1209600, cast=int)  # 2 weeks default
 SESSION_SAVE_EVERY_REQUEST = config('SESSION_SAVE_EVERY_REQUEST', default=False, cast=bool)
@@ -184,3 +204,20 @@ AXES_IPWARE_META_PRECEDENCE_ORDER = [
     'X_FORWARDED_FOR',
     'REMOTE_ADDR',
 ]
+
+# ========================================
+# Email Configuration (for password reset and notifications)
+# ========================================
+EMAIL_BACKEND = config(
+    'EMAIL_BACKEND',
+    default='django.core.mail.backends.console.EmailBackend'  # Development: print to console
+)
+EMAIL_HOST = config('EMAIL_HOST', default='smtp.gmail.com')
+EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
+EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
+EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='noreply@clinic.com')
+
+# Password Reset Settings
+PASSWORD_RESET_TIMEOUT = 3600  # 1 hour (in seconds)
