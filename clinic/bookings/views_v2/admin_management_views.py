@@ -28,8 +28,8 @@ def htmx_users_list(request):
     role = request.GET.get('role', 'all')
     search = request.GET.get('search', '')
     
-    # Base queryset
-    users = User.objects.all().order_by('-date_joined')
+    # Base queryset with optimized query
+    users = User.objects.prefetch_related('groups').order_by('-date_joined')
     
     # Apply role filter
     if role == 'staff':
@@ -87,18 +87,18 @@ def htmx_user_edit(request, user_id):
         return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
     
     try:
-        user = User.objects.get(id=user_id)
+        edit_user = User.objects.get(id=user_id)
         
         # Only superusers can edit staff/superuser accounts
         if not request.user.is_superuser:
-            if user.is_staff or user.is_superuser:
+            if edit_user.is_staff or edit_user.is_superuser:
                 return HttpResponse('<div class="alert alert-danger">Only superusers can edit staff accounts</div>', status=403)
         
         # Get user's group names
-        user_groups = user.groups.values_list('name', flat=True)
+        user_groups = edit_user.groups.values_list('name', flat=True)
         
         return render(request, 'bookings_v2/htmx_partials/user_form.html', {
-            'user': user,
+            'edit_user': edit_user,
             'user_groups': list(user_groups)
         })
     except User.DoesNotExist:
@@ -112,7 +112,8 @@ def htmx_user_create_form(request):
     if not request.user.is_staff:
         return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
     
-    return render(request, 'bookings_v2/htmx_partials/user_form.html')
+    # Pass empty context to ensure no edit_user variable exists
+    return render(request, 'bookings_v2/htmx_partials/user_form.html', {'edit_user': None})
 
 
 @login_required
@@ -173,14 +174,13 @@ def htmx_user_create(request):
             customer_group, created = Group.objects.get_or_create(name='Customer')
             user.groups.add(customer_group)
         
-        # Return updated user list
-        users = User.objects.all().order_by('-date_joined')
+        # Return updated user list with optimized query
+        users = User.objects.prefetch_related('groups').order_by('-date_joined')
         if not request.user.is_superuser:
             users = users.filter(Q(is_staff=False) | Q(id=request.user.id))
         
         response = render(request, 'bookings_v2/htmx_partials/users_list.html', {'users': users})
-        response['HX-Trigger'] = 'userCreated'
-        messages.success(request, f'User "{username}" created successfully!')
+        response['HX-Trigger'] = 'userCreated, showToast'
         return response
         
     except Exception as e:
@@ -222,14 +222,13 @@ def htmx_user_update(request, user_id):
             group, created = Group.objects.get_or_create(name=group_name)
             user.groups.add(group)
         
-        # Return updated user list
-        users = User.objects.all().order_by('-date_joined')
+        # Return updated user list with optimized query
+        users = User.objects.prefetch_related('groups').order_by('-date_joined')
         if not request.user.is_superuser:
             users = users.filter(Q(is_staff=False) | Q(id=request.user.id))
         
         response = render(request, 'bookings_v2/htmx_partials/users_list.html', {'users': users})
-        response['HX-Trigger'] = 'userUpdated'
-        messages.success(request, f'User "{user.username}" updated successfully!')
+        response['HX-Trigger'] = 'userUpdated, showToast'
         return response
         
     except User.DoesNotExist:
@@ -261,7 +260,6 @@ def htmx_user_delete(request, user_id):
         user.is_active = False
         user.save()
         
-        messages.success(request, f'User "{user.username}" has been deactivated')
         return HttpResponse('')  # Return empty for swap delete
         
     except User.DoesNotExist:
@@ -313,13 +311,13 @@ def htmx_service_create(request):
             image=request.FILES.get('image')
         )
         
-        messages.success(request, f'Service "{service.name}" created successfully')
-        
         # Return updated services list
         services = Service.objects.all().order_by('name')
-        return render(request, 'bookings_v2/partials/services_list.html', {
+        response = render(request, 'bookings_v2/partials/services_list.html', {
             'services': services
         })
+        response['HX-Trigger'] = 'showToast'
+        return response
         
     except Exception as e:
         return HttpResponse(f'<div class="alert alert-danger">Error: {str(e)}</div>', status=400)
@@ -360,13 +358,13 @@ def htmx_service_update(request, service_id):
         
         service.save()
         
-        messages.success(request, f'Service "{service.name}" updated successfully')
-        
         # Return updated services list
         services = Service.objects.all().order_by('name')
-        return render(request, 'bookings_v2/partials/services_list.html', {
+        response = render(request, 'bookings_v2/partials/services_list.html', {
             'services': services
         })
+        response['HX-Trigger'] = 'showToast'
+        return response
         
     except Service.DoesNotExist:
         return HttpResponse('<div class="alert alert-danger">Service not found</div>', status=404)
@@ -395,10 +393,10 @@ def htmx_service_delete(request, service_id):
         service_name = service.name
         service.delete()
         
-        messages.success(request, f'Service "{service_name}" deleted successfully')
-        
         # Return empty response - HTMX will swap and remove the row
-        return HttpResponse('', status=200)
+        response = HttpResponse('', status=200)
+        response['HX-Trigger'] = 'showToast'
+        return response
         
     except Service.DoesNotExist:
         return HttpResponse('<tr><td colspan="5" class="text-center text-danger">Service not found</td></tr>', status=404)

@@ -4,6 +4,9 @@
 {% block title %}Admin Dashboard - Romualdez Skin & Eye Clinic{% endblock %}
 
 {% block extra_css %}
+<!-- Cropper.js CSS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">
+
 <style>
     /* Override global background image */
     body,
@@ -294,12 +297,78 @@
     }
     
     .modal-header .btn-close {
-        opacity: 0.8;
+        opacity: 1 !important;
+        background-color: #dc3545 !important;  /* Red background */
+        border-radius: 50% !important;
+        width: 32px !important;
+        height: 32px !important;
+        padding: 0 !important;
+        filter: none !important;  /* Remove any filters from external CSS */
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23fff'%3e%3cpath d='M.293.293a1 1 0 011.414 0L8 6.586 14.293.293a1 1 0 111.414 1.414L9.414 8l6.293 6.293a1 1 0 01-1.414 1.414L8 9.414l-6.293 6.293a1 1 0 01-1.414-1.414L6.586 8 .293 1.707a1 1 0 010-1.414z'/%3e%3c/svg%3e") !important;
+        background-size: 16px !important;
+        background-position: center !important;
+        background-repeat: no-repeat !important;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+        transition: all 0.2s ease !important;
+        position: relative !important;
+    }
+    
+    .modal-header .btn-close::before,
+    .modal-header .btn-close::after {
+        display: none !important;  /* Remove custom X since we're using SVG */
+    }
+    
+    .modal-header .btn-close:hover {
+        background-color: #bb2d3b !important;  /* Darker red on hover */
+        transform: scale(1.1) !important;
     }
     
     .modal-header.bg-success .btn-close {
-        filter: invert(1);
-        opacity: 1;
+        background-color: #ffc107 !important;  /* Yellow/warning color for green headers */
+    }
+    
+    .modal-header.bg-success .btn-close:hover {
+        background-color: #ffb300 !important;
+    }
+    
+    /* Ensure btn-close-white is also styled for POS modal */
+    .btn-close-white {
+        background-color: #ffc107 !important;  /* Yellow for visibility on green */
+        opacity: 1 !important;
+        filter: none !important;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23000'%3e%3cpath d='M.293.293a1 1 0 011.414 0L8 6.586 14.293.293a1 1 0 111.414 1.414L9.414 8l6.293 6.293a1 1 0 01-1.414 1.414L8 9.414l-6.293 6.293a1 1 0 01-1.414-1.414L6.586 8 .293 1.707a1 1 0 010-1.414z'/%3e%3c/svg%3e") !important;
+        background-size: 16px !important;
+        background-position: center !important;
+        border-radius: 50% !important;
+        width: 32px !important;
+        height: 32px !important;
+    }
+    
+    .btn-close-white:hover {
+        background-color: #ffb300 !important;
+    }
+    
+    /* Back and Cancel Button Styling */
+    .btn-outline-secondary,
+    .btn-secondary {
+        background-color: #6c757d !important;
+        color: white !important;
+        border: 2px solid #5a6268 !important;
+        font-weight: 500;
+    }
+    
+    .btn-outline-secondary:hover,
+    .btn-secondary:hover {
+        background-color: #5a6268 !important;
+        color: white !important;
+        border-color: #545b62 !important;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    
+    .btn-outline-secondary i,
+    .btn-secondary i {
+        color: white !important;
     }
     
     .modal-body {
@@ -433,10 +502,124 @@
             grid-template-columns: 1fr;
         }
     }
+    
+    /* ===== TOAST NOTIFICATIONS ===== */
+    .toast-notification {
+        min-width: 300px;
+        max-width: 400px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        margin-bottom: 10px;
+        padding: 16px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        animation: slideInRight 0.3s ease, fadeIn 0.3s ease;
+        border-left: 4px solid #28a745;
+    }
+    
+    .toast-notification.toast-success {
+        border-left-color: #28a745;
+    }
+    
+    .toast-notification.toast-error {
+        border-left-color: #dc3545;
+    }
+    
+    .toast-notification.toast-warning {
+        border-left-color: #ffc107;
+    }
+    
+    .toast-notification.toast-info {
+        border-left-color: #17a2b8;
+    }
+    
+    .toast-icon {
+        font-size: 24px;
+        flex-shrink: 0;
+    }
+    
+    .toast-success .toast-icon {
+        color: #28a745;
+    }
+    
+    .toast-error .toast-icon {
+        color: #dc3545;
+    }
+    
+    .toast-warning .toast-icon {
+        color: #ffc107;
+    }
+    
+    .toast-info .toast-icon {
+        color: #17a2b8;
+    }
+    
+    .toast-content {
+        flex: 1;
+    }
+    
+    .toast-title {
+        font-weight: 600;
+        font-size: 14px;
+        margin-bottom: 4px;
+        color: #212529;
+    }
+    
+    .toast-message {
+        font-size: 13px;
+        color: #6c757d;
+        margin: 0;
+    }
+    
+    .toast-close {
+        background: none;
+        border: none;
+        font-size: 20px;
+        color: #6c757d;
+        cursor: pointer;
+        padding: 0;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 4px;
+        transition: background-color 0.2s;
+    }
+    
+    .toast-close:hover {
+        background-color: rgba(0, 0, 0, 0.05);
+    }
+    
+    @keyframes slideInRight {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    @keyframes fadeOut {
+        from { opacity: 1; }
+        to { opacity: 0; }
+    }
 </style>
 {% endblock %}
 
 {% block content %}
+<!-- Toast Notification Container -->
+<div id="toastContainer" style="position: fixed; top: 20px; right: 20px; z-index: 9999;"></div>
+
 <div class="container dashboard-container">
     <!-- Dashboard Header -->
     <div class="dashboard-header">
@@ -1245,10 +1428,171 @@
     </div>
 </div>
 
+<!-- Global Image Crop Modal -->
+<div class="modal fade" id="globalCropModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-crop"></i> Crop Image
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="globalCropModalClose"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Cropper Container -->
+                <div class="mb-3">
+                    <div style="max-height: 400px; overflow: hidden;">
+                        <img id="globalCropperImage" src="" alt="Image to crop" style="max-width: 100%;">
+                    </div>
+                </div>
+                
+                <!-- Crop Controls -->
+                <div class="row g-2">
+                    <div class="col-md-6">
+                        <label class="form-label small">Aspect Ratio</label>
+                        <div class="btn-group w-100" role="group" id="globalAspectRatioGroup">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" data-ratio="free">Free</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary active" data-ratio="1">Square</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" data-ratio="1.7778">16:9</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" data-ratio="1.3333">4:3</button>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small">Actions</label>
+                        <div class="btn-group w-100" role="group">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="globalRotateLeft" title="Rotate Left">
+                                <i class="fas fa-undo"></i>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="globalRotateRight" title="Rotate Right">
+                                <i class="fas fa-redo"></i>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="globalFlipHorizontal" title="Flip Horizontal">
+                                <i class="fas fa-arrows-alt-h"></i>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="globalFlipVertical" title="Flip Vertical">
+                                <i class="fas fa-arrows-alt-v"></i>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="globalResetCrop" title="Reset">
+                                <i class="fas fa-sync"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="globalCropCancel">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+                <button type="button" class="btn btn-success" id="globalCropAndSave">
+                    <i class="fas fa-check"></i> Crop & Use
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block extra_js %}
 <script>
+    // ===== TOAST NOTIFICATION SYSTEM =====
+    function showToast(message = 'Action completed successfully!', type = 'success', duration = 3000) {
+        const container = document.getElementById('toastContainer');
+        
+        const icons = {
+            success: 'fa-check-circle',
+            error: 'fa-exclamation-circle',
+            warning: 'fa-exclamation-triangle',
+            info: 'fa-info-circle'
+        };
+        
+        const titles = {
+            success: 'Success',
+            error: 'Error',
+            warning: 'Warning',
+            info: 'Info'
+        };
+        
+        const toast = document.createElement('div');
+        toast.className = `toast-notification toast-${type}`;
+        toast.innerHTML = `
+            <div class="toast-icon">
+                <i class="fas ${icons[type]}"></i>
+            </div>
+            <div class="toast-content">
+                <div class="toast-title">${titles[type]}</div>
+                <p class="toast-message">${message}</p>
+            </div>
+            <button class="toast-close" onclick="this.parentElement.remove()">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+        
+        container.appendChild(toast);
+        
+        // Auto-remove after duration
+        setTimeout(() => {
+            toast.style.animation = 'fadeOut 0.3s ease';
+            setTimeout(() => toast.remove(), 300);
+        }, duration);
+    }
+    
+    // Listen for HTMX showToast trigger
+    document.body.addEventListener('htmx:afterSwap', function(event) {
+        const trigger = event.detail.xhr.getResponseHeader('HX-Trigger');
+        if (trigger && trigger.includes('showToast')) {
+            // Determine message based on context
+            let message = 'Operation completed successfully!';
+            
+            if (trigger.includes('userCreated')) {
+                message = 'User created successfully!';
+            } else if (trigger.includes('userUpdated')) {
+                message = 'User updated successfully!';
+            } else if (event.detail.target.id === 'servicesListContainer') {
+                message = 'Service updated successfully!';
+            } else if (event.detail.target.id === 'inventoryListContainer') {
+                message = 'Inventory updated successfully!';
+            }
+            
+            showToast(message, 'success');
+        }
+    });
+    
+    // Clear modal body when opening for create (to prevent edit form from showing)
+    document.addEventListener('DOMContentLoaded', function() {
+        const userEditModal = document.getElementById('userEditModal');
+        if (userEditModal) {
+            userEditModal.addEventListener('show.bs.modal', function(event) {
+                const button = event.relatedTarget; // Button that triggered the modal
+                
+                // Check if this is a create button by checking the hx-get attribute
+                if (button && button.hasAttribute('hx-get')) {
+                    const hxGetUrl = button.getAttribute('hx-get');
+                    
+                    // If URL contains 'create-form', it's a create action
+                    if (hxGetUrl.includes('create-form')) {
+                        // Clear the modal body before loading create form
+                        const modalBody = document.getElementById('userEditModalBody');
+                        const modalTitle = document.getElementById('userEditModalTitle');
+                        if (modalBody) {
+                            modalBody.innerHTML = '<div class="loading-state"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div><p>Loading form...</p></div>';
+                        }
+                        if (modalTitle) {
+                            modalTitle.textContent = 'Create User';
+                        }
+                    } 
+                    // If URL contains 'user_edit', it's an edit action
+                    else if (hxGetUrl.includes('user/') && hxGetUrl.includes('/edit/')) {
+                        const modalTitle = document.getElementById('userEditModalTitle');
+                        if (modalTitle) {
+                            modalTitle.textContent = 'Edit User';
+                        }
+                    }
+                }
+            });
+        }
+    });
+    
     // HTMX event listeners for better UX - No loading buffer
     document.body.addEventListener('htmx:beforeRequest', function(event) {
         // No loading buffer - HTMX handles transitions smoothly
@@ -1288,4 +1632,10 @@
         }
     });
 </script>
+
+<!-- Cropper.js Library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
+<!-- Global Cropper Module -->
+<script src="{% static 'js/global_cropper.js' %}"></script>
+
 {% endblock %}

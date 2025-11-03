@@ -902,6 +902,19 @@ def htmx_medical_images(request, record_id):
         images = record.images.all()
         
         html = f'''
+        <!-- Back Button -->
+        <div class="mb-3">
+            <button 
+                type="button"
+                class="btn btn-outline-secondary btn-sm"
+                hx-get="/admin/htmx/medical-record/{record_id}/edit/"
+                hx-target="#medicalImagesModalBody"
+                hx-swap="outerHTML"
+            >
+                <i class="fas fa-arrow-left me-2"></i>Back to Medical Record
+            </button>
+        </div>
+        
         <div class="mb-3 d-flex justify-content-between align-items-center">
             <div>
                 <h6><strong>Patient:</strong> {record.patient.user.get_full_name()}</h6>

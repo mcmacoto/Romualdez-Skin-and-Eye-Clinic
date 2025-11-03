@@ -1,5 +1,6 @@
 {% extends 'bookings_v2/base_v2.html' %}
 {% load static %}
+{% load description_filters %}
 
 {% block title %}Our Services - V2{% endblock %}
 
@@ -106,12 +107,12 @@
                     
                     <!-- Truncated Description -->
                     <p class="card-text text-muted flex-grow-1" x-show="!showDetails">
-                        {{ service.description|truncatewords:20 }}
+                        {{ service.description|truncatewords:20|format_service_description|safe }}
                     </p>
                     
                     <!-- Full Description (toggleable with Alpine.js) -->
                     <div x-show="showDetails" x-transition.duration.300ms class="flex-grow-1">
-                        <p class="card-text text-muted">{{ service.description }}</p>
+                        {{ service.description|format_service_description|safe }}
                     </div>
                     
                     <!-- Toggle Button -->

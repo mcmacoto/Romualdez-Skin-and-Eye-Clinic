@@ -1,5 +1,17 @@
 {% load static %}
 
+<!-- Back Button -->
+<div class="mb-3">
+    <button type="button" 
+            class="btn btn-outline-secondary btn-sm"
+            hx-get="{% url 'bookings_v2:htmx_users_list' %}"
+            hx-target="#userDetailModalBody"
+            hx-swap="outerHTML"
+            data-bs-dismiss="modal">
+        <i class="fas fa-arrow-left me-2"></i>Back to Users List
+    </button>
+</div>
+
 <div class="user-detail-container">
     <div class="row">
         <div class="col-md-4 text-center border-end">

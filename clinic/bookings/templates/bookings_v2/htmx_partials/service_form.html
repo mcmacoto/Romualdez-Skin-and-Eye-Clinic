@@ -2,7 +2,8 @@
 <form hx-post="{% if service %}{% url 'bookings_v2:htmx_service_update' service.id %}{% else %}{% url 'bookings_v2:htmx_service_create' %}{% endif %}"
       hx-target="#servicesModalBody"
       hx-swap="innerHTML"
-      hx-encoding="multipart/form-data">
+      hx-encoding="multipart/form-data"
+      id="serviceForm">
     
     {% csrf_token %}
     
@@ -82,14 +83,31 @@
                id="image" 
                name="image" 
                accept="image/*"
-               {% if not service %}required{% endif %}>
-        <small class="text-muted">
+               {% if not service %}required{% endif %}
+               style="display: none;">
+        
+        <!-- Custom Upload Button -->
+        <div class="d-flex gap-2 align-items-center">
+            <button type="button" class="btn btn-outline-primary" id="selectImageBtn">
+                <i class="fas fa-upload"></i> Select Image
+            </button>
+            <span id="selectedFileName" class="text-muted small"></span>
+        </div>
+        
+        <small class="text-muted d-block mt-1">
             {% if service %}
             Leave empty to keep current image. Upload a new image to replace it.
             {% else %}
             Upload an image for this service (JPG, PNG, etc.)
             {% endif %}
         </small>
+        
+        <!-- Image Preview (will show cropped image) -->
+        <div id="croppedPreview" style="display: none;" class="mt-2">
+            <p class="text-muted small mb-1">Cropped preview:</p>
+            <img id="croppedImage" src="" alt="Cropped preview" 
+                 style="max-width: 200px; height: auto; border-radius: 8px; border: 2px solid #28a745;">
+        </div>
     </div>
     
     <!-- Action Buttons -->
@@ -108,23 +126,61 @@
 </form>
 
 <script>
-    // Preview image before upload
-    document.getElementById('image').addEventListener('change', function(e) {
+(function() {
+    const fileInput = document.getElementById('image');
+    const selectImageBtn = document.getElementById('selectImageBtn');
+    const selectedFileNameSpan = document.getElementById('selectedFileName');
+    
+    // Click select button to trigger file input
+    selectImageBtn.addEventListener('click', function() {
+        fileInput.click();
+    });
+    
+    // When file is selected, open the global crop modal
+    fileInput.addEventListener('change', async function(e) {
         const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                // Create preview if it doesn't exist
-                let preview = document.getElementById('imagePreview');
-                if (!preview) {
-                    preview = document.createElement('img');
-                    preview.id = 'imagePreview';
-                    preview.style.cssText = 'max-width: 200px; height: auto; border-radius: 8px; border: 2px solid #dee2e6; margin-top: 10px; display: block;';
-                    e.target.parentElement.appendChild(preview);
-                }
-                preview.src = event.target.result;
-            };
-            reader.readAsDataURL(file);
+        if (!file || !file.type.startsWith('image/')) {
+            if (file) {
+                alert('Please select a valid image file.');
+                fileInput.value = '';
+            }
+            return;
+        }
+        
+        // Check if GlobalCropper is available
+        if (!window.GlobalCropper || typeof window.GlobalCropper.open !== 'function') {
+            console.error('GlobalCropper is not available');
+            alert('Image cropper is not loaded. Please refresh the page and try again.');
+            fileInput.value = '';
+            return;
+        }
+        
+        try {
+            // Open the global cropper modal (aspect ratio 1:1 by default)
+            const result = await window.GlobalCropper.open(file, { aspectRatio: 1 });
+            
+            // Create a DataTransfer to set the file input with the cropped image
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(result.file);
+            fileInput.files = dataTransfer.files;
+            
+            // Show preview
+            const preview = document.getElementById('croppedImage');
+            const previewContainer = document.getElementById('croppedPreview');
+            preview.src = result.dataURL;
+            previewContainer.style.display = 'block';
+            
+            // Update filename display
+            selectedFileNameSpan.textContent = result.fileName + ' (cropped)';
+            selectedFileNameSpan.classList.add('text-success');
+            
+        } catch (error) {
+            // User cancelled or error occurred
+            console.log('Crop cancelled or failed:', error);
+            fileInput.value = '';
+            selectedFileNameSpan.textContent = 'No file selected';
+            selectedFileNameSpan.classList.remove('text-success');
         }
     });
+})();
 </script>
