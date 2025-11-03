@@ -69,7 +69,10 @@ class Prescription(models.Model):
         return f"{medicine_name} x{self.quantity} - {self.medical_record.patient.user.get_full_name()}"
     
     def save(self, *args, **kwargs):
-        """Calculate total price and update inventory"""
+        """Calculate total price and update inventory with transaction safety"""
+        from django.db import transaction
+        from django.core.exceptions import ValidationError
+        
         # Set unit price from current medicine price if not set and using inventory medicine
         if self.medicine and not self.unit_price:
             self.unit_price = self.medicine.price
@@ -81,21 +84,38 @@ class Prescription(models.Model):
         # Calculate total
         self.total_price = self.unit_price * self.quantity
         
-        # Save first
+        # Check if this is a new prescription
         is_new = self.pk is None
-        super().save(*args, **kwargs)
         
-        # If new prescription with inventory medicine, deduct from inventory
-        if is_new and self.medicine:
-            if self.medicine.quantity >= self.quantity:
-                self.medicine.quantity -= self.quantity
-                self.medicine.save()
+        # Use atomic transaction to ensure prescription and inventory update happen together
+        with transaction.atomic():
+            # If new prescription with inventory medicine, check stock availability first
+            if is_new and self.medicine:
+                # Lock the inventory item to prevent race conditions
+                medicine = Inventory.objects.select_for_update().get(pk=self.medicine.pk)
+                
+                # Validate sufficient stock before saving
+                if medicine.quantity < self.quantity:
+                    raise ValidationError(
+                        f"Insufficient stock for {medicine.name}. "
+                        f"Available: {medicine.quantity}, Required: {self.quantity}"
+                    )
+                
+                # Save prescription first
+                super().save(*args, **kwargs)
+                
+                # Deduct from inventory
+                medicine.quantity -= self.quantity
+                medicine.save()
                 
                 # Create stock transaction
                 StockTransaction.objects.create(
-                    inventory_item=self.medicine,
+                    inventory_item=medicine,
                     transaction_type='Stock Out',
                     quantity=self.quantity,
                     performed_by=self.prescribed_by,
                     notes=f"Prescribed to {self.medical_record.patient.user.get_full_name()}"
                 )
+            else:
+                # No inventory update needed, just save
+                super().save(*args, **kwargs)

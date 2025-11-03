@@ -105,6 +105,38 @@ class Booking(models.Model):
         ordering = ['-date', '-time']
         verbose_name = 'Booking'
         verbose_name_plural = 'Bookings'
+        # Add compound index for common date+time queries
+        indexes = [
+            models.Index(fields=['date', 'time']),
+            models.Index(fields=['status', 'date']),
+        ]
+    
+    def clean(self):
+        """Validate booking to prevent double-booking"""
+        from django.core.exceptions import ValidationError
+        
+        # Check for existing bookings at the same date/time (excluding cancelled)
+        existing = Booking.objects.filter(
+            date=self.date,
+            time=self.time
+        ).exclude(
+            status='Cancelled'
+        )
+        
+        # Exclude self if updating
+        if self.pk:
+            existing = existing.exclude(pk=self.pk)
+        
+        if existing.exists():
+            raise ValidationError(
+                f"A booking already exists for {self.date} at {self.time}. "
+                f"Please choose a different time slot."
+            )
+    
+    def save(self, *args, **kwargs):
+        """Override save to call clean()"""
+        self.clean()
+        super().save(*args, **kwargs)
     
     def __str__(self):
         return f"{self.patient_name} - {self.date} {self.time} ({self.status})"

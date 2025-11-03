@@ -16,19 +16,23 @@ logger = logging.getLogger(__name__)
 def check_booking_confirmation(sender, instance, **kwargs):
     """
     Check if booking status is changing to Confirmed or consultation_status is changing to Done
+    Store previous state in database to avoid race conditions
     """
     if instance.pk:
         try:
-            old_instance = Booking.objects.get(pk=instance.pk)
+            old_instance = Booking.objects.select_for_update().get(pk=instance.pk)
             
+            # Store flags in a thread-safe way by checking actual database state
             # Check if consultation_status changed to 'Done'
             if old_instance.consultation_status != 'Done' and instance.consultation_status == 'Done':
-                instance._consultation_completed = True
+                # Mark for consultation completion handling
+                instance._consultation_just_completed = True
                 logger.info(f"Booking {instance.id} consultation marked as Done - will create records")
             
             # Check if status changed from non-Confirmed to Confirmed
             elif old_instance.status != 'Confirmed' and instance.status == 'Confirmed':
-                instance._booking_confirmed = True
+                # Mark for appointment creation
+                instance._booking_just_confirmed = True
                 logger.info(f"Booking {instance.id} confirmed - will create Appointment record")
                 
         except Booking.DoesNotExist:
@@ -38,45 +42,43 @@ def check_booking_confirmation(sender, instance, **kwargs):
 @receiver(post_save, sender=Booking)
 def create_appointment_or_patient_records(sender, instance, created, **kwargs):
     """
-    Handle two scenarios:
+    Handle two scenarios with proper transaction management:
     1. When booking is confirmed: Create Appointment record only
     2. When consultation_status = 'Done': Create Patient, MedicalRecord, and Billing
     """
     # Scenario 1: Booking confirmed - Create Appointment record
-    if hasattr(instance, '_booking_confirmed') and instance._booking_confirmed:
+    if hasattr(instance, '_booking_just_confirmed') and instance._booking_just_confirmed:
         try:
-            from .models import Appointment
-            
-            # Check if Appointment already exists for this booking
-            appointment_exists = Appointment.objects.filter(
-                name=instance.patient_name,
-                email=instance.patient_email,
-                date=instance.date,
-                time=instance.time
-            ).exists()
-            
-            if not appointment_exists:
-                # Create Appointment record
-                appointment = Appointment.objects.create(
+            with transaction.atomic():
+                from .models import Appointment
+                
+                # Use get_or_create to prevent duplicates
+                appointment, appointment_created = Appointment.objects.get_or_create(
                     name=instance.patient_name,
                     email=instance.patient_email,
-                    phone=instance.patient_phone,
                     date=instance.date,
                     time=instance.time,
-                    message=instance.notes,
-                    status='Confirmed',
-                    consultation_status='Not Yet'
+                    defaults={
+                        'phone': instance.patient_phone,
+                        'message': instance.notes,
+                        'status': 'Confirmed',
+                        'consultation_status': 'Not Yet'
+                    }
                 )
-                logger.info(f"✅ Created Appointment #{appointment.id} for confirmed booking #{instance.id}")
+                
+                if appointment_created:
+                    logger.info(f"✅ Created Appointment #{appointment.id} for confirmed booking #{instance.id}")
+                else:
+                    logger.info(f"ℹ️ Appointment already exists for booking #{instance.id}")
             
             # Clean up the flag
-            delattr(instance, '_booking_confirmed')
+            delattr(instance, '_booking_just_confirmed')
             
         except Exception as e:
             logger.error(f"❌ Error creating Appointment for booking {instance.id}: {str(e)}")
     
     # Scenario 2: Consultation Done - Create Patient, MedicalRecord, and Billing
-    elif hasattr(instance, '_consultation_completed') and instance._consultation_completed:
+    elif hasattr(instance, '_consultation_just_completed') and instance._consultation_just_completed:
         try:
             with transaction.atomic():
                 # 1. Create or get User account for the patient
@@ -84,8 +86,8 @@ def create_appointment_or_patient_records(sender, instance, created, **kwargs):
                 base_username = username
                 counter = 1
                 
-                # Ensure unique username
-                while User.objects.filter(username=username).exists():
+                # Ensure unique username with database lock
+                while User.objects.select_for_update().filter(username=username).exists():
                     username = f"{base_username}{counter}"
                     counter += 1
                 
@@ -106,10 +108,17 @@ def create_appointment_or_patient_records(sender, instance, created, **kwargs):
                 )
                 
                 if user_created:
-                    # Set a temporary password (patient should reset it)
-                    user.set_password('TempPassword123!')
+                    # Generate a random secure password instead of hardcoded one
+                    import secrets
+                    import string
+                    alphabet = string.ascii_letters + string.digits + string.punctuation
+                    temp_password = ''.join(secrets.choice(alphabet) for i in range(16))
+                    user.set_password(temp_password)
                     user.save()
-                    logger.info(f"✅ Created new user account: {user.username}")
+                    logger.info(f"✅ Created new user account: {user.username} with temporary password")
+                    # TODO: Send password reset email to user
+                    # from django.core.mail import send_mail
+                    # send_password_reset_email(user, temp_password)
                 
                 # 2. Create Patient profile if it doesn't exist
                 patient, patient_created = Patient.objects.get_or_create(
@@ -138,27 +147,30 @@ def create_appointment_or_patient_records(sender, instance, created, **kwargs):
                 logger.info(f"✅ Created medical record #{medical_record.id} for {patient}")
                 
                 # 4. Create Billing (only when consultation is Done)
-                # Check if billing already exists using try/except instead of hasattr
-                try:
-                    existing_billing = Billing.objects.get(booking=instance)
-                    logger.info(f"⚠️ Billing already exists for booking #{instance.id}: #{existing_billing.id}")
-                except Billing.DoesNotExist:
-                    # Determine service fee - use service price if available and > 0, otherwise default to 500
-                    service_fee = 500.00  # Default consultation fee
-                    if instance.service and hasattr(instance.service, 'price') and instance.service.price > 0:
-                        service_fee = float(instance.service.price)
-                    
-                    logger.info(f"Creating billing with service fee: ₱{service_fee}")
-                    
-                    billing = Billing.objects.create(
-                        booking=instance,
-                        service_fee=service_fee,
-                        medicine_fee=0.00,
-                        additional_fee=0.00,
-                        discount=0.00,
-                        notes=f"Consultation fee for {instance.service.name if instance.service else 'General Consultation'}"
-                    )
+                # Use get_or_create to prevent duplicate billings
+                from django.conf import settings
+                default_fee = getattr(settings, 'DEFAULT_SERVICE_FEE', 500.00)
+                
+                # Determine service fee
+                service_fee = default_fee
+                if instance.service and hasattr(instance.service, 'price') and instance.service.price > 0:
+                    service_fee = float(instance.service.price)
+                
+                billing, billing_created = Billing.objects.get_or_create(
+                    booking=instance,
+                    defaults={
+                        'service_fee': service_fee,
+                        'medicine_fee': 0.00,
+                        'additional_fee': 0.00,
+                        'discount': 0.00,
+                        'notes': f"Consultation fee for {instance.service.name if instance.service else 'General Consultation'}"
+                    }
+                )
+                
+                if billing_created:
                     logger.info(f"✅ Created billing #{billing.id} with service fee ₱{service_fee}, total ₱{billing.total_amount}")
+                else:
+                    logger.info(f"ℹ️ Billing already exists for booking #{instance.id}: #{billing.id}")
                 
                 # Update booking status to Completed
                 Booking.objects.filter(pk=instance.pk).update(status='Completed')
@@ -167,7 +179,7 @@ def create_appointment_or_patient_records(sender, instance, created, **kwargs):
                 logger.info(f"✅ TRANSACTION COMPLETE: All records created for booking #{instance.id} after consultation completion")
             
             # Clean up the flag
-            delattr(instance, '_consultation_completed')
+            delattr(instance, '_consultation_just_completed')
             
         except Exception as e:
             logger.error(f"❌ TRANSACTION FAILED: Error creating records for booking {instance.id}: {str(e)}")

@@ -101,26 +101,35 @@ class Billing(models.Model):
         super().save(*args, **kwargs)
     
     def update_payment_status(self):
-        """Update payment status based on total payments - uses update() to avoid signal recursion"""
-        total_payments = sum(
-            payment.amount_paid 
-            for payment in self.payments.all()
-        )
-        amount_paid = total_payments
-        balance = self.total_amount - total_payments
-        is_paid = balance <= 0
+        """
+        Update payment status based on total payments with database-level transaction lock
+        Uses select_for_update() to prevent race conditions in concurrent payment scenarios
+        """
+        from django.db import transaction
         
-        # Use update() to avoid triggering post_save signal
-        Billing.objects.filter(pk=self.pk).update(
-            amount_paid=amount_paid,
-            balance=balance,
-            is_paid=is_paid
-        )
-        
-        # Update instance attributes to reflect changes
-        self.amount_paid = amount_paid
-        self.balance = balance
-        self.is_paid = is_paid
+        with transaction.atomic():
+            # Lock the billing record to prevent concurrent updates
+            billing = Billing.objects.select_for_update().get(pk=self.pk)
+            
+            # Calculate total from payments using database aggregation
+            from django.db.models import Sum
+            payment_total = billing.payments.aggregate(total=Sum('amount_paid'))['total'] or 0
+            
+            amount_paid = payment_total
+            balance = billing.total_amount - payment_total
+            is_paid = balance <= 0
+            
+            # Use update() to avoid triggering post_save signal
+            Billing.objects.filter(pk=self.pk).update(
+                amount_paid=amount_paid,
+                balance=balance,
+                is_paid=is_paid
+            )
+            
+            # Update instance attributes to reflect changes
+            self.amount_paid = amount_paid
+            self.balance = balance
+            self.is_paid = is_paid
     
     def get_status_text(self):
         """Get human-readable payment status"""

@@ -122,31 +122,52 @@ def htmx_inventory_adjust(request, item_id):
 @login_required
 @require_http_methods(["POST"])
 def htmx_inventory_adjust_submit(request, item_id):
-    """Process inventory adjustment"""
+    """Process inventory adjustment with validation"""
     if not request.user.is_staff:
         return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
     
     try:
-        item = Inventory.objects.get(item_id=item_id)
-        adjustment_type = request.POST.get('adjustment_type')
-        quantity = int(request.POST.get('quantity', 0))
-        notes = request.POST.get('notes', '')
+        from django.db import transaction
         
-        # Store old quantity for transaction record
-        old_quantity = item.quantity
-        
-        if adjustment_type == 'add':
-            item.quantity += quantity
-        elif adjustment_type == 'remove':
-            item.quantity = max(0, item.quantity - quantity)
-        elif adjustment_type == 'set':
-            item.quantity = quantity
-        
-        # Save the item (status is auto-calculated in save method)
-        item.save()
-        
-        # Create stock transaction record
-        try:
+        with transaction.atomic():
+            # Lock item to prevent concurrent adjustments
+            item = Inventory.objects.select_for_update().get(item_id=item_id)
+            adjustment_type = request.POST.get('adjustment_type')
+            quantity = int(request.POST.get('quantity', 0))
+            notes = request.POST.get('notes', '')
+            
+            # Validate quantity
+            if quantity < 0:
+                return HttpResponse(
+                    '<div class="alert alert-danger">Quantity cannot be negative</div>',
+                    status=400
+                )
+            
+            # Store old quantity for transaction record
+            old_quantity = item.quantity
+            
+            if adjustment_type == 'add':
+                item.quantity += quantity
+            elif adjustment_type == 'remove':
+                # Validate sufficient stock before removing
+                if item.quantity < quantity:
+                    return HttpResponse(
+                        f'<div class="alert alert-danger">Insufficient stock! Current: {item.quantity}, Requested: {quantity}</div>',
+                        status=400
+                    )
+                item.quantity -= quantity
+            elif adjustment_type == 'set':
+                item.quantity = quantity
+            else:
+                return HttpResponse(
+                    '<div class="alert alert-danger">Invalid adjustment type</div>',
+                    status=400
+                )
+            
+            # Save the item (status is auto-calculated in save method)
+            item.save()
+            
+            # Create stock transaction record
             StockTransaction.objects.create(
                 inventory_item=item,
                 transaction_type='Stock In' if adjustment_type == 'add' else 'Stock Out',
@@ -154,9 +175,6 @@ def htmx_inventory_adjust_submit(request, item_id):
                 performed_by=request.user,
                 notes=notes or f'{adjustment_type.capitalize()} stock adjustment'
             )
-        except Exception as e:
-            # If StockTransaction fails, continue anyway
-            pass
         
         return HttpResponse(
             f'''
@@ -693,13 +711,8 @@ def htmx_pos_complete_sale(request, sale_id):
         sale_type = request.POST.get('sale_type', 'Walk-in')
         current_sale.sale_type = sale_type
         
-        print(f"DEBUG: sale_type = {sale_type}")  # DEBUG
-        print(f"DEBUG: POST data = {request.POST}")  # DEBUG
-        print(f"DEBUG: BEFORE - current_sale.customer_name = {current_sale.customer_name}")  # DEBUG
-        
         if sale_type == 'Patient':
             patient_id = request.POST.get('patient_id')
-            print(f"DEBUG: patient_id = {patient_id}")  # DEBUG
             if patient_id:
                 try:
                     patient = Patient.objects.get(id=patient_id)
@@ -708,13 +721,9 @@ def htmx_pos_complete_sale(request, sale_id):
                     full_name = patient.user.get_full_name()
                     customer_name = full_name if full_name.strip() else patient.user.username
                     current_sale.customer_name = customer_name
-                    print(f"DEBUG: Set patient to {customer_name}")  # DEBUG
-                    print(f"DEBUG: AFTER SET - current_sale.customer_name = {current_sale.customer_name}")  # DEBUG
                 except Patient.DoesNotExist:
-                    print(f"DEBUG: Patient {patient_id} not found")  # DEBUG
                     current_sale.customer_name = request.POST.get('customer_name', 'Walk-in Customer')
             else:
-                print(f"DEBUG: No patient_id provided")  # DEBUG
                 current_sale.customer_name = 'Walk-in Customer'
         else:
             customer_name = request.POST.get('customer_name', '').strip()
@@ -724,7 +733,6 @@ def htmx_pos_complete_sale(request, sale_id):
                     status=400
                 )
             current_sale.customer_name = customer_name
-            print(f"DEBUG: Walk-in customer name = {customer_name}")  # DEBUG
         
         # Update payment info
         current_sale.payment_method = request.POST.get('payment_method', 'Cash')
