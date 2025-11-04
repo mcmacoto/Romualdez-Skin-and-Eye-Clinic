@@ -21,6 +21,7 @@ from .auth_views import (
 
 from .dashboard_views import (
     htmx_dashboard_stats,
+    htmx_financial_overview,
 )
 
 from .public_views import (

@@ -112,7 +112,8 @@ def htmx_mark_consultation_done(request, booking_id):
         response = render(request, 'bookings_v2/partials/appointment_row.html', {
             'appointment': booking
         })
-        response['HX-Trigger'] = 'refreshStats'
+        # Trigger both stats and financials refresh (new billing created)
+        response['HX-Trigger'] = '{"refreshStats": {}, "refreshFinancials": {}}'
         return response
     except Booking.DoesNotExist:
         logger.warning(f"Attempted to mark non-existent booking #{booking_id} as done")
@@ -152,7 +153,8 @@ def htmx_update_consultation_status(request, booking_id):
         response = render(request, 'bookings_v2/partials/appointment_row.html', {
             'appointment': booking
         })
-        response['HX-Trigger'] = 'refreshStats'
+        # Trigger both stats and financials refresh (new billing created when status = Done)
+        response['HX-Trigger'] = '{"refreshStats": {}, "refreshFinancials": {}}'
         return response
     except Booking.DoesNotExist:
         logger.warning(f"Attempted to update non-existent booking #{booking_id}")

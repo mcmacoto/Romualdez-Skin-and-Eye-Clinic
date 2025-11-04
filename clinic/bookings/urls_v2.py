@@ -12,7 +12,7 @@ from .views_v2 import (
     home_v2, booking_v2, services_v2, about_v2, contact_v2, success_v2,
     htmx_services_preview, htmx_time_slots, htmx_submit_booking, htmx_submit_contact,
     # Dashboard views
-    htmx_dashboard_stats,
+    htmx_dashboard_stats, htmx_financial_overview,
     # Billing views
     htmx_unpaid_patients, htmx_all_billings, htmx_mark_paid,
     htmx_paid_billings, htmx_unpaid_billings,
@@ -85,6 +85,7 @@ urlpatterns = [
     # HTMX partial endpoints (return HTML fragments)
     # Dashboard stats refresh endpoint
     path('htmx/dashboard-stats/', htmx_dashboard_stats, name='htmx_dashboard_stats'),
+    path('htmx/financial-overview/', htmx_financial_overview, name='htmx_financial_overview'),
     
     path('htmx/unpaid-patients/', htmx_unpaid_patients, name='htmx_unpaid_patients'),
     path('htmx/all-billings/', htmx_all_billings, name='htmx_all_billings'),

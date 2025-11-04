@@ -676,98 +676,22 @@
                 </div>
             </div>
             
-            <!-- Financial Overview -->
-            <h3 class="section-title">
-                <i class="fas fa-dollar-sign"></i>
-                Financial Overview
-            </h3>
-            
-            <div class="financial-grid">
-                <div class="financial-card revenue">
-                    <div class="financial-icon">
-                        <i class="fas fa-coins"></i>
-                    </div>
-                    <div class="financial-content">
-                        <div class="financial-label">Total Revenue (Paid)</div>
-                        <div class="financial-value">₱{{ total_revenue|floatformat:2 }}</div>
-                    </div>
-                </div>
-                
-                <div class="financial-card balance">
-                    <div class="financial-icon">
-                        <i class="fas fa-exclamation-triangle"></i>
-                    </div>
-                    <div class="financial-content">
-                        <div class="financial-label">Outstanding Balance</div>
-                        <div class="financial-value">₱{{ total_balance_outstanding|floatformat:2 }}</div>
-                    </div>
-                </div>
-                
-                <div class="financial-card billed">
-                    <div class="financial-icon">
-                        <i class="fas fa-file-invoice-dollar"></i>
-                    </div>
-                    <div class="financial-content">
-                        <div class="financial-label">Total Billed</div>
-                        <div class="financial-value">₱{{ total_amount_billed|floatformat:2 }}</div>
-                    </div>
-                </div>
+            <!-- Auto-refreshable financial overview container -->
+            <div id="financial-overview-container" 
+                 hx-get="{% url 'bookings_v2:htmx_financial_overview' %}" 
+                 hx-trigger="refreshFinancials from:body"
+                 hx-swap="innerHTML"
+                 hx-indicator="#financial-loading">
+                {% include 'bookings_v2/htmx_partials/financial_overview.html' %}
             </div>
             
-            <!-- Transaction Summary -->
-            <div class="transaction-summary">
-                <h4 style="margin: 1rem 0 0.75rem 0; color: #333; font-size: 1rem;">
-                    <i class="fas fa-chart-bar"></i> Transaction Summary
-                </h4>
-                <div class="summary-grid">
-                    <div class="summary-item clickable" 
-                         hx-get="{% url 'bookings_v2:htmx_paid_billings' %}" 
-                         hx-target="#billingsModalBody" 
-                         hx-trigger="click" 
-                         data-bs-toggle="modal" 
-                         data-bs-target="#billingsModal"
-                         style="cursor: pointer;" 
-                         title="Click to view fully paid bills">
-                        <div class="summary-icon paid">
-                            <i class="fas fa-check-circle"></i>
-                        </div>
-                        <div class="summary-details">
-                            <div class="summary-count">{{ paid_bills }}</div>
-                            <div class="summary-label">Fully Paid</div>
-                        </div>
+            <!-- Loading indicator for financial stats -->
+            <div id="financial-loading" class="htmx-indicator" style="display: none;">
+                <div class="text-center py-3">
+                    <div class="spinner-border text-success" role="status">
+                        <span class="visually-hidden">Loading...</span>
                     </div>
-                    <div class="summary-item clickable" 
-                         hx-get="{% url 'bookings_v2:htmx_unpaid_billings' %}" 
-                         hx-target="#billingsModalBody" 
-                         hx-trigger="click" 
-                         data-bs-toggle="modal" 
-                         data-bs-target="#billingsModal"
-                         style="cursor: pointer;" 
-                         title="Click to view unpaid bills">
-                        <div class="summary-icon unpaid">
-                            <i class="fas fa-times-circle"></i>
-                        </div>
-                        <div class="summary-details">
-                            <div class="summary-count">{{ unpaid_bills }}</div>
-                            <div class="summary-label">Unpaid</div>
-                        </div>
-                    </div>
-                    <div class="summary-item clickable" 
-                         hx-get="{% url 'bookings_v2:htmx_all_billings_list' %}" 
-                         hx-target="#billingsModalBody" 
-                         hx-trigger="click" 
-                         data-bs-toggle="modal" 
-                         data-bs-target="#billingsModal"
-                         style="cursor: pointer;" 
-                         title="Click to view all bills">
-                        <div class="summary-icon total">
-                            <i class="fas fa-list"></i>
-                        </div>
-                        <div class="summary-details">
-                            <div class="summary-count">{{ total_billings }}</div>
-                            <div class="summary-label">Total Bills</div>
-                        </div>
-                    </div>
+                    <p class="text-muted mt-2">Updating financial data...</p>
                 </div>
             </div>
         </div>

@@ -27,7 +27,7 @@
                         <button class="btn btn-sm btn-success"
                                 hx-post="{% url 'bookings_v2:htmx_mark_paid' billing.id %}"
                                 hx-target="#billing-row-{{ billing.id }}"
-                                hx-swap="outerHTML"
+                                hx-swap="delete"
                                 hx-confirm="Mark this billing as paid?">
                             <i class="fas fa-check"></i> Mark Paid
                         </button>

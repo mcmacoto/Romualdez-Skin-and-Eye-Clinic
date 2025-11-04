@@ -67,15 +67,15 @@ def create_appointment_or_patient_records(sender, instance, created, **kwargs):
                 )
                 
                 if appointment_created:
-                    logger.info(f"✅ Created Appointment #{appointment.id} for confirmed booking #{instance.id}")
+                    logger.info(f"[OK] Created Appointment #{appointment.id} for confirmed booking #{instance.id}")
                 else:
-                    logger.info(f"ℹ️ Appointment already exists for booking #{instance.id}")
+                    logger.info(f"[INFO] Appointment already exists for booking #{instance.id}")
             
             # Clean up the flag
             delattr(instance, '_booking_just_confirmed')
             
         except Exception as e:
-            logger.error(f"❌ Error creating Appointment for booking {instance.id}: {str(e)}")
+            logger.error(f"[ERROR] Error creating Appointment for booking {instance.id}: {str(e)}")
     
     # Scenario 2: Consultation Done - Create Patient, MedicalRecord, and Billing
     elif hasattr(instance, '_consultation_just_completed') and instance._consultation_just_completed:
@@ -115,7 +115,7 @@ def create_appointment_or_patient_records(sender, instance, created, **kwargs):
                     temp_password = ''.join(secrets.choice(alphabet) for i in range(16))
                     user.set_password(temp_password)
                     user.save()
-                    logger.info(f"✅ Created new user account: {user.username} with temporary password")
+                    logger.info(f"[OK] Created new user account: {user.username} with temporary password")
                     # TODO: Send password reset email to user
                     # from django.core.mail import send_mail
                     # send_password_reset_email(user, temp_password)
@@ -132,7 +132,7 @@ def create_appointment_or_patient_records(sender, instance, created, **kwargs):
                 )
                 
                 if patient_created:
-                    logger.info(f"✅ Created new patient profile for {user.get_full_name()}")
+                    logger.info(f"[OK] Created new patient profile for {user.get_full_name()}")
                 
                 # 3. Create Medical Record for this visit
                 medical_record = MedicalRecord.objects.create(
@@ -144,7 +144,7 @@ def create_appointment_or_patient_records(sender, instance, created, **kwargs):
                     treatment_plan="As prescribed by the doctor",
                     created_by=instance.created_by,
                 )
-                logger.info(f"✅ Created medical record #{medical_record.id} for {patient}")
+                logger.info(f"[OK] Created medical record #{medical_record.id} for {patient}")
                 
                 # 4. Create Billing (only when consultation is Done)
                 # Use get_or_create to prevent duplicate billings
@@ -168,21 +168,21 @@ def create_appointment_or_patient_records(sender, instance, created, **kwargs):
                 )
                 
                 if billing_created:
-                    logger.info(f"✅ Created billing #{billing.id} with service fee ₱{service_fee}, total ₱{billing.total_amount}")
+                    logger.info(f"[OK] Created billing #{billing.id} with service fee PHP{service_fee}, total PHP{billing.total_amount}")
                 else:
-                    logger.info(f"ℹ️ Billing already exists for booking #{instance.id}: #{billing.id}")
+                    logger.info(f"[INFO] Billing already exists for booking #{instance.id}: #{billing.id}")
                 
                 # Update booking status to Completed
                 Booking.objects.filter(pk=instance.pk).update(status='Completed')
                 instance.status = 'Completed'
                 
-                logger.info(f"✅ TRANSACTION COMPLETE: All records created for booking #{instance.id} after consultation completion")
+                logger.info(f"[OK] TRANSACTION COMPLETE: All records created for booking #{instance.id} after consultation completion")
             
             # Clean up the flag
             delattr(instance, '_consultation_just_completed')
             
         except Exception as e:
-            logger.error(f"❌ TRANSACTION FAILED: Error creating records for booking {instance.id}: {str(e)}")
+            logger.error(f"[ERROR] TRANSACTION FAILED: Error creating records for booking {instance.id}: {str(e)}")
             # Transaction will be rolled back automatically
 
 

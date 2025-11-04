@@ -35,7 +35,7 @@ def htmx_dashboard_stats(request):
     
     total_inventory_items = Inventory.objects.count()
     low_stock_items = Inventory.objects.filter(
-        quantity__lte=F('reorder_level')
+        quantity__lte=F('stock')
     ).count()
     out_of_stock_items = Inventory.objects.filter(quantity=0).count()
     
@@ -86,3 +86,39 @@ def htmx_dashboard_stats(request):
     }
     
     return render(request, 'bookings_v2/htmx_partials/dashboard_stats.html', context)
+
+
+@login_required
+@staff_required
+def htmx_financial_overview(request):
+    """
+    HTMX endpoint to refresh financial overview and transaction summary
+    Returns only the financial stats HTML for seamless updates
+    """
+    # Calculate financial statistics
+    total_billings = Billing.objects.count()
+    paid_bills = Billing.objects.filter(is_paid=True).count()
+    unpaid_bills = Billing.objects.filter(is_paid=False).count()
+    
+    total_revenue = Billing.objects.filter(is_paid=True).aggregate(
+        total=Sum('amount_paid')
+    )['total'] or 0
+    
+    total_amount_billed = Billing.objects.aggregate(
+        total=Sum('total_amount')
+    )['total'] or 0
+    
+    total_balance_outstanding = Billing.objects.filter(is_paid=False).aggregate(
+        total=Sum('balance')
+    )['total'] or 0
+    
+    context = {
+        'total_billings': total_billings,
+        'paid_bills': paid_bills,
+        'unpaid_bills': unpaid_bills,
+        'total_revenue': total_revenue,
+        'total_amount_billed': total_amount_billed,
+        'total_balance_outstanding': total_balance_outstanding,
+    }
+    
+    return render(request, 'bookings_v2/htmx_partials/financial_overview.html', context)

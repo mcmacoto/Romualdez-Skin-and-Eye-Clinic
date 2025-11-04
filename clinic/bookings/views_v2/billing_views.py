@@ -103,26 +103,12 @@ def htmx_mark_paid(request, billing_id):
         request_path = request.path
         
         # If from unpaid patients endpoint (5 columns: Name, Service, Date, Balance, Action)
+        # Remove the row entirely and trigger refreshes
         if 'unpaid-patients' in request_path or request.GET.get('source') == 'unpaid':
-            response = HttpResponse(f'''
-                <tr id="billing-row-{billing.id}" class="table-success">
-                    <td>
-                        <strong>{patient_name}</strong><br>
-                        <small class="text-muted">{patient_email}</small>
-                    </td>
-                    <td>{service_name}</td>
-                    <td>{billing_date.strftime("%B %d, %Y") if billing_date else "N/A"}</td>
-                    <td class="text-end">
-                        <span class="badge bg-success fs-6"><i class="fas fa-check"></i> ₱0.00</span>
-                    </td>
-                    <td class="text-center">
-                        <button class="btn btn-sm btn-secondary" disabled>
-                            <i class="fas fa-check"></i> Paid
-                        </button>
-                    </td>
-                </tr>
-            ''')
-            response['HX-Trigger'] = 'refreshStats'
+            # Use empty response with proper JSON trigger format
+            response = HttpResponse('')
+            # Trigger multiple events using JSON format
+            response['HX-Trigger'] = '{"refreshStats": {}, "refreshFinancials": {}}'
             return response
         
         # For all billings list (9 columns: #, Patient, Date, Service, Amount, Paid, Balance, Status, Actions)
@@ -150,7 +136,7 @@ def htmx_mark_paid(request, billing_id):
                 </td>
             </tr>
         ''')
-        response['HX-Trigger'] = 'refreshStats'
+        response['HX-Trigger'] = '{"refreshStats": {}, "refreshFinancials": {}}'
         return response
     except Billing.DoesNotExist:
         return HttpResponse(
@@ -257,13 +243,15 @@ def htmx_payment_create(request):
             recorded_by=request.user
         )
         
-        messages.success(request, f'Payment of ₱{payment.amount_paid} recorded successfully')
+        messages.success(request, f'Payment of PHP{payment.amount_paid} recorded successfully')
         
-        # Return updated billings list
+        # Return updated billings list with triggers for both stats and financials
         billings = Billing.objects.select_related('booking').order_by('-issued_date')[:50]
-        return render(request, 'bookings_v2/partials/billings_list.html', {
+        response = render(request, 'bookings_v2/partials/billings_list.html', {
             'billings': billings
         })
+        response['HX-Trigger'] = '{"refreshStats": {}, "refreshFinancials": {}}'
+        return response
         
     except Billing.DoesNotExist:
         return HttpResponse('<div class="alert alert-danger">Billing record not found</div>', status=404)
