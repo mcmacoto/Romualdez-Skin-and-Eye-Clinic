@@ -258,7 +258,7 @@ def htmx_inventory_create(request):
         low_stock_count = Inventory.objects.filter(status='Low Stock').count()
         out_of_stock_count = Inventory.objects.filter(status='Out of Stock').count()
         
-        return render(request, 'bookings_v2/partials/inventory_list.html', {
+        response = render(request, 'bookings_v2/partials/inventory_list.html', {
             'inventory_items': inventory_items,
             'in_stock_count': in_stock_count,
             'low_stock_count': low_stock_count,
@@ -268,6 +268,8 @@ def htmx_inventory_create(request):
             'today': date.today(),
             'thirty_days_from_now': date.today() + timedelta(days=30)
         })
+        response['HX-Trigger'] = 'refreshStats'
+        return response
         
     except Exception as e:
         import traceback
@@ -336,7 +338,7 @@ def htmx_inventory_update(request, item_id):
         low_stock_count = Inventory.objects.filter(status='Low Stock').count()
         out_of_stock_count = Inventory.objects.filter(status='Out of Stock').count()
         
-        return render(request, 'bookings_v2/partials/inventory_list.html', {
+        response = render(request, 'bookings_v2/partials/inventory_list.html', {
             'inventory_items': inventory_items,
             'in_stock_count': in_stock_count,
             'low_stock_count': low_stock_count,
@@ -346,6 +348,8 @@ def htmx_inventory_update(request, item_id):
             'today': date.today(),
             'thirty_days_from_now': date.today() + timedelta(days=30)
         })
+        response['HX-Trigger'] = 'refreshStats'
+        return response
         
     except Inventory.DoesNotExist:
         return HttpResponse('<div class="alert alert-danger">Inventory item not found</div>', status=404)
@@ -371,7 +375,7 @@ def htmx_inventory_delete(request, item_id):
         low_stock_count = Inventory.objects.filter(status='Low Stock').count()
         out_of_stock_count = Inventory.objects.filter(status='Out of Stock').count()
         
-        return render(request, 'bookings_v2/partials/inventory_list.html', {
+        response = render(request, 'bookings_v2/partials/inventory_list.html', {
             'inventory_items': inventory_items,
             'in_stock_count': in_stock_count,
             'low_stock_count': low_stock_count,
@@ -381,6 +385,8 @@ def htmx_inventory_delete(request, item_id):
             'today': date.today(),
             'thirty_days_from_now': date.today() + timedelta(days=30)
         })
+        response['HX-Trigger'] = 'refreshStats'
+        return response
         
     except Inventory.DoesNotExist:
         return HttpResponse('<div class="alert alert-danger">Inventory item not found</div>', status=404)

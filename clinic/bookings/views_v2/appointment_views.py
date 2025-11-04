@@ -109,9 +109,11 @@ def htmx_mark_consultation_done(request, booking_id):
         logger.info(f"Consultation marked as done for booking #{booking_id} by {request.user.username}")
         
         # Return just the updated row
-        return render(request, 'bookings_v2/partials/appointment_row.html', {
+        response = render(request, 'bookings_v2/partials/appointment_row.html', {
             'appointment': booking
         })
+        response['HX-Trigger'] = 'refreshStats'
+        return response
     except Booking.DoesNotExist:
         logger.warning(f"Attempted to mark non-existent booking #{booking_id} as done")
         return htmx_error("Booking not found", status=404)
@@ -147,9 +149,11 @@ def htmx_update_consultation_status(request, booking_id):
         logger.info(f"Consultation status updated to '{new_status}' for booking #{booking_id} by {request.user.username}")
         
         # Return just the updated row
-        return render(request, 'bookings_v2/partials/appointment_row.html', {
+        response = render(request, 'bookings_v2/partials/appointment_row.html', {
             'appointment': booking
         })
+        response['HX-Trigger'] = 'refreshStats'
+        return response
     except Booking.DoesNotExist:
         logger.warning(f"Attempted to update non-existent booking #{booking_id}")
         return htmx_error("Booking not found", status=404)
@@ -376,9 +380,11 @@ def htmx_appointment_create(request):
         
         # Return updated appointments list
         appointments = Booking.objects.select_related('service').order_by('-date', '-time')
-        return render(request, 'bookings_v2/partials/appointments_list.html', {
+        response = render(request, 'bookings_v2/partials/appointments_list.html', {
             'appointments': appointments
         })
+        response['HX-Trigger'] = 'refreshStats'
+        return response
         
     except Service.DoesNotExist:
         return HttpResponse('<div class="alert alert-danger">Service not found</div>', status=400)
@@ -429,9 +435,11 @@ def htmx_appointment_update(request, appointment_id):
         
         # Return updated appointments list
         appointments = Booking.objects.select_related('service').order_by('-date', '-time')
-        return render(request, 'bookings_v2/partials/appointments_list.html', {
+        response = render(request, 'bookings_v2/partials/appointments_list.html', {
             'appointments': appointments
         })
+        response['HX-Trigger'] = 'refreshStats'
+        return response
         
     except Booking.DoesNotExist:
         return HttpResponse('<div class="alert alert-danger">Appointment not found</div>', status=404)

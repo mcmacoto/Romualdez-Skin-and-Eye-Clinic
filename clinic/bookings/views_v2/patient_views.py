@@ -217,7 +217,9 @@ def htmx_delete_patient(request, patient_id):
             user.delete()
         
         # Return empty response - HTMX will swap and remove the row
-        return HttpResponse('', status=200)
+        response = HttpResponse('', status=200)
+        response['HX-Trigger'] = 'refreshStats'
+        return response
         
     except Patient.DoesNotExist:
         return HttpResponse(
@@ -287,9 +289,11 @@ def htmx_patient_create(request):
         
         # Return updated patients list
         patients = Patient.objects.select_related('user').prefetch_related('medical_records').all()[:20]
-        return render(request, 'bookings_v2/partials/patients_list.html', {
+        response = render(request, 'bookings_v2/partials/patients_list.html', {
             'patients': patients
         })
+        response['HX-Trigger'] = 'refreshStats'
+        return response
         
     except Exception as e:
         return HttpResponse(f'<div class="alert alert-danger">Error: {str(e)}</div>', status=400)
@@ -342,9 +346,11 @@ def htmx_patient_update(request, patient_id):
         
         # Return updated patients list
         patients = Patient.objects.select_related('user').prefetch_related('medical_records').all()[:20]
-        return render(request, 'bookings_v2/partials/patients_list.html', {
+        response = render(request, 'bookings_v2/partials/patients_list.html', {
             'patients': patients
         })
+        response['HX-Trigger'] = 'refreshStats'
+        return response
         
     except Patient.DoesNotExist:
         return HttpResponse('<div class="alert alert-danger">Patient not found</div>', status=404)
@@ -481,9 +487,11 @@ def htmx_medical_record_update(request, record_id):
             'prescriptions', 'images'
         ).order_by('-visit_date')
         
-        return render(request, 'bookings_v2/partials/medical_records_list.html', {
+        response = render(request, 'bookings_v2/partials/medical_records_list.html', {
             'records': records
         })
+        response['HX-Trigger'] = 'refreshStats'
+        return response
         
     except MedicalRecord.DoesNotExist:
         return HttpResponse(
@@ -552,10 +560,12 @@ def htmx_medical_record_create(request):
         ).get(id=record.id)
         
         # Return the edit form so user can add prescriptions and images
-        return render(request, 'bookings_v2/htmx_partials/medical_record_form.html', {
+        response = render(request, 'bookings_v2/htmx_partials/medical_record_form.html', {
             'record': record,
             'just_created': True  # Flag to show success message
         })
+        response['HX-Trigger'] = 'refreshStats'
+        return response
         
     except Patient.DoesNotExist:
         return HttpResponse(

@@ -104,7 +104,7 @@ def htmx_mark_paid(request, billing_id):
         
         # If from unpaid patients endpoint (5 columns: Name, Service, Date, Balance, Action)
         if 'unpaid-patients' in request_path or request.GET.get('source') == 'unpaid':
-            return HttpResponse(f'''
+            response = HttpResponse(f'''
                 <tr id="billing-row-{billing.id}" class="table-success">
                     <td>
                         <strong>{patient_name}</strong><br>
@@ -122,9 +122,11 @@ def htmx_mark_paid(request, billing_id):
                     </td>
                 </tr>
             ''')
+            response['HX-Trigger'] = 'refreshStats'
+            return response
         
         # For all billings list (9 columns: #, Patient, Date, Service, Amount, Paid, Balance, Status, Actions)
-        return HttpResponse(f'''
+        response = HttpResponse(f'''
             <tr id="billing-row-{billing.id}" class="table-success">
                 <td><strong>#{billing.id}</strong></td>
                 <td>
@@ -148,6 +150,8 @@ def htmx_mark_paid(request, billing_id):
                 </td>
             </tr>
         ''')
+        response['HX-Trigger'] = 'refreshStats'
+        return response
     except Billing.DoesNotExist:
         return HttpResponse(
             '<tr><td colspan="7"><div class="alert alert-danger">Billing not found</div></td></tr>',

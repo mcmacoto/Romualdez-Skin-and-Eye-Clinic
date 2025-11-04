@@ -5,6 +5,44 @@ All notable changes to the Romualdez Skin and Eye Clinic Management System will 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] - 2025-11-04
+
+### Added
+
+#### Dashboard Auto-Refresh System
+- Implemented real-time dashboard statistics auto-refresh across all data-modifying operations
+- Added `HX-Trigger: refreshStats` header to 13 view functions for seamless updates
+- Enhanced patient management views (create, update, delete) to trigger stats refresh
+- Enhanced medical record views (create, update) to trigger stats refresh
+- Enhanced billing views (mark_paid) to trigger stats refresh for all billing metrics
+- Enhanced inventory views (create, update, delete) to trigger stats refresh
+- Enhanced appointment views (create, update, status changes) to trigger stats refresh
+- Dashboard now shows real-time updates for all 18 statistics without page reload
+
+#### Statistics Coverage
+Auto-refresh now applies to:
+- Booking statistics (total, pending, confirmed, completed, today's appointments)
+- Patient & medical records counts
+- Inventory metrics (total items, low stock, out of stock)
+- Financial metrics (total billings, paid, unpaid, partially paid, revenue, outstanding balance)
+
+### Changed
+
+#### User Experience Improvements
+- Eliminated need for manual page refresh to see updated dashboard statistics
+- Dashboard metrics now update immediately after any create/update/delete action
+- Improved feedback loop between user actions and dashboard display
+- Enhanced professional feel with modern real-time updates
+
+### Technical Details
+- Leveraged existing HTMX infrastructure (no new dependencies)
+- Utilized pre-existing `htmx_dashboard_stats` endpoint
+- Modified 4 view files: `patient_views.py`, `billing_views.py`, `inventory_views.py`, `appointment_views.py`
+- All changes backward-compatible with existing functionality
+- Zero impact on server performance (stats only refresh on user actions)
+
+---
+
 ## [2.0.0] - 2025-11-03
 
 ### Added
