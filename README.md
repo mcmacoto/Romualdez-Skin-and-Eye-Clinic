@@ -1,6 +1,8 @@
 # Romualdez Skin and Eye Clinic Management System
 
-A comprehensive clinic management system built with Django for managing appointments, patients, medical records, inventory, and billing. Features a modern V2 dashboard with HTMX for dynamic interactions and enhanced user experience.
+A comprehensive clinic management system built with **Django 5.2.7**, **PostgreSQL 17**, **Bootstrap 5.3.2**, **HTMX 1.9.10**, and **Alpine.js 3.13.3** for managing appointments, patients, medical records, inventory, and billing. Features a modern professional interface with full mobile responsiveness and enhanced user experience.
+
+**📚 Important:** For PostgreSQL database setup, see [POSTGRESQL_SETUP.md](POSTGRESQL_SETUP.md) for complete installation and configuration instructions.
 
 ## Features
 
@@ -29,12 +31,23 @@ A comprehensive clinic management system built with Django for managing appointm
 - **Service Management**: Add and edit clinic services with image upload
 - **Dashboard Analytics**: Quick overview of appointments, patients, and billing
 
+## Technology Stack
+
+- **Backend:** Django 5.2.7, Python 3.11+
+- **Database:** PostgreSQL 17
+- **Frontend:** Bootstrap 5.3.2, HTMX 1.9.10, Alpine.js 3.13.3
+- **Icons:** Font Awesome 6.4.0
+- **Image Processing:** Cropper.js 1.6.1
+- **Security:** Django Axes 6.1.1 (login protection)
+- **Animations:** AOS (Animate On Scroll)
+
 ## Prerequisites
 
 Before you begin, ensure you have the following installed:
-- Python 3.12 or higher
-- pip (Python package manager)
-- Git
+- **Python 3.11 or higher**
+- **PostgreSQL 17** (see [POSTGRESQL_SETUP.md](POSTGRESQL_SETUP.md))
+- **pip** (Python package manager)
+- **Git**
 
 ## Installation & Setup
 
@@ -77,30 +90,92 @@ pip install -r requirements.txt
 cd clinic
 ```
 
-### 5. Apply Database Migrations
+### 5. Set Up PostgreSQL Database
+
+**Important:** PostgreSQL 17 must be installed and configured. Follow the complete guide:
+
+📖 **[PostgreSQL Setup Guide](POSTGRESQL_SETUP.md)** - Complete instructions for:
+- Installing PostgreSQL
+- Creating database and user
+- Configuring environment variables
+- Running migrations
+- Troubleshooting common issues
+
+**Quick setup summary:**
+```sql
+-- In PostgreSQL prompt (psql -U postgres):
+CREATE DATABASE clinic_db;
+CREATE USER clinic_user WITH PASSWORD 'clinic_secure_password_2025';
+GRANT ALL PRIVILEGES ON DATABASE clinic_db TO clinic_user;
+```
+
+### 6. Configure Environment Variables
+
+Create a `.env` file in the project root:
+
+```env
+# Django Settings
+DEBUG=True
+SECRET_KEY=your-secret-key-here
+ALLOWED_HOSTS=localhost,127.0.0.1
+
+# Database Configuration (PostgreSQL)
+DB_NAME=clinic_db
+DB_USER=clinic_user
+DB_PASSWORD=clinic_secure_password_2025
+DB_HOST=localhost
+DB_PORT=5432
+```
+
+Generate a SECRET_KEY:
+```bash
+python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
+```
+
+### 7. Apply Database Migrations
 
 ```bash
 python manage.py migrate
 ```
 
-### 6. Create a Superuser (Admin Account)
+Expected: 47 migrations (admin, auth, axes, bookings, contenttypes, sessions)
+
+### 8. Create a Superuser (Admin Account)
 
 ```bash
 python manage.py createsuperuser
+
+# Recommended credentials for development:
+# Username: admin
+# Email: admin@clinic.com
+# Password: admin123 (or choose your own)
 ```
 
-Follow the prompts to create your admin account.
+### 9. (Optional) Seed Test Data
 
-### 7. Collect Static Files
+```bash
+# Load sample data for testing
+python seed_minimal.py
+```
+
+This creates:
+- 7 services (consultations, treatments)
+- 7 patient profiles (password: patient123)
+- 11 bookings (completed, confirmed, pending)
+
+### 10. Collect Static Files
 
 ```bash
 python manage.py collectstatic --noinput
 ```
 
-### 8. Run the Development Server
+### 11. Run the Development Server
 
 ```bash
 python manage.py runserver
+
+# Or specify a port:
+python manage.py runserver 8002
 ```
 
 The application will be available at: **http://127.0.0.1:8000/**

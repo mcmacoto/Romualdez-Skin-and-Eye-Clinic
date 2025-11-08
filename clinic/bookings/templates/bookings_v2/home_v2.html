@@ -4,70 +4,117 @@
 {% block title %}Home - Romualdez Skin & Eye Clinic{% endblock %}
 
 {% block content %}
-<!-- Hero Section -->
-<section class="hero-section bg-primary text-white py-5" style="background: linear-gradient(135deg, #3d5c3d 0%, #5a7c5a 100%);">
+<!-- Professional Hero Section -->
+<section class="hero-section-professional text-white py-5">
     <div class="container py-5">
         <div class="row align-items-center">
-            <div class="col-lg-6 mb-4 mb-lg-0">
-                <h1 class="display-3 fw-bold mb-4">Welcome to Romualdez Skin & Eye Clinic</h1>
-                <p class="lead mb-4">Your trusted partner for comprehensive skin and eye care. Professional treatments with experienced specialists.</p>
-                <div class="d-flex gap-3 flex-wrap">
-                    <a href="{% url 'bookings_v2:booking' %}" class="btn btn-light btn-lg px-4">
-                        <i class="fas fa-calendar-check"></i> Book Appointment
+            <div class="col-lg-6 mb-4 mb-lg-0" data-aos="fade-right">
+                <h1 class="display-3 fw-bold mb-4 animate__animated animate__fadeInLeft">
+                    Welcome to Romualdez<br>
+                    <span class="text-white opacity-90">Skin & Eye Clinic</span>
+                </h1>
+                <p class="lead mb-4 opacity-90">
+                    Your trusted partner for comprehensive skin and eye care. 
+                    Professional treatments with experienced specialists dedicated to your health and well-being.
+                </p>
+                <div class="d-flex gap-3 flex-wrap flex-column flex-sm-row">
+                    <a href="{% url 'bookings_v2:booking' %}" class="btn btn-light btn-lg px-4 shadow hover-scale">
+                        <i class="fas fa-calendar-check me-2"></i>Book Appointment
                     </a>
-                    <a href="{% url 'bookings_v2:services' %}" class="btn btn-outline-light btn-lg px-4">
-                        <i class="fas fa-list"></i> Our Services
+                    <a href="{% url 'bookings_v2:services' %}" class="btn btn-outline-light btn-lg px-4 hover-scale">
+                        <i class="fas fa-list me-2"></i>Our Services
                     </a>
                 </div>
+                
+                <!-- Trust Indicators -->
+                <div class="row mt-5 text-center g-3">
+                    <div class="col-md-4 col-4">
+                        <div class="text-white">
+                            <h3 class="fw-bold mb-0">1000+</h3>
+                            <small class="opacity-75 d-block">Happy Patients</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4 col-4">
+                        <div class="text-white">
+                            <h3 class="fw-bold mb-0">10+</h3>
+                            <small class="opacity-75 d-block">Years Experience</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4 col-4">
+                        <div class="text-white">
+                            <h3 class="fw-bold mb-0">24/7</h3>
+                            <small class="opacity-75 d-block">Support</small>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="col-lg-6 text-center">
-                <i class="fas fa-clinic-medical" style="font-size: 15rem; opacity: 0.2;"></i>
+            <div class="col-lg-6 text-center" data-aos="fade-left">
+                <div class="position-relative">
+                    <i class="fas fa-clinic-medical" style="font-size: 15rem; opacity: 0.15;"></i>
+                    <div class="position-absolute top-50 start-50 translate-middle">
+                        <i class="fas fa-heartbeat text-white" style="font-size: 5rem; opacity: 0.3; animation: pulse 2s infinite;"></i>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </section>
 
-<!-- Features Section -->
-<section class="py-5">
-    <div class="container">
-        <div class="text-center mb-5">
-            <h2 class="display-5 fw-bold">Why Choose Us?</h2>
-            <p class="text-muted">Exceptional care with modern facilities</p>
+<style>
+@keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 0.3; }
+    50% { transform: scale(1.1); opacity: 0.5; }
+}
+</style>
+
+<!-- Professional Features Section -->
+<section class="py-5 bg-light">
+    <div class="container py-4">
+        <div class="text-center mb-5" data-aos="fade-up">
+            <span class="badge badge-professional bg-primary text-white mb-3">Our Advantages</span>
+            <h2 class="display-5 fw-bold mb-3">Why Choose Us?</h2>
+            <p class="text-muted lead">Exceptional care with modern facilities and experienced professionals</p>
         </div>
         
         <div class="row g-4">
-            <div class="col-md-4">
-                <div class="card border-0 shadow-sm h-100 text-center p-4">
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="100">
+                <div class="card border-0 shadow-sm h-100 text-center p-4 card-hover-lift">
                     <div class="card-body">
-                        <div class="mb-3">
-                            <i class="fas fa-user-md text-primary" style="font-size: 3rem;"></i>
+                        <div class="mb-4">
+                            <div class="d-inline-flex align-items-center justify-content-center bg-primary bg-opacity-10 rounded-circle" style="width: 80px; height: 80px;">
+                                <i class="fas fa-user-md text-primary" style="font-size: 2.5rem;"></i>
+                            </div>
                         </div>
-                        <h5 class="card-title fw-bold">Expert Specialists</h5>
-                        <p class="card-text text-muted">Board-certified doctors with years of experience in dermatology and ophthalmology.</p>
+                        <h5 class="card-title fw-bold mb-3">Expert Specialists</h5>
+                        <p class="card-text text-muted">Board-certified doctors with years of experience in dermatology and ophthalmology providing world-class care.</p>
                     </div>
                 </div>
             </div>
             
-            <div class="col-md-4">
-                <div class="card border-0 shadow-sm h-100 text-center p-4">
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="200">
+                <div class="card border-0 shadow-sm h-100 text-center p-4 card-hover-lift">
                     <div class="card-body">
-                        <div class="mb-3">
-                            <i class="fas fa-hospital text-success" style="font-size: 3rem;"></i>
+                        <div class="mb-4">
+                            <div class="d-inline-flex align-items-center justify-content-center bg-success bg-opacity-10 rounded-circle" style="width: 80px; height: 80px;">
+                                <i class="fas fa-hospital text-success" style="font-size: 2.5rem;"></i>
+                            </div>
                         </div>
-                        <h5 class="card-title fw-bold">Modern Facilities</h5>
-                        <p class="card-text text-muted">State-of-the-art equipment and comfortable treatment rooms for your care.</p>
+                        <h5 class="card-title fw-bold mb-3">Modern Facilities</h5>
+                        <p class="card-text text-muted">State-of-the-art equipment and comfortable treatment rooms ensuring the highest quality care.</p>
                     </div>
                 </div>
             </div>
             
-            <div class="col-md-4">
-                <div class="card border-0 shadow-sm h-100 text-center p-4">
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="300">
+                <div class="card border-0 shadow-sm h-100 text-center p-4 card-hover-lift">
                     <div class="card-body">
-                        <div class="mb-3">
-                            <i class="fas fa-heart text-danger" style="font-size: 3rem;"></i>
+                        <div class="mb-4">
+                            <div class="d-inline-flex align-items-center justify-content-center bg-danger bg-opacity-10 rounded-circle" style="width: 80px; height: 80px;">
+                                <i class="fas fa-heart text-danger" style="font-size: 2.5rem;"></i>
+                            </div>
                         </div>
-                        <h5 class="card-title fw-bold">Personalized Care</h5>
-                        <p class="card-text text-muted">Customized treatment plans tailored to your specific needs and conditions.</p>
+                        <h5 class="card-title fw-bold mb-3">Personalized Care</h5>
+                        <p class="card-text text-muted">Customized treatment plans tailored to your specific needs and conditions for optimal results.</p>
                     </div>
                 </div>
             </div>
@@ -75,64 +122,69 @@
     </div>
 </section>
 
-<!-- Services Preview Section -->
-<section class="py-5 bg-light">
-    <div class="container">
-        <div class="text-center mb-5">
-            <h2 class="display-5 fw-bold">Our Services</h2>
-            <p class="text-muted">Comprehensive skin and eye care solutions</p>
+<!-- Professional Services Preview Section -->
+<section class="py-5">
+    <div class="container py-4">
+        <div class="text-center mb-5" data-aos="fade-up">
+            <span class="badge badge-professional bg-primary text-white mb-3">What We Offer</span>
+            <h2 class="display-5 fw-bold mb-3">Our Services</h2>
+            <p class="text-muted lead">Comprehensive skin and eye care solutions tailored to your needs</p>
         </div>
         
         <!-- HTMX: Load services dynamically -->
         <div id="services-preview" 
              hx-get="{% url 'bookings_v2:htmx_services_preview' %}"
              hx-trigger="load"
-             hx-indicator="#services-loading">
-            <!-- Loading state -->
-            <div id="services-loading" class="text-center py-5">
-                <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Loading services...</span>
+             hx-indicator="#services-loading"
+             data-aos="fade-up" data-aos-delay="100">
+            <!-- Professional Loading state -->
+            <div id="services-loading" class="loading-overlay">
+                <div class="text-center py-5">
+                    <div class="spinner-professional mb-3"></div>
+                    <p class="text-muted fw-medium">Loading our services...</p>
                 </div>
-                <p class="mt-3 text-muted">Loading our services...</p>
             </div>
         </div>
         
-        <div class="text-center mt-4">
-            <a href="{% url 'bookings_v2:services' %}" class="btn btn-primary btn-lg">
-                View All Services <i class="fas fa-arrow-right"></i>
+        <div class="text-center mt-5" data-aos="fade-up" data-aos-delay="200">
+            <a href="{% url 'bookings_v2:services' %}" class="btn btn-primary btn-lg px-5 hover-scale">
+                View All Services <i class="fas fa-arrow-right ms-2"></i>
             </a>
         </div>
     </div>
 </section>
 
-<!-- CTA Section -->
-<section class="py-5 bg-primary text-white">
-    <div class="container">
-        <div class="row align-items-center">
-            <div class="col-lg-8 mb-3 mb-lg-0">
-                <h3 class="fw-bold mb-2">Ready to take care of your skin and eyes?</h3>
-                <p class="mb-0">Book an appointment today and experience professional care.</p>
+<!-- Professional CTA Section -->
+<section class="py-5 bg-gradient" style="background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);">
+    <div class="container py-4">
+        <div class="row align-items-center" data-aos="fade-up">
+            <div class="col-lg-8 mb-4 mb-lg-0 text-white">
+                <h3 class="display-6 fw-bold mb-3">
+                    <i class="fas fa-calendar-check me-2"></i>
+                    Ready to take care of your skin and eyes?
+                </h3>
+                <p class="lead mb-0 opacity-90">Book an appointment today and experience professional care from our expert team.</p>
             </div>
             <div class="col-lg-4 text-lg-end">
-                <a href="{% url 'bookings_v2:booking' %}" class="btn btn-light btn-lg">
-                    <i class="fas fa-calendar-plus"></i> Book Now
+                <a href="{% url 'bookings_v2:booking' %}" class="btn btn-light btn-lg px-5 py-3 hover-scale shadow-lg">
+                    <i class="fas fa-calendar-plus me-2"></i> Book Now
                 </a>
             </div>
         </div>
     </div>
 </section>
 
-<!-- Stats Section with Alpine.js -->
-<section class="py-5">
-    <div class="container">
+<!-- Professional Stats Section with Alpine.js -->
+<section class="py-5 bg-light">
+    <div class="container py-4">
         <div class="row text-center g-4" x-data="{ 
             patients: 0, 
             appointments: 0, 
             years: 0,
             animateNumbers() {
                 const duration = 2000;
-                const targetPatients = 500;
-                const targetAppointments = 1200;
+                const targetPatients = 1000;
+                const targetAppointments = 2500;
                 const targetYears = 15;
                 
                 const start = Date.now();
@@ -149,22 +201,37 @@
                 animate();
             }
         }" x-init="animateNumbers()">
-            <div class="col-md-4">
-                <div class="p-4">
-                    <h2 class="display-4 fw-bold text-primary" x-text="patients + '+'"></h2>
-                    <p class="text-muted">Happy Patients</p>
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="100">
+                <div class="card border-0 shadow-sm p-4 h-100 card-hover-lift">
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <i class="fas fa-users text-primary" style="font-size: 3rem;"></i>
+                        </div>
+                        <h2 class="display-4 fw-bold text-primary mb-2" x-text="patients.toLocaleString() + '+'"></h2>
+                        <p class="text-muted fw-medium mb-0">Happy Patients</p>
+                    </div>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="p-4">
-                    <h2 class="display-4 fw-bold text-success" x-text="appointments + '+'"></h2>
-                    <p class="text-muted">Appointments Completed</p>
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="200">
+                <div class="card border-0 shadow-sm p-4 h-100 card-hover-lift">
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <i class="fas fa-calendar-check text-success" style="font-size: 3rem;"></i>
+                        </div>
+                        <h2 class="display-4 fw-bold text-success mb-2" x-text="appointments.toLocaleString() + '+'"></h2>
+                        <p class="text-muted fw-medium mb-0">Appointments Completed</p>
+                    </div>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="p-4">
-                    <h2 class="display-4 fw-bold text-info" x-text="years + '+'"></h2>
-                    <p class="text-muted">Years of Service</p>
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="300">
+                <div class="card border-0 shadow-sm p-4 h-100 card-hover-lift">
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <i class="fas fa-award text-info" style="font-size: 3rem;"></i>
+                        </div>
+                        <h2 class="display-4 fw-bold text-info mb-2" x-text="years + '+'"></h2>
+                        <p class="text-muted fw-medium mb-0">Years of Service</p>
+                    </div>
                 </div>
             </div>
         </div>

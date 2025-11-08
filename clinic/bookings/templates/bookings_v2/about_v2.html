@@ -4,57 +4,65 @@
 {% block title %}About Us - V2{% endblock %}
 
 {% block content %}
-<!-- Hero Section -->
-<div class="bg-primary text-white py-5">
-    <div class="container text-center">
-        <h1 class="display-3 fw-bold mb-3" x-data x-init="$el.classList.add('animate__animated', 'animate__fadeInDown')">
-            About Romualdez Skin & Eye Clinic
+<!-- Professional Hero Section -->
+<div class="hero-section-professional text-white py-5">
+    <div class="container text-center py-4">
+        <span class="badge badge-professional bg-white text-primary mb-3" data-aos="fade-down">About Us</span>
+        <h1 class="display-3 fw-bold mb-4" data-aos="fade-up" data-aos-delay="100">
+            Romualdez Skin & Eye Clinic
         </h1>
-        <p class="lead" x-data x-init="$el.classList.add('animate__animated', 'animate__fadeInUp')">
-            Dedicated to providing exceptional dermatological care since 2010
+        <p class="lead opacity-90 mx-auto" style="max-width: 700px;" data-aos="fade-up" data-aos-delay="200">
+            Dedicated to providing exceptional dermatological and ophthalmological care since 2010
         </p>
+        <div class="mt-4" data-aos="fade-up" data-aos-delay="300">
+            <i class="fas fa-award fa-3x opacity-75"></i>
+        </div>
     </div>
 </div>
 
-<!-- Mission & Vision Section -->
+<!-- Professional Mission & Vision Section -->
 <div class="container py-5">
     <div class="row g-4 mb-5">
-        <div class="col-md-6">
-            <div class="card h-100 border-0 shadow-lg hover-lift">
-                <div class="card-body p-4">
-                    <div class="text-center mb-3">
-                        <div class="icon-circle bg-primary">
-                            <i class="fas fa-heart fa-3x text-white"></i>
+        <div class="col-md-6" data-aos="fade-right">
+            <div class="card h-100 border-0 shadow-sm card-hover-lift">
+                <div class="card-body p-5">
+                    <div class="text-center mb-4">
+                        <div class="d-inline-flex align-items-center justify-content-center bg-primary bg-opacity-10 rounded-circle" style="width: 100px; height: 100px;">
+                            <i class="fas fa-heart fa-3x text-primary"></i>
                         </div>
                     </div>
-                    <h3 class="card-title text-center text-primary fw-bold mb-3">Our Mission</h3>
-                    <p class="card-text text-muted">
-                        To provide comprehensive, compassionate, and cutting-edge skin care services that enhance 
+                    <h3 class="card-title text-center text-primary fw-bold mb-4">
+                        <i class="fas fa-star me-2"></i>Our Mission
+                    </h3>
+                    <p class="card-text text-muted mb-3 lh-lg">
+                        To provide comprehensive, compassionate, and cutting-edge skin and eye care services that enhance 
                         the quality of life for our patients. We are committed to excellence in patient care, 
                         education, and research.
                     </p>
-                    <p class="card-text text-muted">
+                    <p class="card-text text-muted lh-lg">
                         Our mission extends beyond treatment to include prevention, education, and long-term 
                         wellness support for every patient who walks through our doors.
                     </p>
                 </div>
             </div>
         </div>
-        <div class="col-md-6">
-            <div class="card h-100 border-0 shadow-lg hover-lift">
-                <div class="card-body p-4">
-                    <div class="text-center mb-3">
-                        <div class="icon-circle bg-success">
-                            <i class="fas fa-bullseye fa-3x text-white"></i>
+        <div class="col-md-6" data-aos="fade-left">
+            <div class="card h-100 border-0 shadow-sm card-hover-lift">
+                <div class="card-body p-5">
+                    <div class="text-center mb-4">
+                        <div class="d-inline-flex align-items-center justify-content-center bg-success bg-opacity-10 rounded-circle" style="width: 100px; height: 100px;">
+                            <i class="fas fa-bullseye fa-3x text-success"></i>
                         </div>
                     </div>
-                    <h3 class="card-title text-center text-success fw-bold mb-3">Our Vision</h3>
-                    <p class="card-text text-muted">
-                        To be the leading dermatology clinic in the region, recognized for our innovative treatments, 
+                    <h3 class="card-title text-center text-success fw-bold mb-4">
+                        <i class="fas fa-flag me-2"></i>Our Vision
+                    </h3>
+                    <p class="card-text text-muted mb-3 lh-lg">
+                        To be the leading dermatology and ophthalmology clinic in the region, recognized for our innovative treatments, 
                         exceptional patient care, and commitment to community health.
                     </p>
-                    <p class="card-text text-muted">
-                        We envision a future where everyone has access to quality skin care, promoting overall 
+                    <p class="card-text text-muted lh-lg">
+                        We envision a future where everyone has access to quality skin and eye care, promoting overall 
                         health and confidence in our community.
                     </p>
                 </div>
@@ -62,25 +70,28 @@
         </div>
     </div>
 
-    <!-- Team Section -->
+    <!-- Professional Team Section -->
     <div class="mb-5">
-        <h2 class="text-center text-primary fw-bold mb-2">
-            <i class="fas fa-users"></i> Meet Our Expert Team
-        </h2>
-        <p class="text-center text-muted mb-5">
-            Our dedicated professionals are committed to providing you with the highest quality care
-        </p>
+        <div class="text-center mb-5" data-aos="fade-up">
+            <span class="badge badge-professional bg-primary text-white mb-3">Our Team</span>
+            <h2 class="display-5 fw-bold mb-3">
+                <i class="fas fa-users me-2"></i> Meet Our Expert Team
+            </h2>
+            <p class="text-muted lead">
+                Our dedicated professionals are committed to providing you with the highest quality care
+            </p>
+        </div>
         
         <div class="row g-4">
-            <div class="col-md-4">
-                <div class="card h-100 border-0 shadow hover-lift text-center">
-                    <div class="card-body p-4">
-                        <div class="team-photo bg-primary">
-                            <i class="fas fa-user-md fa-4x text-white"></i>
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="100">
+                <div class="card h-100 border-0 shadow-sm card-hover-lift text-center">
+                    <div class="card-body p-5">
+                        <div class="mx-auto mb-4" style="width: 120px; height: 120px; border-radius: 50%; background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%); display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-user-md fa-3x text-white"></i>
                         </div>
-                        <h5 class="card-title fw-bold mt-3">Dr. Ana Liza L. Romualdez</h5>
-                        <p class="text-muted fst-italic">Founder & Chief Dermatologist</p>
-                        <p class="card-text small">
+                        <h5 class="card-title fw-bold mb-2">Dr. Ana Liza L. Romualdez</h5>
+                        <p class="text-primary fw-medium mb-3">Founder & Chief Dermatologist</p>
+                        <p class="card-text text-muted small lh-base">
                             Board-certified dermatologist with over 15 years of experience in medical 
                             and cosmetic dermatology.
                         </p>
@@ -88,15 +99,15 @@
                 </div>
             </div>
             
-            <div class="col-md-4">
-                <div class="card h-100 border-0 shadow hover-lift text-center">
-                    <div class="card-body p-4">
-                        <div class="team-photo bg-info">
-                            <i class="fas fa-microscope fa-4x text-white"></i>
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="200">
+                <div class="card h-100 border-0 shadow-sm card-hover-lift text-center">
+                    <div class="card-body p-5">
+                        <div class="mx-auto mb-4" style="width: 120px; height: 120px; border-radius: 50%; background: linear-gradient(135deg, #17a2b8 0%, #138496 100%); display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-eye fa-3x text-white"></i>
                         </div>
-                        <h5 class="card-title fw-bold mt-3">Dr. Ben C. Romualdez</h5>
-                        <p class="text-muted fst-italic">Ophthalmologist</p>
-                        <p class="card-text small">
+                        <h5 class="card-title fw-bold mb-2">Dr. Ben C. Romualdez</h5>
+                        <p class="text-info fw-medium mb-3">Ophthalmologist</p>
+                        <p class="card-text text-muted small lh-base">
                             A specialist in eye care and vision health, dedicated to providing precise 
                             diagnosis and compassionate treatment.
                         </p>
@@ -104,15 +115,15 @@
                 </div>
             </div>
             
-            <div class="col-md-4">
-                <div class="card h-100 border-0 shadow hover-lift text-center">
-                    <div class="card-body p-4">
-                        <div class="team-photo bg-success">
-                            <i class="fas fa-user-nurse fa-4x text-white"></i>
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="300">
+                <div class="card h-100 border-0 shadow-sm card-hover-lift text-center">
+                    <div class="card-body p-5">
+                        <div class="mx-auto mb-4" style="width: 120px; height: 120px; border-radius: 50%; background: linear-gradient(135deg, #28a745 0%, #20c997 100%); display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-user-nurse fa-3x text-white"></i>
                         </div>
-                        <h5 class="card-title fw-bold mt-3">Noemi Valdez</h5>
-                        <p class="text-muted fst-italic">Head Nurse & Secretary</p>
-                        <p class="card-text small">
+                        <h5 class="card-title fw-bold mb-2">Noemi Valdez</h5>
+                        <p class="text-success fw-medium mb-3">Head Nurse & Secretary</p>
+                        <p class="card-text text-muted small lh-base">
                             A dedicated healthcare professional who oversees patient care and clinic operations 
                             with compassion and efficiency.
                         </p>

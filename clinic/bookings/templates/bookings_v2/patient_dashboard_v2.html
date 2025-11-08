@@ -14,7 +14,7 @@
     }
     
     .dashboard-header {
-        background: linear-gradient(135deg, var(--primary-color) 0%, var(--dark-green) 100%);
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
         color: white;
         padding: 2rem;
         border-radius: 12px;
@@ -33,51 +33,7 @@
         opacity: 0.9;
     }
     
-    .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 1.5rem;
-        margin-bottom: 2rem;
-    }
-    
-    .stat-card {
-        background: white;
-        border-radius: 12px;
-        padding: 1.5rem;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-        text-align: center;
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-    
-    .stat-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
-    }
-    
-    .stat-icon {
-        width: 60px;
-        height: 60px;
-        background: linear-gradient(135deg, var(--primary-color) 0%, var(--dark-green) 100%);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 auto 1rem;
-        color: white;
-        font-size: 1.5rem;
-    }
-    
-    .stat-number {
-        font-size: 2rem;
-        font-weight: 700;
-        color: var(--primary-color);
-        margin-bottom: 0.5rem;
-    }
-    
-    .stat-label {
-        color: #6c757d;
-        font-size: 0.9rem;
-    }
+    /* Stats grid and cards now use global styles from styles_v2.css */
     
     .section-card {
         background: white;
@@ -132,14 +88,17 @@
     .appointment-card.past {
         border-left-color: #6c757d;
         opacity: 0.8;
+        background: rgba(108, 117, 125, 0.03);
     }
     
     .appointment-card.pending {
-        border-left-color: #ffc107;
+        border-left-color: #ff9800;
+        background: rgba(255, 152, 0, 0.05);
     }
     
     .appointment-card.confirmed {
         border-left-color: #28a745;
+        background: rgba(40, 167, 69, 0.05);
     }
     
     .record-card {
@@ -150,41 +109,9 @@
         border: 1px solid #dee2e6;
     }
     
-    .billing-table {
-        width: 100%;
-        font-size: 0.95rem;
-    }
-    
-    .billing-table th {
-        background-color: #f8f9fa;
-        font-weight: 600;
-        padding: 0.75rem;
-    }
-    
-    .billing-table td {
-        padding: 0.75rem;
-        vertical-align: middle;
-    }
-    
-    .badge-paid {
-        background-color: #28a745;
-    }
-    
-    .badge-unpaid {
-        background-color: #dc3545;
-    }
-    
-    .empty-state {
-        text-align: center;
-        padding: 3rem;
-        color: #6c757d;
-    }
-    
-    .empty-state i {
-        font-size: 4rem;
-        color: #dee2e6;
-        margin-bottom: 1rem;
-    }
+    /* Billing table now uses global table styles from styles_v2.css */
+    /* Badge styles now use global badge-* classes from styles_v2.css */
+    /* Empty state now uses global .empty-state from styles_v2.css */
     
     .profile-info {
         display: grid;
@@ -211,36 +138,122 @@
         color: #212529;
         font-weight: 500;
     }
+    
+    /* Mobile Responsiveness */
+    @media (max-width: 768px) {
+        .dashboard-container {
+            padding: 1rem 0;
+        }
+        
+        .dashboard-header {
+            padding: 1.5rem;
+        }
+        
+        .dashboard-header h1 {
+            font-size: 1.5rem;
+        }
+        
+        .section-card {
+            padding: 1.5rem;
+        }
+        
+        .section-title {
+            font-size: 1.25rem;
+        }
+        
+        .profile-info {
+            grid-template-columns: 1fr;
+        }
+        
+        .appointment-card {
+            padding: 0.75rem;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .dashboard-header {
+            padding: 1rem;
+        }
+        
+        .dashboard-header h1 {
+            font-size: 1.25rem;
+        }
+        
+        .section-card {
+            padding: 1rem;
+        }
+        
+        .section-title {
+            font-size: 1.1rem;
+        }
+        
+        .no-profile-card {
+            padding: 2rem 1rem;
+        }
+        
+        .no-profile-card i {
+            font-size: 3rem;
+        }
+    }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="dashboard-container container">
     <!-- Dashboard Header -->
-    <div class="dashboard-header">
-        <h1>
-            <i class="fas fa-user-circle"></i>
-            Welcome, {{ user.get_full_name|default:user.username }}!
-        </h1>
-        <p>Manage your appointments, view medical records, and track your billing</p>
+    <div class="dashboard-header" data-aos="fade-down">
+        <div class="row align-items-center">
+            <div class="col-md-2 text-center">
+                <!-- Profile Picture -->
+                {% if has_profile and patient.profile_picture %}
+                    <img src="{{ patient.profile_picture.url }}" alt="{{ user.get_full_name }}" 
+                         class="img-fluid rounded-circle" style="width: 120px; height: 120px; object-fit: cover; border: 4px solid white; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                {% else %}
+                    <div class="default-avatar rounded-circle d-flex align-items-center justify-content-center mx-auto" 
+                         style="width: 120px; height: 120px; background-color: rgba(255, 255, 255, 0.2); border: 4px solid white; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                        <i class="fas fa-user fa-3x text-white"></i>
+                    </div>
+                {% endif %}
+            </div>
+            <div class="col-md-8">
+                <span class="badge badge-professional bg-white text-primary mb-2">Patient Portal</span>
+                <h1 class="mb-2">
+                    <i class="fas fa-user-circle me-2"></i>
+                    Welcome, {{ user.get_full_name|default:user.username }}!
+                </h1>
+                <p class="mb-0 opacity-90">Manage your appointments, view medical records, and track your billing</p>
+            </div>
+            <div class="col-md-2 text-end d-none d-md-block">
+                <div class="text-white-50 small">Last login</div>
+                <div class="fw-bold">{{ user.last_login|date:"M d, Y"|default:"Today" }}</div>
+                <div class="small opacity-75">{{ user.last_login|time:"g:i A"|default:"" }}</div>
+            </div>
+        </div>
     </div>
 
     {% if not has_profile %}
     <!-- No Profile Found - Show Limited Dashboard -->
-    <div class="alert alert-info mb-4">
+    <div class="alert alert-professional alert-info border-0 shadow-sm mb-4" data-aos="fade-up">
         <div class="d-flex align-items-start">
-            <i class="fas fa-info-circle fs-3 me-3 mt-1"></i>
-            <div>
-                <h5 class="alert-heading mb-2">Welcome to Your Patient Dashboard!</h5>
-                <p class="mb-2">Your full patient profile will be created automatically after your first consultation is completed.</p>
-                <p class="mb-0">You can still book appointments and view your booking history below.</p>
+            <div class="flex-shrink-0">
+                <div class="d-inline-flex align-items-center justify-content-center bg-info bg-opacity-10 rounded-circle" 
+                     style="width: 60px; height: 60px;">
+                    <i class="fas fa-info-circle fa-2x text-info"></i>
+                </div>
+            </div>
+            <div class="flex-grow-1 ms-3">
+                <h5 class="alert-heading fw-bold mb-3">
+                    <i class="fas fa-hand-sparkles me-2"></i>Welcome to Your Patient Dashboard!
+                </h5>
+                <p class="mb-2 lh-base">Your full patient profile will be created automatically after your first consultation is completed.</p>
+                <p class="mb-0 lh-base">You can still book appointments and view your booking history below.</p>
             </div>
         </div>
     </div>
     
     <!-- Stats Overview - Limited for non-profile users -->
-    <div class="stats-grid">
-        <div class="stat-card">
+    <div class="stats-grid" data-aos="fade-up" data-aos-delay="100">
+        <div class="stat-card card-hover-lift" data-aos="zoom-in" data-aos-delay="150">
             <div class="stat-icon">
                 <i class="fas fa-calendar-alt"></i>
             </div>
@@ -248,16 +261,16 @@
             <div class="stat-label">Total Appointments</div>
         </div>
         
-        <div class="stat-card">
+        <div class="stat-card card-hover-lift" data-aos="zoom-in" data-aos-delay="200">
             <div class="stat-icon">
                 <i class="fas fa-file-medical"></i>
             </div>
             <div class="stat-number">0</div>
             <div class="stat-label">Medical Records</div>
-            <small class="text-muted d-block mt-2">Available after consultation</small>
+            <small class="text-muted d-block mt-2"><i class="fas fa-info-circle me-1"></i>Available after consultation</small>
         </div>
         
-        <div class="stat-card">
+        <div class="stat-card card-hover-lift" data-aos="zoom-in" data-aos-delay="250">
             <div class="stat-icon">
                 <i class="fas fa-money-bill-wave"></i>
             </div>
@@ -267,8 +280,8 @@
     </div>
     {% else %}
     <!-- Stats Overview -->
-    <div class="stats-grid">
-        <div class="stat-card">
+    <div class="stats-grid" data-aos="fade-up" data-aos-delay="100">
+        <div class="stat-card card-hover-lift hover-scale" data-aos="zoom-in" data-aos-delay="150">
             <div class="stat-icon">
                 <i class="fas fa-calendar-alt"></i>
             </div>
@@ -276,15 +289,16 @@
             <div class="stat-label">Total Appointments</div>
         </div>
         
-        <div class="stat-card" onclick="document.getElementById('medical-records-section').scrollIntoView({ behavior: 'smooth', block: 'start' });" style="cursor: pointer;">
+        <div class="stat-card card-hover-lift hover-scale" onclick="document.getElementById('medical-records-section').scrollIntoView({ behavior: 'smooth', block: 'start' });" style="cursor: pointer;" data-aos="zoom-in" data-aos-delay="200">
             <div class="stat-icon">
                 <i class="fas fa-file-medical"></i>
             </div>
             <div class="stat-number">{{ total_records }}</div>
             <div class="stat-label">Medical Records</div>
+            <small class="text-muted d-block mt-2"><i class="fas fa-mouse-pointer me-1"></i>Click to view</small>
         </div>
         
-        <div class="stat-card">
+        <div class="stat-card card-hover-lift hover-scale" data-aos="zoom-in" data-aos-delay="250">
             <div class="stat-icon">
                 <i class="fas fa-money-bill-wave"></i>
             </div>
@@ -296,11 +310,14 @@
     
     <!-- Personal Information - Only shown if profile exists -->
     {% if has_profile %}
-    <div class="section-card">
-        <h3 class="section-title">
-            <i class="fas fa-user"></i>
-            Personal Information
-        </h3>
+    <div class="section-card card-hover-lift" data-aos="fade-up" data-aos-delay="150">
+        <div class="d-flex align-items-center justify-content-between mb-4">
+            <h3 class="section-title mb-0">
+                <span class="badge badge-professional bg-primary text-white me-2">Profile</span>
+                <i class="fas fa-user me-2"></i>
+                Personal Information
+            </h3>
+        </div>
         <div class="profile-info">
             <div class="info-item">
                 <div class="info-label">Full Name</div>
@@ -353,27 +370,37 @@
     {% endif %}
 
     <!-- Upcoming Appointments - Shown for all users -->
-    <div class="section-card">
-        <h3 class="section-title">
-            <i class="fas fa-calendar-check"></i>
-            Upcoming Appointments
-        </h3>
+    <div class="section-card card-hover-lift" data-aos="fade-up" data-aos-delay="200">
+        <div class="d-flex align-items-center justify-content-between mb-4">
+            <h3 class="section-title mb-0">
+                <span class="badge badge-professional bg-success text-white me-2">Active</span>
+                <i class="fas fa-calendar-check me-2"></i>
+                Upcoming Appointments
+            </h3>
+            <a href="{% url 'bookings_v2:booking' %}" class="btn btn-primary btn-sm hover-scale">
+                <i class="fas fa-plus-circle me-1"></i> Book New
+            </a>
+        </div>
         
         {% if upcoming_bookings %}
             {% for booking in upcoming_bookings %}
-            <div class="appointment-card {{ booking.status|lower }}">
+            <div class="appointment-card {{ booking.status|lower }} card-hover-lift" data-aos="fade-right" data-aos-delay="{{ forloop.counter0|add:50 }}">
                 <div class="row align-items-center">
                     <div class="col-md-3">
-                        <div class="text-muted small">DATE & TIME</div>
-                        <div class="fw-bold">
-                            <i class="fas fa-calendar"></i> {{ booking.date|date:"M d, Y" }}
+                        <div class="text-muted small text-uppercase fw-semibold mb-1">
+                            <i class="fas fa-calendar-day me-1"></i> Date & Time
                         </div>
-                        <div>
-                            <i class="fas fa-clock"></i> {{ booking.time|time:"g:i A" }}
+                        <div class="fw-bold mb-1">
+                            <i class="fas fa-calendar text-primary me-1"></i> {{ booking.date|date:"M d, Y" }}
+                        </div>
+                        <div class="text-muted">
+                            <i class="fas fa-clock text-primary me-1"></i> {{ booking.time|time:"g:i A" }}
                         </div>
                     </div>
                     <div class="col-md-4">
-                        <div class="text-muted small">SERVICE</div>
+                        <div class="text-muted small text-uppercase fw-semibold mb-1">
+                            <i class="fas fa-concierge-bell me-1"></i> Service
+                        </div>
                         <div class="fw-bold">
                             {% if booking.service %}
                                 {{ booking.service.name }}
@@ -383,25 +410,27 @@
                         </div>
                     </div>
                     <div class="col-md-3">
-                        <div class="text-muted small">STATUS</div>
+                        <div class="text-muted small text-uppercase fw-semibold mb-1">
+                            <i class="fas fa-info-circle me-1"></i> Status
+                        </div>
                         <div>
                             {% if booking.status == 'Pending' %}
-                                <span class="badge bg-warning text-dark">
-                                    <i class="fas fa-hourglass-half"></i> Pending Review
+                                <span class="badge badge-professional bg-warning text-dark">
+                                    <i class="fas fa-hourglass-half me-1"></i> Pending Review
                                 </span>
                             {% elif booking.status == 'Confirmed' %}
-                                <span class="badge bg-success">
-                                    <i class="fas fa-check-circle"></i> Confirmed
+                                <span class="badge badge-professional bg-success">
+                                    <i class="fas fa-check-circle me-1"></i> Confirmed
                                 </span>
                             {% endif %}
                         </div>
                     </div>
                     <div class="col-md-2 text-end">
                         {% if booking.notes %}
-                        <button class="btn btn-sm btn-outline-info" 
+                        <button class="btn btn-sm btn-outline-info hover-scale" 
                                 data-bs-toggle="collapse" 
                                 data-bs-target="#notes-{{ booking.id }}">
-                            <i class="fas fa-sticky-note"></i> Notes
+                            <i class="fas fa-sticky-note me-1"></i> Notes
                         </button>
                         {% endif %}
                     </div>
@@ -417,12 +446,15 @@
             </div>
             {% endfor %}
         {% else %}
-            <div class="empty-state">
-                <i class="fas fa-calendar-times"></i>
-                <h4>No Upcoming Appointments</h4>
-                <p>You don't have any scheduled appointments.</p>
-                <a href="{% url 'bookings_v2:booking' %}" class="btn btn-success">
-                    <i class="fas fa-calendar-plus"></i> Book an Appointment
+            <div class="empty-state" data-aos="fade-up">
+                <div class="d-inline-flex align-items-center justify-content-center bg-light rounded-circle mb-3" 
+                     style="width: 80px; height: 80px;">
+                    <i class="fas fa-calendar-times fa-3x text-muted"></i>
+                </div>
+                <h4 class="fw-bold">No Upcoming Appointments</h4>
+                <p class="text-muted mb-4">You don't have any scheduled appointments.</p>
+                <a href="{% url 'bookings_v2:booking' %}" class="btn btn-success btn-lg hover-scale shadow-sm px-4">
+                    <i class="fas fa-calendar-plus me-2"></i> Book an Appointment
                 </a>
             </div>
         {% endif %}
@@ -430,11 +462,15 @@
 
     <!-- Past Appointments -->
     {% if past_bookings %}
-    <div class="section-card">
-        <h3 class="section-title">
-            <i class="fas fa-history"></i>
-            Past Appointments
-        </h3>
+    <div class="section-card card-hover-lift" data-aos="fade-up" data-aos-delay="250">
+        <div class="d-flex align-items-center justify-content-between mb-4">
+            <h3 class="section-title mb-0">
+                <span class="badge badge-professional bg-secondary text-white me-2">History</span>
+                <i class="fas fa-history me-2"></i>
+                Past Appointments
+            </h3>
+            <small class="text-muted"><i class="fas fa-info-circle me-1"></i>Showing recent 5</small>
+        </div>
         
         {% for booking in past_bookings|slice:":5" %}
         <div class="appointment-card past">
@@ -478,26 +514,36 @@
 
     <!-- Medical Records - Only shown if profile exists -->
     {% if has_profile and medical_records %}
-    <div class="section-card" id="medical-records-section">
-        <h3 class="section-title">
-            <i class="fas fa-notes-medical"></i>
-            Medical Records
-        </h3>
+    <div class="section-card card-hover-lift" id="medical-records-section" data-aos="fade-up" data-aos-delay="300">
+        <div class="d-flex align-items-center justify-content-between mb-4">
+            <h3 class="section-title mb-0">
+                <span class="badge badge-professional bg-info text-white me-2">Records</span>
+                <i class="fas fa-notes-medical me-2"></i>
+                Medical Records
+            </h3>
+            <small class="text-muted"><i class="fas fa-info-circle me-1"></i>Recent 3 records</small>
+        </div>
         
         {% for record in medical_records|slice:":3" %}
-        <div class="record-card">
+        <div class="record-card card-hover-lift" data-aos="fade-left" data-aos-delay="{{ forloop.counter0|add:50 }}">
             <div class="row">
                 <div class="col-md-3">
-                    <div class="text-muted small">VISIT DATE</div>
-                    <div class="fw-bold">{{ record.visit_date|date:"M d, Y" }}</div>
+                    <div class="text-muted small text-uppercase fw-semibold mb-1">
+                        <i class="fas fa-calendar-check me-1"></i> Visit Date
+                    </div>
+                    <div class="fw-bold"><i class="fas fa-calendar text-primary me-1"></i>{{ record.visit_date|date:"M d, Y" }}</div>
                 </div>
                 <div class="col-md-9">
-                    <div class="text-muted small">CHIEF COMPLAINT</div>
-                    <div>{{ record.chief_complaint|truncatewords:20 }}</div>
+                    <div class="text-muted small text-uppercase fw-semibold mb-1">
+                        <i class="fas fa-stethoscope me-1"></i> Chief Complaint
+                    </div>
+                    <div class="mb-2">{{ record.chief_complaint|truncatewords:20 }}</div>
                     
                     {% if record.diagnosis %}
-                    <div class="mt-2">
-                        <div class="text-muted small">DIAGNOSIS</div>
+                    <div class="mt-3 p-2 bg-light rounded">
+                        <div class="text-muted small text-uppercase fw-semibold mb-1">
+                            <i class="fas fa-diagnosis me-1"></i> Diagnosis
+                        </div>
                         <div class="text-primary fw-bold">{{ record.diagnosis|truncatewords:15 }}</div>
                     </div>
                     {% endif %}
@@ -516,24 +562,28 @@
     {% endif %}
 
     <!-- Billing Information -->
-    <div class="section-card">
-        <h3 class="section-title">
-            <i class="fas fa-file-invoice-dollar"></i>
-            Billing & Payments
-        </h3>
+    <div class="section-card card-hover-lift" data-aos="fade-up" data-aos-delay="350">
+        <div class="d-flex align-items-center justify-content-between mb-4">
+            <h3 class="section-title mb-0">
+                <span class="badge badge-professional bg-warning text-dark me-2">Billing</span>
+                <i class="fas fa-file-invoice-dollar me-2"></i>
+                Billing & Payments
+            </h3>
+            <small class="text-muted"><i class="fas fa-info-circle me-1"></i>Recent transactions</small>
+        </div>
         
         {% if billings or pos_sales %}
             <div class="table-responsive">
-                <table class="table billing-table">
+                <table class="table table-hover align-middle">
                     <thead>
                         <tr>
-                            <th>Date</th>
-                            <th>Type</th>
-                            <th>Service/Item</th>
-                            <th>Amount</th>
-                            <th>Paid</th>
-                            <th>Balance</th>
-                            <th>Status</th>
+                            <th><i class="fas fa-calendar me-2"></i>Date</th>
+                            <th><i class="fas fa-tag me-2"></i>Type</th>
+                            <th><i class="fas fa-file-medical me-2"></i>Service/Item</th>
+                            <th><i class="fas fa-dollar-sign me-2"></i>Amount</th>
+                            <th><i class="fas fa-hand-holding-usd me-2"></i>Paid</th>
+                            <th><i class="fas fa-exclamation-circle me-2"></i>Balance</th>
+                            <th><i class="fas fa-info-circle me-2"></i>Status</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -614,24 +664,27 @@
             </div>
             {% endif %}
         {% else %}
-            <div class="empty-state">
-                <i class="fas fa-receipt"></i>
-                <h4>No Billing Records</h4>
-                <p>You don't have any billing records yet.</p>
+            <div class="empty-state" data-aos="fade-up">
+                <div class="d-inline-flex align-items-center justify-content-center bg-light rounded-circle mb-3" 
+                     style="width: 80px; height: 80px;">
+                    <i class="fas fa-receipt fa-3x text-muted"></i>
+                </div>
+                <h4 class="fw-bold">No Billing Records</h4>
+                <p class="text-muted mb-0">You don't have any billing records yet.</p>
             </div>
         {% endif %}
     </div>
 
     <!-- Quick Actions -->
-    <div class="row">
+    <div class="row" data-aos="fade-up" data-aos-delay="400">
         <div class="col-md-6 mb-3">
-            <a href="{% url 'bookings_v2:booking' %}" class="btn btn-success btn-lg w-100">
-                <i class="fas fa-calendar-plus"></i> Book New Appointment
+            <a href="{% url 'bookings_v2:booking' %}" class="btn btn-success btn-lg w-100 hover-scale shadow-sm py-3">
+                <i class="fas fa-calendar-plus me-2"></i> Book New Appointment
             </a>
         </div>
         <div class="col-md-6 mb-3">
-            <a href="{% url 'bookings_v2:contact' %}" class="btn btn-outline-primary btn-lg w-100">
-                <i class="fas fa-phone"></i> Contact Clinic
+            <a href="{% url 'bookings_v2:contact' %}" class="btn btn-outline-primary btn-lg w-100 hover-scale py-3" style="border-width: 2px;">
+                <i class="fas fa-phone me-2"></i> Contact Clinic
             </a>
         </div>
     </div>

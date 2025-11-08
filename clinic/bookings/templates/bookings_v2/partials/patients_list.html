@@ -2,12 +2,12 @@
 <!-- Search Bar -->
 <div class="search-bar mb-3">
     <div class="input-group">
-        <span class="input-group-text bg-white">
-            <i class="fas fa-search text-muted"></i>
+        <span class="input-group-text bg-primary text-white border-0">
+            <i class="fas fa-search"></i>
         </span>
         <input 
             type="text" 
-            class="form-control" 
+            class="form-control form-control-professional border-0 shadow-none" 
             placeholder="Search by name, email, or phone..." 
             name="search"
             hx-get="{% url 'bookings_v2:htmx_patients_list' %}"
@@ -24,11 +24,41 @@
     <table class="table table-hover align-middle">
         <thead class="table-light">
             <tr>
-                <th><i class="fas fa-user me-2"></i>Name</th>
-                <th><i class="fas fa-envelope me-2"></i>Email</th>
-                <th><i class="fas fa-phone me-2"></i>Phone</th>
-                <th><i class="fas fa-venus-mars me-2"></i>Gender</th>
-                <th><i class="fas fa-birthday-cake me-2"></i>DOB</th>
+                <th class="sortable {% if sort_by == 'name' %}sort-{{ sort_order }}{% endif %}"
+                    hx-get="{% url 'bookings_v2:htmx_patients_list' %}?sort=name&order={% if sort_by == 'name' and sort_order == 'asc' %}desc{% else %}asc{% endif %}"
+                    hx-target="#patientsModalBody"
+                    hx-swap="innerHTML"
+                    hx-include="[name='search']">
+                    <i class="fas fa-user me-2"></i>Name
+                </th>
+                <th class="sortable {% if sort_by == 'email' %}sort-{{ sort_order }}{% endif %}"
+                    hx-get="{% url 'bookings_v2:htmx_patients_list' %}?sort=email&order={% if sort_by == 'email' and sort_order == 'asc' %}desc{% else %}asc{% endif %}"
+                    hx-target="#patientsModalBody"
+                    hx-swap="innerHTML"
+                    hx-include="[name='search']">
+                    <i class="fas fa-envelope me-2"></i>Email
+                </th>
+                <th class="sortable {% if sort_by == 'phone' %}sort-{{ sort_order }}{% endif %}"
+                    hx-get="{% url 'bookings_v2:htmx_patients_list' %}?sort=phone&order={% if sort_by == 'phone' and sort_order == 'asc' %}desc{% else %}asc{% endif %}"
+                    hx-target="#patientsModalBody"
+                    hx-swap="innerHTML"
+                    hx-include="[name='search']">
+                    <i class="fas fa-phone me-2"></i>Phone
+                </th>
+                <th class="sortable {% if sort_by == 'gender' %}sort-{{ sort_order }}{% endif %}"
+                    hx-get="{% url 'bookings_v2:htmx_patients_list' %}?sort=gender&order={% if sort_by == 'gender' and sort_order == 'asc' %}desc{% else %}asc{% endif %}"
+                    hx-target="#patientsModalBody"
+                    hx-swap="innerHTML"
+                    hx-include="[name='search']">
+                    <i class="fas fa-venus-mars me-2"></i>Gender
+                </th>
+                <th class="sortable {% if sort_by == 'dob' %}sort-{{ sort_order }}{% endif %}"
+                    hx-get="{% url 'bookings_v2:htmx_patients_list' %}?sort=dob&order={% if sort_by == 'dob' and sort_order == 'asc' %}desc{% else %}asc{% endif %}"
+                    hx-target="#patientsModalBody"
+                    hx-swap="innerHTML"
+                    hx-include="[name='search']">
+                    <i class="fas fa-birthday-cake me-2"></i>DOB
+                </th>
                 <th class="text-center"><i class="fas fa-file-medical me-2"></i>Records</th>
                 <th class="text-center"><i class="fas fa-cog me-2"></i>Actions</th>
             </tr>
@@ -50,12 +80,12 @@
                     </span>
                 </td>
                 <td>
-                    {% if patient.gender == 'Male' %}
+                    {% if patient.gender == 'M' %}
                         <i class="fas fa-mars text-primary"></i> Male
-                    {% elif patient.gender == 'Female' %}
+                    {% elif patient.gender == 'F' %}
                         <i class="fas fa-venus text-danger"></i> Female
                     {% else %}
-                        <i class="fas fa-genderless text-secondary"></i> {{ patient.gender }}
+                        <i class="fas fa-genderless text-secondary"></i> Other
                     {% endif %}
                 </td>
                 <td>

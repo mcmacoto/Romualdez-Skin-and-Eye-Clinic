@@ -2,12 +2,12 @@
 <!-- Search Bar -->
 <div class="search-bar mb-3">
     <div class="input-group">
-        <span class="input-group-text bg-white">
-            <i class="fas fa-search text-muted"></i>
+        <span class="input-group-text bg-primary text-white border-0">
+            <i class="fas fa-search"></i>
         </span>
         <input 
             type="text" 
-            class="form-control" 
+            class="form-control form-control-professional border-0 shadow-none" 
             placeholder="Search by patient name or service..." 
             name="search"
             hx-get="{% url 'bookings_v2:htmx_all_billings' %}"
@@ -25,13 +25,55 @@
         <thead class="table-light">
             <tr>
                 <th><i class="fas fa-hashtag me-2"></i>Bill #</th>
-                <th><i class="fas fa-user me-2"></i>Patient</th>
-                <th><i class="fas fa-calendar me-2"></i>Date</th>
-                <th><i class="fas fa-list me-2"></i>Service</th>
-                <th class="text-end"><i class="fas fa-money-bill-wave me-2"></i>Amount</th>
-                <th class="text-end"><i class="fas fa-hand-holding-usd me-2"></i>Paid</th>
-                <th class="text-end"><i class="fas fa-balance-scale me-2"></i>Balance</th>
-                <th><i class="fas fa-info-circle me-2"></i>Status</th>
+                <th class="sortable {% if sort_by == 'patient' %}sort-{{ sort_order }}{% endif %}"
+                    hx-get="{% url 'bookings_v2:htmx_all_billings' %}?sort=patient&order={% if sort_by == 'patient' and sort_order == 'asc' %}desc{% else %}asc{% endif %}"
+                    hx-target="#billingsModalBody"
+                    hx-swap="innerHTML"
+                    hx-include="[name='search']">
+                    <i class="fas fa-user me-2"></i>Patient
+                </th>
+                <th class="sortable {% if sort_by == 'date' %}sort-{{ sort_order }}{% endif %}"
+                    hx-get="{% url 'bookings_v2:htmx_all_billings' %}?sort=date&order={% if sort_by == 'date' and sort_order == 'asc' %}desc{% else %}asc{% endif %}"
+                    hx-target="#billingsModalBody"
+                    hx-swap="innerHTML"
+                    hx-include="[name='search']">
+                    <i class="fas fa-calendar me-2"></i>Date
+                </th>
+                <th class="sortable {% if sort_by == 'service' %}sort-{{ sort_order }}{% endif %}"
+                    hx-get="{% url 'bookings_v2:htmx_all_billings' %}?sort=service&order={% if sort_by == 'service' and sort_order == 'asc' %}desc{% else %}asc{% endif %}"
+                    hx-target="#billingsModalBody"
+                    hx-swap="innerHTML"
+                    hx-include="[name='search']">
+                    <i class="fas fa-list me-2"></i>Service
+                </th>
+                <th class="text-end sortable {% if sort_by == 'amount' %}sort-{{ sort_order }}{% endif %}"
+                    hx-get="{% url 'bookings_v2:htmx_all_billings' %}?sort=amount&order={% if sort_by == 'amount' and sort_order == 'asc' %}desc{% else %}asc{% endif %}"
+                    hx-target="#billingsModalBody"
+                    hx-swap="innerHTML"
+                    hx-include="[name='search']">
+                    <i class="fas fa-money-bill-wave me-2"></i>Amount
+                </th>
+                <th class="text-end sortable {% if sort_by == 'paid' %}sort-{{ sort_order }}{% endif %}"
+                    hx-get="{% url 'bookings_v2:htmx_all_billings' %}?sort=paid&order={% if sort_by == 'paid' and sort_order == 'asc' %}desc{% else %}asc{% endif %}"
+                    hx-target="#billingsModalBody"
+                    hx-swap="innerHTML"
+                    hx-include="[name='search']">
+                    <i class="fas fa-hand-holding-usd me-2"></i>Paid
+                </th>
+                <th class="text-end sortable {% if sort_by == 'balance' %}sort-{{ sort_order }}{% endif %}"
+                    hx-get="{% url 'bookings_v2:htmx_all_billings' %}?sort=balance&order={% if sort_by == 'balance' and sort_order == 'asc' %}desc{% else %}asc{% endif %}"
+                    hx-target="#billingsModalBody"
+                    hx-swap="innerHTML"
+                    hx-include="[name='search']">
+                    <i class="fas fa-balance-scale me-2"></i>Balance
+                </th>
+                <th class="sortable {% if sort_by == 'status' %}sort-{{ sort_order }}{% endif %}"
+                    hx-get="{% url 'bookings_v2:htmx_all_billings' %}?sort=status&order={% if sort_by == 'status' and sort_order == 'asc' %}desc{% else %}asc{% endif %}"
+                    hx-target="#billingsModalBody"
+                    hx-swap="innerHTML"
+                    hx-include="[name='search']">
+                    <i class="fas fa-info-circle me-2"></i>Status
+                </th>
                 <th class="text-center"><i class="fas fa-cog me-2"></i>Actions</th>
             </tr>
         </thead>

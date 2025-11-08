@@ -2,12 +2,12 @@
 <!-- Search Bar -->
 <div class="search-bar mb-3">
     <div class="input-group">
-        <span class="input-group-text bg-white">
-            <i class="fas fa-search text-muted"></i>
+        <span class="input-group-text bg-primary text-white border-0">
+            <i class="fas fa-search"></i>
         </span>
         <input 
             type="text" 
-            class="form-control" 
+            class="form-control form-control-professional border-0 shadow-none" 
             placeholder="Search by patient name, email, or phone..." 
             name="search"
             hx-get="{% url 'bookings_v2:htmx_appointments_list' %}"
@@ -24,11 +24,41 @@
     <table class="table table-hover align-middle">
         <thead class="table-light">
             <tr>
-                <th><i class="fas fa-user me-2"></i>Patient</th>
-                <th><i class="fas fa-calendar me-2"></i>Date</th>
-                <th><i class="fas fa-clock me-2"></i>Time</th>
-                <th><i class="fas fa-list me-2"></i>Service</th>
-                <th><i class="fas fa-info-circle me-2"></i>Status</th>
+                <th class="sortable {% if sort_by == 'patient' %}sort-{{ sort_order }}{% endif %}"
+                    hx-get="{% url 'bookings_v2:htmx_appointments_list' %}?sort=patient&order={% if sort_by == 'patient' and sort_order == 'asc' %}desc{% else %}asc{% endif %}"
+                    hx-target="#appointmentsModalBody"
+                    hx-swap="innerHTML"
+                    hx-include="[name='search']">
+                    <i class="fas fa-user me-2"></i>Patient
+                </th>
+                <th class="sortable {% if sort_by == 'date' %}sort-{{ sort_order }}{% endif %}"
+                    hx-get="{% url 'bookings_v2:htmx_appointments_list' %}?sort=date&order={% if sort_by == 'date' and sort_order == 'asc' %}desc{% else %}asc{% endif %}"
+                    hx-target="#appointmentsModalBody"
+                    hx-swap="innerHTML"
+                    hx-include="[name='search']">
+                    <i class="fas fa-calendar me-2"></i>Date
+                </th>
+                <th class="sortable {% if sort_by == 'time' %}sort-{{ sort_order }}{% endif %}"
+                    hx-get="{% url 'bookings_v2:htmx_appointments_list' %}?sort=time&order={% if sort_by == 'time' and sort_order == 'asc' %}desc{% else %}asc{% endif %}"
+                    hx-target="#appointmentsModalBody"
+                    hx-swap="innerHTML"
+                    hx-include="[name='search']">
+                    <i class="fas fa-clock me-2"></i>Time
+                </th>
+                <th class="sortable {% if sort_by == 'service' %}sort-{{ sort_order }}{% endif %}"
+                    hx-get="{% url 'bookings_v2:htmx_appointments_list' %}?sort=service&order={% if sort_by == 'service' and sort_order == 'asc' %}desc{% else %}asc{% endif %}"
+                    hx-target="#appointmentsModalBody"
+                    hx-swap="innerHTML"
+                    hx-include="[name='search']">
+                    <i class="fas fa-list me-2"></i>Service
+                </th>
+                <th class="sortable {% if sort_by == 'status' %}sort-{{ sort_order }}{% endif %}"
+                    hx-get="{% url 'bookings_v2:htmx_appointments_list' %}?sort=status&order={% if sort_by == 'status' and sort_order == 'asc' %}desc{% else %}asc{% endif %}"
+                    hx-target="#appointmentsModalBody"
+                    hx-swap="innerHTML"
+                    hx-include="[name='search']">
+                    <i class="fas fa-info-circle me-2"></i>Status
+                </th>
                 <th><i class="fas fa-tasks me-2"></i>Consultation</th>
                 <th class="text-center"><i class="fas fa-cog me-2"></i>Actions</th>
             </tr>
@@ -95,6 +125,9 @@
                         <option value="Done" {% if appointment.consultation_status == 'Done' %}selected{% endif %}>
                             Done
                         </option>
+                        <option value="No-Show" {% if appointment.consultation_status == 'No-Show' %}selected{% endif %}>
+                            No-Show
+                        </option>
                     </select>
                     {% else %}
                         {% if appointment.consultation_status == 'Done' %}
@@ -104,6 +137,10 @@
                         {% elif appointment.consultation_status == 'Ongoing' %}
                             <span class="badge bg-info">
                                 <i class="fas fa-hourglass-half"></i> Ongoing
+                            </span>
+                        {% elif appointment.consultation_status == 'No-Show' %}
+                            <span class="badge bg-danger">
+                                <i class="fas fa-user-slash"></i> No-Show
                             </span>
                         {% else %}
                             <span class="badge bg-secondary">

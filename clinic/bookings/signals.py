@@ -116,9 +116,9 @@ def create_appointment_or_patient_records(sender, instance, created, **kwargs):
                     user.set_password(temp_password)
                     user.save()
                     logger.info(f"[OK] Created new user account: {user.username} with temporary password")
-                    # TODO: Send password reset email to user
-                    # from django.core.mail import send_mail
-                    # send_password_reset_email(user, temp_password)
+                    # NOTE: Email functionality not configured in this version
+                    # For production deployment, configure EMAIL_BACKEND in settings.py
+                    # and implement password reset email notification here
                 
                 # 2. Create Patient profile if it doesn't exist
                 patient, patient_created = Patient.objects.get_or_create(
