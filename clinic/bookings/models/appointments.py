@@ -34,6 +34,7 @@ class Appointment(models.Model):
         ('Not Yet', 'Not Yet'),
         ('Ongoing', 'Ongoing'),
         ('Done', 'Done'),
+        ('No-Show', 'No-Show'),
     ]
     consultation_status = models.CharField(
         max_length=10, 
@@ -60,6 +61,7 @@ class Booking(models.Model):
         ('Not Yet', 'Not Yet'),
         ('Ongoing', 'Ongoing'),
         ('Done', 'Done'),
+        ('No-Show', 'No-Show'),
     ]
     
     # Patient Information

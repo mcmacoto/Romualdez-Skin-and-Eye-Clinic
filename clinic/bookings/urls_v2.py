@@ -36,6 +36,7 @@ from .views_v2 import (
     htmx_medical_image_delete,
     htmx_patient_create_form, htmx_patient_create,
     htmx_patient_edit_form, htmx_patient_update,
+    upload_profile_picture,
     # Inventory views
     htmx_inventory_list, htmx_inventory_adjust, htmx_inventory_adjust_submit,
     htmx_stock_transactions_list,
@@ -121,6 +122,7 @@ urlpatterns = [
     path('htmx/patient/create/', htmx_patient_create, name='htmx_patient_create'),
     path('htmx/patient/<int:patient_id>/edit/', htmx_patient_edit_form, name='htmx_patient_edit_form'),
     path('htmx/patient/<int:patient_id>/update/', htmx_patient_update, name='htmx_patient_update'),
+    path('htmx/upload-profile-picture/', upload_profile_picture, name='upload_profile_picture'),
     
     # Medical Records HTMX endpoints
     path('htmx/medical-records/', htmx_medical_records_list, name='htmx_medical_records_list'),

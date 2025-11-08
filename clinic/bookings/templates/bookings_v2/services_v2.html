@@ -23,47 +23,58 @@
 
 {% block content %}
 <div class="container py-5" x-data="servicesFilter()">
-    <!-- Header Section -->
-    <div class="text-center mb-5">
-        <h1 class="display-4 fw-bold">Our Services</h1>
+    <!-- Professional Header Section -->
+    <div class="text-center mb-5" data-aos="fade-up">
+        <span class="badge badge-professional bg-primary text-white mb-3">What We Offer</span>
+        <h1 class="display-4 fw-bold mb-3">Our Services</h1>
         <p class="lead text-muted">Professional skin and eye care treatments tailored to your needs</p>
     </div>
 
-    <!-- Search and Filter Section with Alpine.js -->
-    <div class="row mb-4">
-        <div class="col-md-6 mb-3">
-            <div class="input-group">
-                <span class="input-group-text bg-primary text-white">
-                    <i class="fas fa-search"></i>
-                </span>
-                <input 
-                    type="text" 
-                    class="form-control" 
-                    placeholder="Search services..."
-                    x-model="searchQuery"
-                    @input="filterServices()"
-                >
+    <!-- Professional Search and Filter Section -->
+    <div class="card border-0 shadow-sm mb-5" data-aos="fade-up" data-aos-delay="100">
+        <div class="card-body p-4">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label fw-medium text-muted small mb-2">
+                        <i class="fas fa-search me-1"></i> Search Services
+                    </label>
+                    <div class="input-group input-group-lg">
+                        <span class="input-group-text bg-primary text-white border-0">
+                            <i class="fas fa-search"></i>
+                        </span>
+                        <input 
+                            type="text" 
+                            class="form-control form-control-professional border-0 shadow-none" 
+                            placeholder="Search by name or description..."
+                            x-model="searchQuery"
+                            @input="filterServices()"
+                        >
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-medium text-muted small mb-2">
+                        <i class="fas fa-filter me-1"></i> Filter by Price
+                    </label>
+                    <select class="form-select form-select-lg form-control-professional border-0 shadow-none" x-model="priceFilter" @change="filterServices()">
+                        <option value="all">All Prices</option>
+                        <option value="low">₱0 - ₱2,000</option>
+                        <option value="medium">₱2,001 - ₱5,000</option>
+                        <option value="high">₱5,001+</option>
+                    </select>
+                </div>
             </div>
         </div>
-        <div class="col-md-6 mb-3">
-            <select class="form-select" x-model="priceFilter" @change="filterServices()">
-                <option value="all">All Prices</option>
-                <option value="low">₱0 - ₱2,000</option>
-                <option value="medium">₱2,001 - ₱5,000</option>
-                <option value="high">₱5,001+</option>
-            </select>
+    </div>
+
+    <!-- Professional Services Count -->
+    <div class="mb-4" data-aos="fade-up" data-aos-delay="150">
+        <div class="d-flex align-items-center text-muted">
+            <i class="fas fa-info-circle me-2 text-primary"></i> 
+            <span>Showing <strong class="text-dark" x-text="visibleCount"></strong> of <strong class="text-dark">{{ services.count }}</strong> services</span>
         </div>
     </div>
 
-    <!-- Services Count -->
-    <div class="mb-3">
-        <p class="text-muted">
-            <i class="fas fa-info-circle"></i> 
-            Showing <strong x-text="visibleCount"></strong> of <strong>{{ services.count }}</strong> services
-        </p>
-    </div>
-
-    <!-- Services Grid with Alpine.js filtering -->
+    <!-- Professional Services Grid with Alpine.js filtering -->
     <div class="row g-4">
         {% for service in services %}
         <div 
@@ -73,8 +84,10 @@
             data-service-price="{{ service.price }}"
             x-show="isVisible($el)"
             x-transition
+            data-aos="fade-up" 
+            data-aos-delay="{{ forloop.counter0|add:'200' }}"
         >
-            <div class="card h-100 shadow-sm hover-lift" x-data="{ showDetails: false }">
+            <div class="card h-100 border-0 shadow-sm card-hover-lift" x-data="{ showDetails: false }">
                 <!-- Service Image -->
                 {% if service.image %}
                 <div class="position-relative">
@@ -83,19 +96,19 @@
                         class="card-img-top" 
                         alt="{{ service.name }}" 
                         style="height: 250px; object-fit: cover;"
-                        onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'card-img-top bg-gradient d-flex align-items-center justify-content-center\' style=\'height: 250px; background: linear-gradient(135deg, #3d5c3d 0%, #5a7c5a 100%);\'><i class=\'fas fa-spa fa-4x text-white\'></i></div>';"
+                        onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'card-img-top bg-gradient d-flex align-items-center justify-content-center\' style=\'height: 250px; background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);\'><i class=\'fas fa-spa fa-4x text-white\'></i></div>';"
                     >
                     <div class="position-absolute top-0 end-0 m-3">
-                        <span class="badge bg-success fs-6">₱{{ service.price }}</span>
+                        <span class="badge badge-professional bg-success text-white shadow fs-6 px-3 py-2">₱{{ service.price|floatformat:0 }}</span>
                     </div>
                 </div>
                 {% else %}
                 <div class="position-relative">
-                    <div class="card-img-top bg-gradient d-flex align-items-center justify-content-center" style="height: 250px; background: linear-gradient(135deg, #3d5c3d 0%, #5a7c5a 100%);">
+                    <div class="card-img-top bg-gradient d-flex align-items-center justify-content-center" style="height: 250px; background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);">
                         <i class="fas fa-spa fa-4x text-white"></i>
                     </div>
                     <div class="position-absolute top-0 end-0 m-3">
-                        <span class="badge bg-success fs-6">₱{{ service.price }}</span>
+                        <span class="badge badge-professional bg-success text-white shadow fs-6 px-3 py-2">₱{{ service.price|floatformat:0 }}</span>
                     </div>
                 </div>
                 {% endif %}
@@ -115,38 +128,39 @@
                         {{ service.description|format_service_description|safe }}
                     </div>
                     
-                    <!-- Toggle Button -->
+                    <!-- Professional Toggle Button -->
                     <button 
                         @click="showDetails = !showDetails" 
-                        class="btn btn-sm btn-outline-secondary mb-3 align-self-start"
+                        class="btn btn-sm btn-outline-primary mb-3 align-self-start hover-scale"
                         x-transition
                     >
                         <i class="fas" :class="showDetails ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
                         <span x-text="showDetails ? 'Show Less' : 'Show More'"></span>
                     </button>
                     
-                    <!-- Price and Book Button -->
-                    <div class="d-flex justify-content-between align-items-center mt-auto">
+                    <!-- Professional Price and Book Button -->
+                    <div class="d-flex justify-content-between align-items-center mt-auto pt-3 border-top">
                         <div>
-                            <small class="text-muted d-block">Starting at</small>
-                            <h5 class="mb-0 text-success fw-bold">₱{{ service.price }}</h5>
+                            <small class="text-muted d-block mb-1">Starting at</small>
+                            <h5 class="mb-0 text-success fw-bold">₱{{ service.price|floatformat:0 }}</h5>
                         </div>
                         <a 
                             href="{% url 'bookings_v2:booking' %}" 
-                            class="btn btn-primary"
+                            class="btn btn-primary px-4 hover-scale shadow-sm"
                             x-data
                             @click.prevent="bookService('{{ service.name }}')"
                         >
-                            <i class="fas fa-calendar-check"></i> Book Now
+                            <i class="fas fa-calendar-check me-2"></i> Book Now
                         </a>
                     </div>
                 </div>
                 
-                <!-- Card Footer with Additional Info -->
-                <div class="card-footer bg-light">
-                    <small class="text-muted">
-                        <i class="fas fa-clock"></i> Consultation included
-                    </small>
+                <!-- Professional Card Footer -->
+                <div class="card-footer bg-light border-0">
+                    <div class="d-flex align-items-center text-muted">
+                        <i class="fas fa-clock text-primary me-2"></i>
+                        <small class="fw-medium">Consultation included</small>
+                    </div>
                 </div>
             </div>
         </div>

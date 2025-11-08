@@ -21,6 +21,7 @@ from ..models import (
 )
 from ..decorators import staff_required
 from ..utils.responses import htmx_error, htmx_success
+from ..utils.db_helpers import atomic_save
 
 logger = logging.getLogger(__name__)
 
@@ -78,7 +79,26 @@ def htmx_patients_list(request):
             except (ValueError, TypeError):
                 pass
         
-        patients = patients.order_by('-created_at')
+        # Handle column sorting
+        sort_by = request.GET.get('sort', '').strip()
+        sort_order = request.GET.get('order', 'asc').strip()
+        
+        # Define valid sort fields and their mappings
+        sort_fields = {
+            'name': 'user__last_name',
+            'email': 'user__email',
+            'phone': 'phone',
+            'gender': 'gender',
+            'dob': 'date_of_birth',
+        }
+        
+        if sort_by in sort_fields:
+            field = sort_fields[sort_by]
+            if sort_order == 'desc':
+                field = f'-{field}'
+            patients = patients.order_by(field)
+        else:
+            patients = patients.order_by('-created_at')
         
         # Add pagination
         paginator = Paginator(patients, 25)
@@ -89,6 +109,8 @@ def htmx_patients_list(request):
             'patients': page_obj,
             'paginator': paginator,
             'page_obj': page_obj,
+            'sort_by': sort_by,
+            'sort_order': sort_order,
         })
     except Exception as e:
         logger.error(f"Error in patients list view: {str(e)}", exc_info=True)
@@ -187,6 +209,63 @@ def htmx_patient_detail(request, patient_id):
 
 @login_required
 @staff_required
+@require_http_methods(["POST"])
+def upload_profile_picture(request):
+    """Upload and save profile picture for a user's patient profile"""
+    from django.http import JsonResponse
+    import os
+    
+    try:
+        user_id = request.POST.get('user_id')
+        profile_picture = request.FILES.get('profile_picture')
+        
+        if not user_id or not profile_picture:
+            return JsonResponse({'success': False, 'error': 'Missing user ID or image file'}, status=400)
+        
+        user = User.objects.get(id=user_id)
+        
+        # Get or create patient profile for this user
+        try:
+            patient = Patient.objects.get(user=user)
+        except Patient.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'No patient profile found for this user'}, status=404)
+        
+        # Validate file type
+        allowed_types = ['image/jpeg', 'image/png', 'image/jpg']
+        if profile_picture.content_type not in allowed_types:
+            return JsonResponse({'success': False, 'error': 'Invalid file type. Only JPG and PNG allowed.'}, status=400)
+        
+        # Validate file size (max 5MB)
+        if profile_picture.size > 5 * 1024 * 1024:
+            return JsonResponse({'success': False, 'error': 'File size must be less than 5MB'}, status=400)
+        
+        # Delete old profile picture if exists
+        if patient.profile_picture:
+            old_picture_path = patient.profile_picture.path
+            if os.path.exists(old_picture_path):
+                os.remove(old_picture_path)
+        
+        # Save new profile picture with automatic retry on database locks
+        patient.profile_picture = profile_picture
+        atomic_save(patient)
+        
+        logger.info(f"Profile picture uploaded for user {user.get_full_name()} by {request.user.username}")
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Profile picture uploaded successfully',
+            'profile_picture_url': patient.profile_picture.url
+        })
+        
+    except User.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'User not found'}, status=404)
+    except Exception as e:
+        logger.error(f"Error uploading profile picture: {str(e)}", exc_info=True)
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@login_required
+@staff_required
 @require_http_methods(["DELETE"])
 def htmx_delete_patient(request, patient_id):
     """Delete patient - handles cascade and returns empty response"""
@@ -232,6 +311,7 @@ def htmx_delete_patient(request, patient_id):
 @staff_required
 @require_http_methods(["GET"])
 def htmx_patient_create_form(request):
+
     """Return HTML form for creating a new patient"""
     return render(request, 'bookings_v2/htmx_partials/patient_form.html', {
         'today': date.today().isoformat()
@@ -907,7 +987,7 @@ def htmx_prescription_delete(request, prescription_id):
 
 @login_required
 @staff_required
-@require_http_methods(["GET"])
+@require_http_methods(["GET", "POST"])  # Allow POST for internal calls from upload
 def htmx_medical_images(request, record_id):
     """Return HTML fragment showing medical images for a specific record"""
     try:
@@ -922,7 +1002,7 @@ def htmx_medical_images(request, record_id):
                 class="btn btn-outline-secondary btn-sm"
                 hx-get="/admin/htmx/medical-record/{record_id}/edit/"
                 hx-target="#medicalImagesModalBody"
-                hx-swap="outerHTML"
+                hx-swap="innerHTML"
             >
                 <i class="fas fa-arrow-left me-2"></i>Back to Medical Record
             </button>

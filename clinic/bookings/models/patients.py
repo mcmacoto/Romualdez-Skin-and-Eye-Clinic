@@ -17,12 +17,27 @@ from django.core.validators import EmailValidator
 email_validator = EmailValidator(message="Enter a valid email address.")
 
 
+def profile_picture_upload_path(instance, filename):
+    """Generate upload path for profile pictures"""
+    import os
+    from django.utils.text import slugify
+    username = slugify(instance.user.username)
+    ext = os.path.splitext(filename)[1]
+    return f'profile_pictures/{username}{ext}'
+
+
 class Patient(models.Model):
     """Extended patient information linked to User account"""
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='patient_profile')
     
     # Personal Information
     date_of_birth = models.DateField()
+    profile_picture = models.ImageField(
+        upload_to=profile_picture_upload_path,
+        blank=True,
+        null=True,
+        help_text="Patient's profile picture"
+    )
     gender_choices = [
         ('M', 'Male'),
         ('F', 'Female'),

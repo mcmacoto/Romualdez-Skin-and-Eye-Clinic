@@ -33,11 +33,12 @@
         .login-card {
             background: white;
             border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
             overflow: hidden;
-            max-width: 450px;
+            max-width: 480px;
             width: 100%;
             animation: fadeInUp 0.6s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
         
         @keyframes fadeInUp {
@@ -52,26 +53,69 @@
         }
         
         .login-header {
-            background: linear-gradient(135deg, #17a2b8 0%, #138496 100%) !important;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--dark-green) 100%) !important;
             color: white !important;
-            padding: 2.5rem;
+            padding: 3rem 2.5rem;
             text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .login-header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: pulse 3s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.1); opacity: 0.8; }
         }
         
         .login-header i {
-            font-size: 3rem;
+            font-size: 4.5rem;
             margin-bottom: 1rem;
             color: white !important;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
+            position: relative;
+            z-index: 1;
         }
         
         .login-header h2 {
             font-weight: 700;
             margin-bottom: 0.5rem;
             color: white !important;
+            font-size: 2.25rem;
+            letter-spacing: -0.5px;
+            position: relative;
+            z-index: 1;
         }
         
         .login-header p {
             color: white !important;
+            opacity: 0.95;
+            font-size: 1.05rem;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .badge-professional-login {
+            display: inline-block;
+            padding: 0.35rem 1rem;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.75rem;
+            border: 1px solid rgba(255, 255, 255, 0.3);
         }
         
         .login-body {
@@ -84,21 +128,28 @@
         }
         
         .form-control {
-            border-radius: 10px;
-            padding: 0.75rem 1rem;
+            border-radius: 12px;
+            padding: 0.875rem 1.25rem;
             border: 2px solid #e9ecef;
+            transition: all 0.3s ease;
+            font-size: 1rem;
         }
         
         .form-control:focus {
-            border-color: #17a2b8;
-            box-shadow: 0 0 0 0.2rem rgba(23, 162, 184, 0.25);
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.25rem rgba(44, 95, 45, 0.15);
+            transform: translateY(-1px);
+        }
+        
+        .form-control:hover:not(:focus) {
+            border-color: #ced4da;
         }
         
         .btn-login {
-            background: linear-gradient(135deg, #17a2b8 0%, #138496 100%) !important;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--dark-green) 100%) !important;
             border: none;
             color: white !important;
-            padding: 0.75rem;
+            padding: 0.875rem 1.5rem;
             font-weight: 600;
             font-size: 1.1rem;
             border-radius: 10px;
@@ -107,10 +158,14 @@
         }
         
         .btn-login:hover {
-            background: linear-gradient(135deg, #138496 0%, #117a8b 100%) !important;
+            background: linear-gradient(135deg, var(--dark-green) 0%, var(--primary-color) 100%) !important;
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(23, 162, 184, 0.3);
+            box-shadow: 0 8px 20px rgba(44, 95, 45, 0.3);
             color: white !important;
+        }
+        
+        .btn-login:active {
+            transform: translateY(0px);
         }
         
         .divider {
@@ -161,9 +216,10 @@
     <div class="login-card">
         <!-- Header -->
         <div class="login-header">
+            <span class="badge-professional-login">Patient Portal</span>
             <i class="fas fa-user-circle"></i>
-            <h2>Patient Login</h2>
-            <p class="mb-0">Access your health records</p>
+            <h2>Welcome Back</h2>
+            <p class="mb-0">Sign in to access your health records and appointments</p>
         </div>
         
         <!-- Body -->
@@ -186,60 +242,68 @@
             <form method="post" action="{% url 'bookings_v2:login' %}">
                 {% csrf_token %}
                 
-                <div class="mb-3">
+                <div class="mb-4">
                     <label for="username" class="form-label">
-                        <i class="fas fa-user"></i> Username
+                        <i class="fas fa-user text-primary me-1"></i> Username
                     </label>
                     <input 
                         type="text" 
-                        class="form-control" 
+                        class="form-control form-control-lg" 
                         id="username" 
                         name="username" 
                         placeholder="Enter your username"
                         required
                         autofocus
                     >
+                    <div class="form-text small mt-2">
+                        <i class="fas fa-info-circle text-muted me-1"></i>
+                        Use the username provided during registration
+                    </div>
                 </div>
                 
-                <div class="mb-3">
+                <div class="mb-4">
                     <label for="password" class="form-label">
-                        <i class="fas fa-lock"></i> Password
+                        <i class="fas fa-lock text-primary me-1"></i> Password
                     </label>
                     <input 
                         type="password" 
-                        class="form-control" 
+                        class="form-control form-control-lg" 
                         id="password" 
                         name="password" 
                         placeholder="Enter your password"
                         required
                     >
+                    <div class="form-text small mt-2">
+                        <i class="fas fa-shield-alt text-muted me-1"></i>
+                        Your password is encrypted and secure
+                    </div>
                 </div>
                 
-                <div class="mb-3 form-check">
-                    <input type="checkbox" class="form-check-input" id="remember" name="remember">
-                    <label class="form-check-label" for="remember">
-                        Remember me
+                <div class="mb-4 form-check">
+                    <input type="checkbox" class="form-check-input" id="remember" name="remember" style="width: 1.1em; height: 1.1em;">
+                    <label class="form-check-label ms-2" for="remember" style="font-weight: 500;">
+                        <i class="fas fa-clock text-muted me-1"></i> Remember me for 30 days
                     </label>
                 </div>
                 
-                <button type="submit" class="btn btn-login">
-                    <i class="fas fa-sign-in-alt"></i> Login
+                <button type="submit" class="btn btn-login shadow-sm">
+                    <i class="fas fa-sign-in-alt me-2"></i> Sign In to Portal
                 </button>
             </form>
             
             <div class="divider">
-                <span>or</span>
+                <span><i class="fas fa-grip-lines-vertical mx-1"></i></span>
             </div>
             
-            <div class="d-grid gap-2">
-                <a href="{% url 'bookings_v2:home' %}" class="btn btn-outline-secondary">
-                    <i class="fas fa-home"></i> Continue as Guest
+            <div class="d-grid gap-3">
+                <a href="{% url 'bookings_v2:home' %}" class="btn btn-outline-secondary btn-lg" style="border-width: 2px; border-radius: 12px; padding: 0.875rem; font-weight: 600; transition: all 0.3s;">
+                    <i class="fas fa-user-clock me-2"></i> Continue as Guest
                 </a>
             </div>
             
-            <div class="back-link">
-                <a href="{% url 'bookings_v2:landing' %}">
-                    <i class="fas fa-arrow-left"></i> Back to Landing
+            <div class="back-link mt-4">
+                <a href="{% url 'bookings_v2:landing' %}" style="text-decoration: none; color: #6c757d; font-weight: 500; transition: all 0.3s; display: inline-flex; align-items: center;">
+                    <i class="fas fa-arrow-left me-2"></i> Back to Landing Page
                 </a>
             </div>
         </div>

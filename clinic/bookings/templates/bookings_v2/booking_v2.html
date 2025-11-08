@@ -6,12 +6,25 @@
 <div class="container py-5">
     <div class="row justify-content-center">
         <div class="col-lg-8">
-            <!-- Booking Form Card -->
-            <div class="card shadow">
-                <div class="card-header bg-primary text-white">
-                    <h3 class="mb-0"><i class="fas fa-calendar-check"></i> Book an Appointment</h3>
+            <!-- Professional Hero Section -->
+            <div class="text-center mb-5" data-aos="fade-up">
+                <span class="badge badge-professional bg-primary text-white mb-3">Book Appointment</span>
+                <h1 class="display-5 fw-bold mb-3">Schedule Your Visit</h1>
+                <p class="text-muted lead">Fill out the form below and we'll confirm your appointment within 24 hours</p>
+            </div>
+            
+            <!-- Professional Booking Form Card -->
+            <div class="card border-0 shadow-sm card-hover-lift" data-aos="fade-up" data-aos-delay="100">
+                <div class="card-header bg-gradient text-white border-0" style="background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-calendar-check fa-2x me-3"></i>
+                        <div>
+                            <h3 class="mb-0">Book an Appointment</h3>
+                            <small class="opacity-90">Complete the form to schedule your visit</small>
+                        </div>
+                    </div>
                 </div>
-                <div class="card-body" id="booking-form-container">
+                <div class="card-body p-4 p-md-5" id="booking-form-container">
                     {% if user.is_authenticated %}
                     <form 
                         hx-post="/admin/htmx/submit-booking/" 
@@ -23,13 +36,13 @@
                     >
                         {% csrf_token %}
                         
-                        <!-- Service Selection -->
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">
-                                <i class="fas fa-concierge-bell text-primary"></i> Select Service *
+                        <!-- Professional Service Selection -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold text-muted small mb-2">
+                                <i class="fas fa-concierge-bell text-primary me-1"></i> SELECT SERVICE *
                             </label>
                             <select 
-                                class="form-select" 
+                                class="form-select form-select-lg form-control-professional" 
                                 name="service"
                                 x-model="selectedService" 
                                 @change="loadTimeSlots()"
@@ -38,52 +51,63 @@
                                 <option value="">Choose a service...</option>
                                 {% for service in services %}
                                 <option value="{{ service.id }}" data-price="{{ service.price }}">
-                                    {{ service.name }} - ₱{{ service.price }}
+                                    {{ service.name }} - ₱{{ service.price|floatformat:0 }}
                                 </option>
                                 {% endfor %}
                             </select>
-                            <div class="invalid-feedback" x-show="errors.service" x-text="errors.service"></div>
+                            <div class="invalid-feedback d-block text-danger small mt-1" x-show="errors.service" x-text="errors.service"></div>
                         </div>
 
-                        <!-- Patient Information Section -->
-                        <h5 class="mb-3 mt-4"><i class="fas fa-user-circle"></i> Patient Information</h5>
+                        <!-- Professional Patient Information Section -->
+                        <div class="mb-4 mt-5">
+                            <span class="badge badge-professional bg-primary text-white mb-2">Step 1</span>
+                            <h5 class="fw-bold mb-3">
+                                <i class="fas fa-user-circle text-primary me-2"></i> Patient Information
+                            </h5>
+                        </div>
                         
-                        <!-- Patient Name -->
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Full Name *</label>
+                        <!-- Professional Patient Name -->
+                        <div class="mb-4">
+                            <label class="form-label fw-medium mb-2">
+                                <i class="fas fa-user text-primary me-1"></i> Full Name *
+                            </label>
                             <input 
                                 type="text" 
-                                class="form-control" 
+                                class="form-control form-control-lg form-control-professional" 
                                 name="patient_name"
                                 x-model="patientName"
                                 @blur="validateField('patient_name')"
                                 placeholder="Enter your full name"
                                 required
                             >
-                            <div class="invalid-feedback" x-show="errors.patient_name" x-text="errors.patient_name"></div>
+                            <div class="invalid-feedback d-block text-danger small mt-1" x-show="errors.patient_name" x-text="errors.patient_name"></div>
                         </div>
 
-                        <!-- Email -->
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Email Address *</label>
+                        <!-- Professional Email -->
+                        <div class="mb-4">
+                            <label class="form-label fw-medium mb-2">
+                                <i class="fas fa-envelope text-primary me-1"></i> Email Address *
+                            </label>
                             <input 
                                 type="email" 
-                                class="form-control" 
+                                class="form-control form-control-lg form-control-professional" 
                                 name="patient_email"
                                 x-model="patientEmail"
                                 @blur="validateField('patient_email')"
                                 placeholder="your.email@example.com"
                                 required
                             >
-                            <div class="invalid-feedback" x-show="errors.patient_email" x-text="errors.patient_email"></div>
+                            <div class="invalid-feedback d-block text-danger small mt-1" x-show="errors.patient_email" x-text="errors.patient_email"></div>
                         </div>
 
-                        <!-- Phone -->
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Phone Number *</label>
+                        <!-- Professional Phone -->
+                        <div class="mb-4">
+                            <label class="form-label fw-medium mb-2">
+                                <i class="fas fa-phone text-primary me-1"></i> Phone Number *
+                            </label>
                             <input 
                                 type="tel" 
-                                class="form-control" 
+                                class="form-control form-control-lg form-control-professional" 
                                 name="patient_phone"
                                 x-model="patientPhone"
                                 @blur="validateField('patient_phone')"
@@ -91,34 +115,47 @@
                                 pattern="[+]?[0-9]{10,15}"
                                 required
                             >
-                            <small class="form-text text-muted">Format: +63XXXXXXXXXX or 09XXXXXXXXX</small>
-                            <div class="invalid-feedback" x-show="errors.patient_phone" x-text="errors.patient_phone"></div>
+                            <small class="form-text text-muted d-flex align-items-center mt-2">
+                                <i class="fas fa-info-circle me-1"></i> Format: +63XXXXXXXXXX or 09XXXXXXXXX
+                            </small>
+                            <div class="invalid-feedback d-block text-danger small mt-1" x-show="errors.patient_phone" x-text="errors.patient_phone"></div>
                         </div>
 
-                        <!-- Appointment Details Section -->
-                        <h5 class="mb-3 mt-4"><i class="fas fa-calendar-alt"></i> Appointment Details</h5>
+                        <!-- Professional Appointment Details Section -->
+                        <div class="mb-4 mt-5">
+                            <span class="badge badge-professional bg-primary text-white mb-2">Step 2</span>
+                            <h5 class="fw-bold mb-3">
+                                <i class="fas fa-calendar-alt text-primary me-2"></i> Appointment Details
+                            </h5>
+                        </div>
 
-                        <!-- Date Selection -->
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Preferred Date *</label>
+                        <!-- Professional Date Selection -->
+                        <div class="mb-4">
+                            <label class="form-label fw-medium mb-2">
+                                <i class="fas fa-calendar text-primary me-1"></i> Preferred Date *
+                            </label>
                             <input 
                                 type="date" 
-                                class="form-control" 
+                                class="form-control form-control-lg form-control-professional" 
                                 name="date"
                                 x-model="selectedDate"
                                 :min="minDate"
                                 @change="loadTimeSlots()"
                                 required
                             >
-                            <small class="form-text text-muted">Please select a date at least 1 day in advance</small>
+                            <small class="form-text text-muted d-flex align-items-center mt-2">
+                                <i class="fas fa-info-circle me-1"></i> Please select a date at least 1 day in advance
+                            </small>
                         </div>
 
-                        <!-- Time Selection with HTMX -->
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Preferred Time *</label>
+                        <!-- Professional Time Selection with HTMX -->
+                        <div class="mb-4">
+                            <label class="form-label fw-medium mb-2">
+                                <i class="fas fa-clock text-primary me-1"></i> Preferred Time *
+                            </label>
                             <div id="time-slots-container">
                                 <select 
-                                    class="form-select" 
+                                    class="form-select form-select-lg form-control-professional" 
                                     name="time" 
                                     required 
                                     disabled
@@ -133,79 +170,119 @@
                                 </select>
                             </div>
                             <div id="time-loading" class="htmx-indicator">
-                                <small class="text-muted">
-                                    <i class="fas fa-spinner fa-spin"></i> Loading available time slots...
-                                </small>
+                                <div class="d-flex align-items-center text-muted small mt-2">
+                                    <div class="spinner-professional me-2" style="width: 16px; height: 16px; border-width: 2px;"></div>
+                                    <span>Loading available time slots...</span>
+                                </div>
                             </div>
                         </div>
 
-                        <!-- Notes -->
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Additional Notes (Optional)</label>
+                        <!-- Professional Notes -->
+                        <div class="mb-4">
+                            <label class="form-label fw-medium mb-2">
+                                <i class="fas fa-sticky-note text-primary me-1"></i> Additional Notes (Optional)
+                            </label>
                             <textarea 
-                                class="form-control" 
+                                class="form-control form-control-professional" 
                                 name="notes" 
-                                rows="3"
+                                rows="4"
                                 x-model="notes"
                                 placeholder="Any special requests or information we should know?"
                             ></textarea>
+                            <small class="form-text text-muted d-flex align-items-center mt-2">
+                                <i class="fas fa-lightbulb me-1"></i> Let us know about any allergies, medications, or special needs
+                            </small>
                         </div>
 
-                        <!-- Loading Spinner -->
-                        <div id="loading-spinner" class="htmx-indicator text-center my-3">
-                            <div class="spinner-border text-primary" role="status">
-                                <span class="visually-hidden">Loading...</span>
+                        <!-- Professional Loading Spinner -->
+                        <div id="loading-spinner" class="htmx-indicator">
+                            <div class="loading-overlay">
+                                <div class="text-center py-5">
+                                    <div class="spinner-professional mb-3"></div>
+                                    <p class="text-muted fw-medium">Processing your booking...</p>
+                                    <small class="text-muted">Please wait while we confirm availability</small>
+                                </div>
                             </div>
-                            <p class="mt-2 text-muted">Processing your booking...</p>
                         </div>
 
-                        <!-- Submit Button -->
-                        <div class="d-grid gap-2 mt-4">
+                        <!-- Professional Submit Button -->
+                        <div class="d-grid gap-3 mt-5 pt-4 border-top">
                             <button 
                                 type="submit" 
-                                class="btn btn-primary btn-lg"
+                                class="btn btn-primary btn-lg px-5 py-3 hover-scale shadow-sm"
                                 :disabled="!isFormValid"
+                                :class="{'opacity-50': !isFormValid}"
                             >
-                                <i class="fas fa-check-circle"></i> Book Appointment
+                                <i class="fas fa-check-circle me-2"></i> Confirm Appointment
                             </button>
-                            <a href="/admin/" class="btn btn-outline-secondary">
-                                <i class="fas fa-arrow-left"></i> Back to Home
+                            <a href="/admin/" class="btn btn-outline-secondary btn-lg hover-scale">
+                                <i class="fas fa-arrow-left me-2"></i> Back to Home
                             </a>
                         </div>
                     </form>
                     {% else %}
-                    <!-- Guest User Restriction Message -->
-                    <div class="alert alert-warning d-flex align-items-center" role="alert">
-                        <i class="fas fa-exclamation-triangle fa-2x me-3"></i>
-                        <div>
-                            <h5 class="alert-heading mb-2">Account Required</h5>
-                            <p class="mb-2">
-                                You must have an account to book online. Please visit the clinic in person to create an account.
-                            </p>
-                            <hr>
-                            <p class="mb-0">
-                                <strong>Clinic Address:</strong> 140 Juan Luna St., Koronadal City, South Cotabato 9506, Philippines<br>
-                                <strong>Contact:</strong> +63 976 152 | analizaromualdez@gmail.com<br>
-                                <strong>Hours:</strong> Monday to Saturday, 9:00 AM - 5:00 PM
-                            </p>
+                    <!-- Professional Guest User Restriction Message -->
+                    <div class="alert alert-professional alert-warning border-0 shadow-sm" role="alert">
+                        <div class="d-flex align-items-start">
+                            <div class="flex-shrink-0">
+                                <div class="d-inline-flex align-items-center justify-content-center bg-warning bg-opacity-10 rounded-circle" style="width: 60px; height: 60px;">
+                                    <i class="fas fa-exclamation-triangle fa-2x text-warning"></i>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h5 class="alert-heading fw-bold mb-3">
+                                    <i class="fas fa-lock me-2"></i>Account Required
+                                </h5>
+                                <p class="mb-3 lh-base">
+                                    You must have an account to book online. Please visit the clinic in person to create an account, or contact us for assistance.
+                                </p>
+                                <hr class="my-3">
+                                <div class="row g-3 small">
+                                    <div class="col-md-12">
+                                        <p class="mb-2"><i class="fas fa-map-marker-alt text-warning me-2"></i><strong>Clinic Address:</strong></p>
+                                        <p class="mb-3 ms-4">140 Juan Luna St., Koronadal City<br>South Cotabato 9506, Philippines</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p class="mb-0"><i class="fas fa-phone text-warning me-2"></i><strong>Contact:</strong></p>
+                                        <p class="mb-0 ms-4">+63 976 152 1752</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p class="mb-0"><i class="fas fa-clock text-warning me-2"></i><strong>Hours:</strong></p>
+                                        <p class="mb-0 ms-4">Monday - Saturday<br>9:00 AM - 5:00 PM</p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="d-grid gap-2 mt-3">
-                        <a href="/admin/contact/" class="btn btn-primary">
-                            <i class="fas fa-phone"></i> Contact Us
+                    <div class="d-grid gap-3 mt-4">
+                        <a href="/admin/contact/" class="btn btn-warning btn-lg hover-scale shadow-sm">
+                            <i class="fas fa-phone me-2"></i> Contact Us
                         </a>
-                        <a href="/admin/login/" class="btn btn-outline-secondary">
-                            <i class="fas fa-sign-in-alt"></i> Already have an account? Login
+                        <a href="/admin/login/" class="btn btn-outline-primary btn-lg hover-scale">
+                            <i class="fas fa-sign-in-alt me-2"></i> Already have an account? Login
                         </a>
                     </div>
                     {% endif %}
                 </div>
             </div>
 
-            <!-- Info Alert -->
-            <div class="alert alert-info mt-4" role="alert">
-                <i class="fas fa-info-circle"></i> <strong>Clinic Hours:</strong> Monday to Saturday, 9:00 AM - 5:00 PM. 
-                We'll confirm your appointment within 24 hours.
+            <!-- Professional Info Alert -->
+            <div class="card border-0 shadow-sm mt-4" data-aos="fade-up" data-aos-delay="200">
+                <div class="card-body bg-light">
+                    <div class="d-flex align-items-start">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-info-circle fa-2x text-info"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="fw-bold mb-2">Important Information</h6>
+                            <ul class="mb-0 ps-3">
+                                <li class="mb-1"><strong>Clinic Hours:</strong> Monday to Saturday, 9:00 AM - 5:00 PM</li>
+                                <li class="mb-1"><strong>Confirmation:</strong> We'll confirm your appointment within 24 hours</li>
+                                <li class="mb-0"><strong>Cancellation:</strong> Please notify us at least 24 hours in advance</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -301,12 +378,17 @@ function bookingForm() {
         },
         
         loadTimeSlots() {
+            const selectElement = document.querySelector('#time-slots-container select');
+            if (!selectElement) return;
+            
             if (this.selectedService && this.selectedDate) {
                 // Trigger HTMX to load time slots on the select element
-                const selectElement = document.querySelector('#time-slots-container select');
-                if (selectElement) {
-                    htmx.trigger(selectElement, 'loadTimeSlots');
-                }
+                htmx.trigger(selectElement, 'loadTimeSlots');
+            } else {
+                // Reset and disable time select if date or service is cleared
+                selectElement.disabled = true;
+                selectElement.innerHTML = '<option value="">Select service and date first...</option>';
+                selectElement.value = '';
             }
         }
     }

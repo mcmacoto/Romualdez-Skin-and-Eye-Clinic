@@ -46,7 +46,26 @@ def htmx_inventory_list(request):
     if filter_category:
         inventory_items = inventory_items.filter(category=filter_category)
     
-    inventory_items = inventory_items.order_by('name')
+    # Handle column sorting
+    sort_by = request.GET.get('sort', '').strip()
+    sort_order = request.GET.get('order', 'asc').strip()
+    
+    # Define valid sort fields
+    sort_fields = {
+        'name': 'name',
+        'category': 'category',
+        'quantity': 'quantity',
+        'price': 'price',
+        'status': 'status',
+    }
+    
+    if sort_by in sort_fields:
+        field = sort_fields[sort_by]
+        if sort_order == 'desc':
+            field = f'-{field}'
+        inventory_items = inventory_items.order_by(field)
+    else:
+        inventory_items = inventory_items.order_by('name')
     
     # Calculate summary stats
     in_stock_count = Inventory.objects.filter(status='In Stock').count()
@@ -60,6 +79,8 @@ def htmx_inventory_list(request):
         'out_of_stock_count': out_of_stock_count,
         'filter_status': filter_status,
         'filter_category': filter_category,
+        'sort_by': sort_by,
+        'sort_order': sort_order,
         'today': date.today(),
         'thirty_days_from_now': date.today() + timedelta(days=30)
     })
@@ -916,7 +937,7 @@ def htmx_pos_sales_list(request):
     date_to = request.GET.get('date_to', '')
     
     # Base queryset - exclude pending sales
-    sales = POSSale.objects.exclude(status='Pending').select_related('patient__user', 'created_by').order_by('-sale_date')
+    sales = POSSale.objects.exclude(status='Pending').select_related('patient__user', 'created_by')
     
     # Apply filters
     if status:
@@ -938,6 +959,28 @@ def htmx_pos_sales_list(request):
             sales = sales.filter(sale_date__date__lte=date_to_obj)
         except ValueError:
             pass
+    
+    # Handle column sorting
+    sort_by = request.GET.get('sort', '').strip()
+    sort_order = request.GET.get('order', 'asc').strip()
+    
+    # Define valid sort fields
+    sort_fields = {
+        'receipt': 'receipt_number',
+        'customer': 'customer_name',
+        'date': 'sale_date',
+        'payment': 'payment_method',
+        'amount': 'total_amount',
+        'status': 'status',
+    }
+    
+    if sort_by in sort_fields:
+        field = sort_fields[sort_by]
+        if sort_order == 'desc':
+            field = f'-{field}'
+        sales = sales.order_by(field)
+    else:
+        sales = sales.order_by('-sale_date')
     
     # Calculate summary stats
     today = date.today()
@@ -961,6 +1004,8 @@ def htmx_pos_sales_list(request):
         'filter_payment': payment_method,
         'filter_date_from': date_from,
         'filter_date_to': date_to,
+        'sort_by': sort_by,
+        'sort_order': sort_order,
     }
     
     # If HTMX targeting just table body

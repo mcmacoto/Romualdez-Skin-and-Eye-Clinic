@@ -88,6 +88,7 @@ from .patient_views import (
     htmx_patient_create,
     htmx_patient_edit_form,
     htmx_patient_update,
+    upload_profile_picture,
 )
 
 # Import from inventory_views

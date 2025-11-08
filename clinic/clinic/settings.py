@@ -11,10 +11,14 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
-from decouple import config, Csv
+from decouple import config, Csv, AutoConfig
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Configure decouple to look for .env in project root
+config = AutoConfig(search_path=BASE_DIR.parent)
 
 
 # Quick-start development settings - unsuitable for production
@@ -84,14 +88,21 @@ WSGI_APPLICATION = 'clinic.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': config('DB_ENGINE', default='django.db.backends.sqlite3'),
-        'NAME': config('DB_NAME', default=str(BASE_DIR / 'db.sqlite3')),
-        'USER': config('DB_USER', default=''),
-        'PASSWORD': config('DB_PASSWORD', default=''),
-        'HOST': config('DB_HOST', default=''),
-        'PORT': config('DB_PORT', default=''),
-        'ATOMIC_REQUESTS': True,  # Wrap each request in a transaction
-        'CONN_MAX_AGE': config('DB_CONN_MAX_AGE', default=0, cast=int),  # Connection pooling
+        'ENGINE': config('DB_ENGINE', default='django.db.backends.postgresql'),
+        'NAME': config('DB_NAME', default='clinic_db'),
+        'USER': config('DB_USER', default='clinic_user'),
+        'PASSWORD': config('DB_PASSWORD', default='clinic_password'),
+        'HOST': config('DB_HOST', default='localhost'),
+        'PORT': config('DB_PORT', default='5432'),
+        'ATOMIC_REQUESTS': True,  # Enable atomic requests for data integrity
+        'CONN_MAX_AGE': config('DB_CONN_MAX_AGE', default=600, cast=int),  # Connection pooling (10 minutes)
+        'OPTIONS': {
+            'connect_timeout': 10,
+            'options': '-c statement_timeout=30000',  # 30 second query timeout
+        } if config('DB_ENGINE', default='django.db.backends.postgresql') == 'django.db.backends.postgresql' else {
+            'timeout': 30,
+            'check_same_thread': False,
+        },
     }
 }
 

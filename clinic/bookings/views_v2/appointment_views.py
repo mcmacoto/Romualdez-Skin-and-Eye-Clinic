@@ -80,7 +80,26 @@ def htmx_appointments_list(request):
     elif filter_status == 'today':
         appointments = appointments.filter(date=date.today())
     
-    appointments = appointments.order_by('-date', '-time')
+    # Handle column sorting
+    sort_by = request.GET.get('sort', '').strip()
+    sort_order = request.GET.get('order', 'asc').strip()
+    
+    # Define valid sort fields
+    sort_fields = {
+        'patient': 'patient_name',
+        'date': 'date',
+        'time': 'time',
+        'service': 'service__name',
+        'status': 'status',
+    }
+    
+    if sort_by in sort_fields:
+        field = sort_fields[sort_by]
+        if sort_order == 'desc':
+            field = f'-{field}'
+        appointments = appointments.order_by(field)
+    else:
+        appointments = appointments.order_by('-date', '-time')
     
     # Add pagination (25 items per page)
     paginator = Paginator(appointments, 25)
@@ -91,6 +110,8 @@ def htmx_appointments_list(request):
         'appointments': page_obj,
         'paginator': paginator,
         'page_obj': page_obj,
+        'sort_by': sort_by,
+        'sort_order': sort_order,
     })
 
 
@@ -134,7 +155,7 @@ def htmx_update_consultation_status(request, booking_id):
         new_status = request.POST.get('consultation_status')
         
         # Validate status
-        valid_statuses = ['Not Yet', 'Ongoing', 'Done']
+        valid_statuses = ['Not Yet', 'Ongoing', 'Done', 'No-Show']
         if new_status not in valid_statuses:
             logger.warning(f"Invalid consultation status '{new_status}' attempted for booking #{booking_id}")
             return htmx_error("Invalid status", status=400)
@@ -144,6 +165,9 @@ def htmx_update_consultation_status(request, booking_id):
         # If marking as done, also mark booking as completed
         if new_status == 'Done':
             booking.status = 'Completed'
+        # If marking as no-show, mark booking as cancelled
+        elif new_status == 'No-Show':
+            booking.status = 'Cancelled'
         
         booking.save()
         

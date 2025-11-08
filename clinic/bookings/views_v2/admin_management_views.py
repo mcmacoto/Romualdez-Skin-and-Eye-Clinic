@@ -99,9 +99,16 @@ def htmx_user_edit(request, user_id):
         # Get user's group names
         user_groups = edit_user.groups.values_list('name', flat=True)
         
+        # Try to get patient profile if it exists
+        try:
+            patient_profile = edit_user.patient_profile
+        except:
+            patient_profile = None
+        
         return render(request, 'bookings_v2/htmx_partials/user_form.html', {
             'edit_user': edit_user,
-            'user_groups': list(user_groups)
+            'user_groups': list(user_groups),
+            'patient_profile': patient_profile
         })
     except User.DoesNotExist:
         return HttpResponse('<div class="alert alert-danger">User not found</div>', status=404)

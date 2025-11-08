@@ -43,7 +43,28 @@ def htmx_all_billings(request):
             Q(booking__service__name__icontains=search_query)
         )
     
-    billings = billings.order_by('-issued_date')
+    # Handle column sorting
+    sort_by = request.GET.get('sort', '').strip()
+    sort_order = request.GET.get('order', 'asc').strip()
+    
+    # Define valid sort fields
+    sort_fields = {
+        'patient': 'booking__patient_name',
+        'service': 'booking__service__name',
+        'date': 'issued_date',
+        'amount': 'total_amount',
+        'paid': 'amount_paid',
+        'balance': 'balance',
+        'status': 'is_paid',
+    }
+    
+    if sort_by in sort_fields:
+        field = sort_fields[sort_by]
+        if sort_order == 'desc':
+            field = f'-{field}'
+        billings = billings.order_by(field)
+    else:
+        billings = billings.order_by('-issued_date')
     
     # Calculate summary statistics
     total_count = billings.count()
@@ -64,6 +85,8 @@ def htmx_all_billings(request):
         'total_revenue': total_revenue,
         'amount_collected': amount_collected,
         'outstanding_balance': outstanding_balance,
+        'sort_by': sort_by,
+        'sort_order': sort_order,
     })
 
 
@@ -243,12 +266,30 @@ def htmx_payment_create(request):
             recorded_by=request.user
         )
         
-        messages.success(request, f'Payment of PHP{payment.amount_paid} recorded successfully')
+        messages.success(request, f'Payment of ₱{payment.amount_paid} recorded successfully')
         
-        # Return updated billings list with triggers for both stats and financials
-        billings = Billing.objects.select_related('booking').order_by('-issued_date')[:50]
-        response = render(request, 'bookings_v2/partials/billings_list.html', {
-            'billings': billings
+        # Return complete billings list with statistics (same as htmx_all_billings)
+        billings = Billing.objects.select_related('booking__service').order_by('-issued_date')
+        
+        # Calculate summary statistics
+        total_count = billings.count()
+        paid_count = billings.filter(is_paid=True).count()
+        unpaid_count = billings.filter(is_paid=False, amount_paid=0).count()
+        partial_count = billings.filter(is_paid=False, amount_paid__gt=0).count()
+        
+        total_revenue = sum(b.total_amount for b in billings)
+        amount_collected = sum(b.amount_paid for b in billings)
+        outstanding_balance = sum(b.balance for b in billings)
+        
+        response = render(request, 'bookings_v2/partials/all_billings_list.html', {
+            'billings': billings,
+            'total_count': total_count,
+            'paid_count': paid_count,
+            'unpaid_count': unpaid_count,
+            'partial_count': partial_count,
+            'total_revenue': total_revenue,
+            'amount_collected': amount_collected,
+            'outstanding_balance': outstanding_balance,
         })
         response['HX-Trigger'] = '{"refreshStats": {}, "refreshFinancials": {}}'
         return response
@@ -256,4 +297,6 @@ def htmx_payment_create(request):
     except Billing.DoesNotExist:
         return HttpResponse('<div class="alert alert-danger">Billing record not found</div>', status=404)
     except Exception as e:
-        return HttpResponse(f'<div class="alert alert-danger">Error: {str(e)}</div>', status=400)
+        import traceback
+        error_msg = f'<div class="alert alert-danger">Error recording payment: {str(e)}<br><pre>{traceback.format_exc()}</pre></div>'
+        return HttpResponse(error_msg, status=400)
