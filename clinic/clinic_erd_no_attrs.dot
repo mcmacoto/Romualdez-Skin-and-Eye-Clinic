@@ -1,0 +1,410 @@
+digraph model_graph {
+  // Dotfile by Django-Extensions graph_models
+  // Created: 2025-11-10 02:14
+  // Cli Options: bookings -o clinic_erd_no_attrs.dot --disable-fields
+
+  fontname = "Roboto"
+  fontsize = 8
+  splines  = true
+  rankdir = "TB"
+  
+
+  node [
+    fontname = "Roboto"
+    fontsize = 8
+    shape = "plaintext"
+  ]
+
+  edge [
+    fontname = "Roboto"
+    fontsize = 8
+  ]
+
+  // Labels
+
+
+  bookings_models_base_Service [label=<
+    <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0">
+    <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#1b563f">
+    <FONT FACE="Roboto" COLOR="white" POINT-SIZE="10"><B>
+    Service
+    </B></FONT></TD></TR>
+  
+    </TABLE>
+    >]
+
+  bookings_models_settings_ClinicSettings [label=<
+    <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0">
+    <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#1b563f">
+    <FONT FACE="Roboto" COLOR="white" POINT-SIZE="10"><B>
+    ClinicSettings
+    </B></FONT></TD></TR>
+  
+    </TABLE>
+    >]
+
+  bookings_models_doctors_Doctor [label=<
+    <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0">
+    <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#1b563f">
+    <FONT FACE="Roboto" COLOR="white" POINT-SIZE="10"><B>
+    Doctor
+    </B></FONT></TD></TR>
+  
+    </TABLE>
+    >]
+
+  bookings_models_blocked_dates_BlockedDate [label=<
+    <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0">
+    <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#1b563f">
+    <FONT FACE="Roboto" COLOR="white" POINT-SIZE="10"><B>
+    BlockedDate
+    </B></FONT></TD></TR>
+  
+    </TABLE>
+    >]
+
+  bookings_models_calendar_Calendar [label=<
+    <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0">
+    <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#1b563f">
+    <FONT FACE="Roboto" COLOR="white" POINT-SIZE="10"><B>
+    Calendar
+    </B></FONT></TD></TR>
+  
+    </TABLE>
+    >]
+
+  bookings_models_appointments_Appointment [label=<
+    <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0">
+    <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#1b563f">
+    <FONT FACE="Roboto" COLOR="white" POINT-SIZE="10"><B>
+    Appointment
+    </B></FONT></TD></TR>
+  
+    </TABLE>
+    >]
+
+  bookings_models_appointments_Booking [label=<
+    <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0">
+    <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#1b563f">
+    <FONT FACE="Roboto" COLOR="white" POINT-SIZE="10"><B>
+    Booking
+    </B></FONT></TD></TR>
+  
+    </TABLE>
+    >]
+
+  bookings_models_patients_Patient [label=<
+    <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0">
+    <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#1b563f">
+    <FONT FACE="Roboto" COLOR="white" POINT-SIZE="10"><B>
+    Patient
+    </B></FONT></TD></TR>
+  
+    </TABLE>
+    >]
+
+  bookings_models_patients_MedicalRecord [label=<
+    <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0">
+    <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#1b563f">
+    <FONT FACE="Roboto" COLOR="white" POINT-SIZE="10"><B>
+    MedicalRecord
+    </B></FONT></TD></TR>
+  
+    </TABLE>
+    >]
+
+  bookings_models_patients_MedicalImage [label=<
+    <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0">
+    <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#1b563f">
+    <FONT FACE="Roboto" COLOR="white" POINT-SIZE="10"><B>
+    MedicalImage
+    </B></FONT></TD></TR>
+  
+    </TABLE>
+    >]
+
+  bookings_models_billing_Billing [label=<
+    <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0">
+    <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#1b563f">
+    <FONT FACE="Roboto" COLOR="white" POINT-SIZE="10"><B>
+    Billing
+    </B></FONT></TD></TR>
+  
+    </TABLE>
+    >]
+
+  bookings_models_billing_Payment [label=<
+    <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0">
+    <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#1b563f">
+    <FONT FACE="Roboto" COLOR="white" POINT-SIZE="10"><B>
+    Payment
+    </B></FONT></TD></TR>
+  
+    </TABLE>
+    >]
+
+  bookings_models_inventory_Inventory [label=<
+    <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0">
+    <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#1b563f">
+    <FONT FACE="Roboto" COLOR="white" POINT-SIZE="10"><B>
+    Inventory
+    </B></FONT></TD></TR>
+  
+    </TABLE>
+    >]
+
+  bookings_models_inventory_StockTransaction [label=<
+    <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0">
+    <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#1b563f">
+    <FONT FACE="Roboto" COLOR="white" POINT-SIZE="10"><B>
+    StockTransaction
+    </B></FONT></TD></TR>
+  
+    </TABLE>
+    >]
+
+  bookings_models_activity_log_ActivityLog [label=<
+    <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0">
+    <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#1b563f">
+    <FONT FACE="Roboto" COLOR="white" POINT-SIZE="10"><B>
+    ActivityLog
+    </B></FONT></TD></TR>
+  
+    </TABLE>
+    >]
+
+  bookings_models_prescriptions_Prescription [label=<
+    <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0">
+    <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#1b563f">
+    <FONT FACE="Roboto" COLOR="white" POINT-SIZE="10"><B>
+    Prescription
+    </B></FONT></TD></TR>
+  
+    </TABLE>
+    >]
+
+  bookings_models_pos_POSSale [label=<
+    <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0">
+    <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#1b563f">
+    <FONT FACE="Roboto" COLOR="white" POINT-SIZE="10"><B>
+    POSSale
+    </B></FONT></TD></TR>
+  
+    </TABLE>
+    >]
+
+  bookings_models_pos_POSSaleItem [label=<
+    <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0">
+    <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#1b563f">
+    <FONT FACE="Roboto" COLOR="white" POINT-SIZE="10"><B>
+    POSSaleItem
+    </B></FONT></TD></TR>
+  
+    </TABLE>
+    >]
+
+
+
+
+  // Relations
+  django_contrib_auth_models_User [label=<
+  <TABLE BGCOLOR="white" BORDER="0" CELLBORDER="0" CELLSPACING="0">
+  <TR><TD COLSPAN="2" CELLPADDING="4" ALIGN="CENTER" BGCOLOR="#1b563f">
+  <FONT FACE="Roboto" POINT-SIZE="12" COLOR="white">User</FONT>
+  </TD></TR>
+  </TABLE>
+  >]
+  bookings_models_doctors_Doctor -> django_contrib_auth_models_User
+  [label=" created_by (created_doctors)"] [arrowhead=none, arrowtail=dot, dir=both];
+  django_contrib_auth_models_User [label=<
+  <TABLE BGCOLOR="white" BORDER="0" CELLBORDER="0" CELLSPACING="0">
+  <TR><TD COLSPAN="2" CELLPADDING="4" ALIGN="CENTER" BGCOLOR="#1b563f">
+  <FONT FACE="Roboto" POINT-SIZE="12" COLOR="white">User</FONT>
+  </TD></TR>
+  </TABLE>
+  >]
+  bookings_models_blocked_dates_BlockedDate -> django_contrib_auth_models_User
+  [label=" created_by (blocked_dates)"] [arrowhead=none, arrowtail=dot, dir=both];
+  django_contrib_auth_models_User [label=<
+  <TABLE BGCOLOR="white" BORDER="0" CELLBORDER="0" CELLSPACING="0">
+  <TR><TD COLSPAN="2" CELLPADDING="4" ALIGN="CENTER" BGCOLOR="#1b563f">
+  <FONT FACE="Roboto" POINT-SIZE="12" COLOR="white">User</FONT>
+  </TD></TR>
+  </TABLE>
+  >]
+  bookings_models_calendar_Calendar -> django_contrib_auth_models_User
+  [label=" created_by (calendar_events)"] [arrowhead=none, arrowtail=dot, dir=both];
+
+  bookings_models_appointments_Booking -> bookings_models_base_Service
+  [label=" service (bookings)"] [arrowhead=none, arrowtail=dot, dir=both];
+
+  bookings_models_appointments_Booking -> bookings_models_doctors_Doctor
+  [label=" doctor (bookings)"] [arrowhead=none, arrowtail=dot, dir=both];
+  django_contrib_auth_models_User [label=<
+  <TABLE BGCOLOR="white" BORDER="0" CELLBORDER="0" CELLSPACING="0">
+  <TR><TD COLSPAN="2" CELLPADDING="4" ALIGN="CENTER" BGCOLOR="#1b563f">
+  <FONT FACE="Roboto" POINT-SIZE="12" COLOR="white">User</FONT>
+  </TD></TR>
+  </TABLE>
+  >]
+  bookings_models_appointments_Booking -> django_contrib_auth_models_User
+  [label=" created_by (created_bookings)"] [arrowhead=none, arrowtail=dot, dir=both];
+  django_contrib_auth_models_User [label=<
+  <TABLE BGCOLOR="white" BORDER="0" CELLBORDER="0" CELLSPACING="0">
+  <TR><TD COLSPAN="2" CELLPADDING="4" ALIGN="CENTER" BGCOLOR="#1b563f">
+  <FONT FACE="Roboto" POINT-SIZE="12" COLOR="white">User</FONT>
+  </TD></TR>
+  </TABLE>
+  >]
+  bookings_models_appointments_Booking -> django_contrib_auth_models_User
+  [label=" cancelled_by (cancelled_bookings)"] [arrowhead=none, arrowtail=dot, dir=both];
+  django_contrib_auth_models_User [label=<
+  <TABLE BGCOLOR="white" BORDER="0" CELLBORDER="0" CELLSPACING="0">
+  <TR><TD COLSPAN="2" CELLPADDING="4" ALIGN="CENTER" BGCOLOR="#1b563f">
+  <FONT FACE="Roboto" POINT-SIZE="12" COLOR="white">User</FONT>
+  </TD></TR>
+  </TABLE>
+  >]
+  bookings_models_patients_Patient -> django_contrib_auth_models_User
+  [label=" user (patient_profile)"] [arrowhead=none, arrowtail=none, dir=both];
+  django_contrib_auth_models_User [label=<
+  <TABLE BGCOLOR="white" BORDER="0" CELLBORDER="0" CELLSPACING="0">
+  <TR><TD COLSPAN="2" CELLPADDING="4" ALIGN="CENTER" BGCOLOR="#1b563f">
+  <FONT FACE="Roboto" POINT-SIZE="12" COLOR="white">User</FONT>
+  </TD></TR>
+  </TABLE>
+  >]
+  bookings_models_patients_Patient -> django_contrib_auth_models_User
+  [label=" created_by (created_patients)"] [arrowhead=none, arrowtail=dot, dir=both];
+
+  bookings_models_patients_MedicalRecord -> bookings_models_patients_Patient
+  [label=" patient (medical_records)"] [arrowhead=none, arrowtail=dot, dir=both];
+  django_contrib_auth_models_User [label=<
+  <TABLE BGCOLOR="white" BORDER="0" CELLBORDER="0" CELLSPACING="0">
+  <TR><TD COLSPAN="2" CELLPADDING="4" ALIGN="CENTER" BGCOLOR="#1b563f">
+  <FONT FACE="Roboto" POINT-SIZE="12" COLOR="white">User</FONT>
+  </TD></TR>
+  </TABLE>
+  >]
+  bookings_models_patients_MedicalRecord -> django_contrib_auth_models_User
+  [label=" created_by (created_records)"] [arrowhead=none, arrowtail=dot, dir=both];
+
+  bookings_models_patients_MedicalImage -> bookings_models_patients_MedicalRecord
+  [label=" medical_record (images)"] [arrowhead=none, arrowtail=dot, dir=both];
+  django_contrib_auth_models_User [label=<
+  <TABLE BGCOLOR="white" BORDER="0" CELLBORDER="0" CELLSPACING="0">
+  <TR><TD COLSPAN="2" CELLPADDING="4" ALIGN="CENTER" BGCOLOR="#1b563f">
+  <FONT FACE="Roboto" POINT-SIZE="12" COLOR="white">User</FONT>
+  </TD></TR>
+  </TABLE>
+  >]
+  bookings_models_patients_MedicalImage -> django_contrib_auth_models_User
+  [label=" uploaded_by (uploaded_images)"] [arrowhead=none, arrowtail=dot, dir=both];
+
+  bookings_models_billing_Billing -> bookings_models_appointments_Booking
+  [label=" booking (billing)"] [arrowhead=none, arrowtail=none, dir=both];
+  django_contrib_auth_models_User [label=<
+  <TABLE BGCOLOR="white" BORDER="0" CELLBORDER="0" CELLSPACING="0">
+  <TR><TD COLSPAN="2" CELLPADDING="4" ALIGN="CENTER" BGCOLOR="#1b563f">
+  <FONT FACE="Roboto" POINT-SIZE="12" COLOR="white">User</FONT>
+  </TD></TR>
+  </TABLE>
+  >]
+  bookings_models_billing_Billing -> django_contrib_auth_models_User
+  [label=" updated_by (billing_updates)"] [arrowhead=none, arrowtail=dot, dir=both];
+
+  bookings_models_billing_Payment -> bookings_models_billing_Billing
+  [label=" billing (payments)"] [arrowhead=none, arrowtail=dot, dir=both];
+  django_contrib_auth_models_User [label=<
+  <TABLE BGCOLOR="white" BORDER="0" CELLBORDER="0" CELLSPACING="0">
+  <TR><TD COLSPAN="2" CELLPADDING="4" ALIGN="CENTER" BGCOLOR="#1b563f">
+  <FONT FACE="Roboto" POINT-SIZE="12" COLOR="white">User</FONT>
+  </TD></TR>
+  </TABLE>
+  >]
+  bookings_models_billing_Payment -> django_contrib_auth_models_User
+  [label=" recorded_by (recorded_payments)"] [arrowhead=none, arrowtail=dot, dir=both];
+  django_contrib_auth_models_User [label=<
+  <TABLE BGCOLOR="white" BORDER="0" CELLBORDER="0" CELLSPACING="0">
+  <TR><TD COLSPAN="2" CELLPADDING="4" ALIGN="CENTER" BGCOLOR="#1b563f">
+  <FONT FACE="Roboto" POINT-SIZE="12" COLOR="white">User</FONT>
+  </TD></TR>
+  </TABLE>
+  >]
+  bookings_models_billing_Payment -> django_contrib_auth_models_User
+  [label=" verified_by (verified_payments)"] [arrowhead=none, arrowtail=dot, dir=both];
+
+  bookings_models_inventory_StockTransaction -> bookings_models_inventory_Inventory
+  [label=" inventory_item (transactions)"] [arrowhead=none, arrowtail=dot, dir=both];
+  django_contrib_auth_models_User [label=<
+  <TABLE BGCOLOR="white" BORDER="0" CELLBORDER="0" CELLSPACING="0">
+  <TR><TD COLSPAN="2" CELLPADDING="4" ALIGN="CENTER" BGCOLOR="#1b563f">
+  <FONT FACE="Roboto" POINT-SIZE="12" COLOR="white">User</FONT>
+  </TD></TR>
+  </TABLE>
+  >]
+  bookings_models_inventory_StockTransaction -> django_contrib_auth_models_User
+  [label=" performed_by (stock_transactions)"] [arrowhead=none, arrowtail=dot, dir=both];
+  django_contrib_auth_models_User [label=<
+  <TABLE BGCOLOR="white" BORDER="0" CELLBORDER="0" CELLSPACING="0">
+  <TR><TD COLSPAN="2" CELLPADDING="4" ALIGN="CENTER" BGCOLOR="#1b563f">
+  <FONT FACE="Roboto" POINT-SIZE="12" COLOR="white">User</FONT>
+  </TD></TR>
+  </TABLE>
+  >]
+  bookings_models_inventory_StockTransaction -> django_contrib_auth_models_User
+  [label=" approved_by (approved_stock_transactions)"] [arrowhead=none, arrowtail=dot, dir=both];
+  django_contrib_auth_models_User [label=<
+  <TABLE BGCOLOR="white" BORDER="0" CELLBORDER="0" CELLSPACING="0">
+  <TR><TD COLSPAN="2" CELLPADDING="4" ALIGN="CENTER" BGCOLOR="#1b563f">
+  <FONT FACE="Roboto" POINT-SIZE="12" COLOR="white">User</FONT>
+  </TD></TR>
+  </TABLE>
+  >]
+  bookings_models_activity_log_ActivityLog -> django_contrib_auth_models_User
+  [label=" user (activity_logs)"] [arrowhead=none, arrowtail=dot, dir=both];
+
+  bookings_models_prescriptions_Prescription -> bookings_models_patients_MedicalRecord
+  [label=" medical_record (prescriptions)"] [arrowhead=none, arrowtail=dot, dir=both];
+
+  bookings_models_prescriptions_Prescription -> bookings_models_inventory_Inventory
+  [label=" medicine (prescription)"] [arrowhead=none, arrowtail=dot, dir=both];
+  django_contrib_auth_models_User [label=<
+  <TABLE BGCOLOR="white" BORDER="0" CELLBORDER="0" CELLSPACING="0">
+  <TR><TD COLSPAN="2" CELLPADDING="4" ALIGN="CENTER" BGCOLOR="#1b563f">
+  <FONT FACE="Roboto" POINT-SIZE="12" COLOR="white">User</FONT>
+  </TD></TR>
+  </TABLE>
+  >]
+  bookings_models_prescriptions_Prescription -> django_contrib_auth_models_User
+  [label=" prescribed_by (prescribed_medications)"] [arrowhead=none, arrowtail=dot, dir=both];
+  django_contrib_auth_models_User [label=<
+  <TABLE BGCOLOR="white" BORDER="0" CELLBORDER="0" CELLSPACING="0">
+  <TR><TD COLSPAN="2" CELLPADDING="4" ALIGN="CENTER" BGCOLOR="#1b563f">
+  <FONT FACE="Roboto" POINT-SIZE="12" COLOR="white">User</FONT>
+  </TD></TR>
+  </TABLE>
+  >]
+  bookings_models_prescriptions_Prescription -> django_contrib_auth_models_User
+  [label=" filled_by (filled_prescriptions)"] [arrowhead=none, arrowtail=dot, dir=both];
+
+  bookings_models_pos_POSSale -> bookings_models_patients_Patient
+  [label=" patient (pos_sales)"] [arrowhead=none, arrowtail=dot, dir=both];
+  django_contrib_auth_models_User [label=<
+  <TABLE BGCOLOR="white" BORDER="0" CELLBORDER="0" CELLSPACING="0">
+  <TR><TD COLSPAN="2" CELLPADDING="4" ALIGN="CENTER" BGCOLOR="#1b563f">
+  <FONT FACE="Roboto" POINT-SIZE="12" COLOR="white">User</FONT>
+  </TD></TR>
+  </TABLE>
+  >]
+  bookings_models_pos_POSSale -> django_contrib_auth_models_User
+  [label=" created_by (pos_sales)"] [arrowhead=none, arrowtail=dot, dir=both];
+
+  bookings_models_pos_POSSaleItem -> bookings_models_pos_POSSale
+  [label=" sale (items)"] [arrowhead=none, arrowtail=dot, dir=both];
+
+  bookings_models_pos_POSSaleItem -> bookings_models_inventory_Inventory
+  [label=" inventory_item (possaleitem)"] [arrowhead=none, arrowtail=dot, dir=both];
+
+
+}

@@ -10,6 +10,7 @@ from django.views.decorators.http import require_http_methods
 from django.db.models import Q, Sum
 from datetime import datetime, date, timedelta
 from decimal import Decimal
+from django.utils import timezone
 
 from ..models import Inventory, StockTransaction, POSSale, POSSaleItem, Patient
 
@@ -983,13 +984,25 @@ def htmx_pos_sales_list(request):
         sales = sales.order_by('-sale_date')
     
     # Calculate summary stats
-    today = date.today()
-    today_sales = POSSale.objects.filter(status='Completed', sale_date__date=today)
+    # Get timezone-aware today start and end times
+    now = timezone.now()
+    today_start = timezone.make_aware(datetime.combine(now.date(), datetime.min.time()))
+    today_end = timezone.make_aware(datetime.combine(now.date(), datetime.max.time()))
+    
+    today_sales = POSSale.objects.filter(
+        status='Completed',
+        sale_date__gte=today_start,
+        sale_date__lte=today_end
+    )
     today_count = today_sales.count()
     today_revenue = today_sales.aggregate(total=Sum('total_amount'))['total'] or 0
     
-    month_start = today.replace(day=1)
-    month_sales = POSSale.objects.filter(status='Completed', sale_date__date__gte=month_start)
+    # Get month start in timezone-aware manner
+    month_start = timezone.make_aware(datetime.combine(now.date().replace(day=1), datetime.min.time()))
+    month_sales = POSSale.objects.filter(
+        status='Completed',
+        sale_date__gte=month_start
+    )
     month_count = month_sales.count()
     month_revenue = month_sales.aggregate(total=Sum('total_amount'))['total'] or 0
     

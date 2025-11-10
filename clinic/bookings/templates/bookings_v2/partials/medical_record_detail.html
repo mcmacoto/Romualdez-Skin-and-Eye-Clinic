@@ -181,7 +181,7 @@
                     <thead>
                         <tr>
                             <th>Medication</th>
-                            <th>Dosage</th>
+                            <th>Frequency/Dosage</th>
                             <th>Quantity</th>
                             <th>Duration</th>
                             <th>Instructions</th>
@@ -195,8 +195,10 @@
                                     {% if prescription.custom_medicine_name %}
                                         {{ prescription.custom_medicine_name }}
                                         <span class="badge bg-warning text-dark ms-1">External</span>
-                                    {% else %}
+                                    {% elif prescription.medicine %}
                                         {{ prescription.medicine.name }}
+                                    {% else %}
+                                        <span class="text-muted">N/A</span>
                                     {% endif %}
                                 </strong>
                             </td>

@@ -16,6 +16,13 @@ class Service(models.Model):
         default=0.00, 
         help_text="Service price in Philippine Pesos (₱)"
     )
+    is_active = models.BooleanField(
+        default=True,
+        help_text="Whether this service is currently offered"
+    )
+    
+    class Meta:
+        ordering = ['-is_active', 'name']
     
     def __str__(self):
         return self.name

@@ -19,6 +19,36 @@
     </div>
 </div>
 
+<!-- Consultation Status Filter Buttons -->
+<div class="mb-3">
+    <div class="btn-group" role="group" aria-label="Consultation Status Filter">
+        <button type="button" 
+                class="btn btn-outline-primary {% if not filter_consultation or filter_consultation == 'all' %}active{% endif %}"
+                hx-get="{% url 'bookings_v2:htmx_appointments_list' %}?consultation=all"
+                hx-target="#appointmentsModalBody"
+                hx-swap="innerHTML"
+                hx-include="[name='search']">
+            <i class="fas fa-list"></i> All
+        </button>
+        <button type="button" 
+                class="btn btn-outline-success {% if filter_consultation == 'done' %}active{% endif %}"
+                hx-get="{% url 'bookings_v2:htmx_appointments_list' %}?consultation=done"
+                hx-target="#appointmentsModalBody"
+                hx-swap="innerHTML"
+                hx-include="[name='search']">
+            <i class="fas fa-check-circle"></i> Already Done
+        </button>
+        <button type="button" 
+                class="btn btn-outline-warning {% if filter_consultation == 'not_done' %}active{% endif %}"
+                hx-get="{% url 'bookings_v2:htmx_appointments_list' %}?consultation=not_done"
+                hx-target="#appointmentsModalBody"
+                hx-swap="innerHTML"
+                hx-include="[name='search']">
+            <i class="fas fa-clock"></i> Not Yet Done
+        </button>
+    </div>
+</div>
+
 {% if appointments %}
 <div class="table-responsive">
     <table class="table table-hover align-middle">
@@ -52,6 +82,7 @@
                     hx-include="[name='search']">
                     <i class="fas fa-list me-2"></i>Service
                 </th>
+                <th><i class="fas fa-user-md me-2"></i>Doctor</th>
                 <th class="sortable {% if sort_by == 'status' %}sort-{{ sort_order }}{% endif %}"
                     hx-get="{% url 'bookings_v2:htmx_appointments_list' %}?sort=status&order={% if sort_by == 'status' and sort_order == 'asc' %}desc{% else %}asc{% endif %}"
                     hx-target="#appointmentsModalBody"
@@ -84,6 +115,24 @@
                     </span>
                 </td>
                 <td>{{ appointment.service.name }}</td>
+                <td>
+                    <select 
+                        class="form-select form-select-sm"
+                        name="doctor"
+                        hx-post="{% url 'bookings_v2:htmx_update_appointment_doctor' appointment.id %}"
+                        hx-target="#appointment-row-{{ appointment.id }}"
+                        hx-swap="outerHTML"
+                        hx-trigger="change"
+                        style="min-width: 150px;"
+                    >
+                        <option value="">Not assigned</option>
+                        {% for doctor in available_doctors %}
+                        <option value="{{ doctor.id }}" {% if appointment.doctor and appointment.doctor.id == doctor.id %}selected{% endif %}>
+                            {{ doctor.get_full_name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </td>
                 <td>
                     {% if appointment.status == 'Confirmed' %}
                         <span class="badge bg-success">

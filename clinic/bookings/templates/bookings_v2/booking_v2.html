@@ -2,6 +2,11 @@
 
 {% block title %}Book Appointment - V2{% endblock %}
 
+{% block extra_css %}
+<!-- Flatpickr CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+{% endblock %}
+
 {% block content %}
 <div class="container py-5">
     <div class="row justify-content-center">
@@ -66,6 +71,42 @@
                             </h5>
                         </div>
                         
+                        {% if existing_patient %}
+                        <!-- Existing Patient Option -->
+                        <div class="mb-4">
+                            <div class="card border-success shadow-sm">
+                                <div class="card-body bg-light">
+                                    <div class="d-flex align-items-start">
+                                        <div class="flex-shrink-0">
+                                            <i class="fas fa-user-check fa-2x text-success"></i>
+                                        </div>
+                                        <div class="flex-grow-1 ms-3">
+                                            <h6 class="fw-bold text-success mb-2">
+                                                <i class="fas fa-info-circle me-1"></i> Existing Patient Profile Found
+                                            </h6>
+                                            <p class="mb-3 small">
+                                                We found your existing patient profile. You can use your saved information or enter different details for someone else.
+                                            </p>
+                                            <div class="form-check form-switch">
+                                                <input 
+                                                    class="form-check-input" 
+                                                    type="checkbox" 
+                                                    id="useExistingProfile"
+                                                    x-model="useExistingProfile"
+                                                    @change="toggleExistingProfile()"
+                                                    checked
+                                                >
+                                                <label class="form-check-label fw-medium" for="useExistingProfile">
+                                                    Use my saved profile: <strong>{{ existing_patient.user.get_full_name }}</strong>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
                         <!-- Professional Patient Name -->
                         <div class="mb-4">
                             <label class="form-label fw-medium mb-2">
@@ -78,6 +119,7 @@
                                 x-model="patientName"
                                 @blur="validateField('patient_name')"
                                 placeholder="Enter your full name"
+                                {% if existing_patient %}:disabled="useExistingProfile"{% endif %}
                                 required
                             >
                             <div class="invalid-feedback d-block text-danger small mt-1" x-show="errors.patient_name" x-text="errors.patient_name"></div>
@@ -95,6 +137,7 @@
                                 x-model="patientEmail"
                                 @blur="validateField('patient_email')"
                                 placeholder="your.email@example.com"
+                                {% if existing_patient %}:disabled="useExistingProfile"{% endif %}
                                 required
                             >
                             <div class="invalid-feedback d-block text-danger small mt-1" x-show="errors.patient_email" x-text="errors.patient_email"></div>
@@ -113,6 +156,7 @@
                                 @blur="validateField('patient_phone')"
                                 placeholder="+63 9XX XXX XXXX"
                                 pattern="[+]?[0-9]{10,15}"
+                                {% if existing_patient %}:disabled="useExistingProfile"{% endif %}
                                 required
                             >
                             <small class="form-text text-muted d-flex align-items-center mt-2">
@@ -135,17 +179,19 @@
                                 <i class="fas fa-calendar text-primary me-1"></i> Preferred Date *
                             </label>
                             <input 
-                                type="date" 
+                                type="text" 
                                 class="form-control form-control-lg form-control-professional" 
                                 name="date"
                                 x-model="selectedDate"
-                                :min="minDate"
-                                @change="loadTimeSlots()"
+                                placeholder="Select a date"
+                                @change="validateDate(); loadTimeSlots()"
                                 required
+                                readonly
                             >
                             <small class="form-text text-muted d-flex align-items-center mt-2">
-                                <i class="fas fa-info-circle me-1"></i> Please select a date at least 1 day in advance
+                                <i class="fas fa-info-circle me-1"></i> Click to select a date - blocked dates are grayed out
                             </small>
+                            <div class="invalid-feedback d-block text-danger small mt-1" x-show="errors.date" x-text="errors.date"></div>
                         </div>
 
                         <!-- Professional Time Selection with HTMX -->
@@ -159,7 +205,7 @@
                                     name="time" 
                                     required 
                                     disabled
-                                    hx-get="/admin/htmx/time-slots/"
+                                    hx-get="{% url 'bookings_v2:htmx_time_slots' %}"
                                     hx-trigger="loadTimeSlots from:body"
                                     hx-include="[name='service'], [name='date']"
                                     hx-target="#time-slots-container"
@@ -276,7 +322,7 @@
                         <div class="flex-grow-1 ms-3">
                             <h6 class="fw-bold mb-2">Important Information</h6>
                             <ul class="mb-0 ps-3">
-                                <li class="mb-1"><strong>Clinic Hours:</strong> Monday to Saturday, 9:00 AM - 5:00 PM</li>
+                                <li class="mb-1"><strong>Clinic Hours:</strong> Monday to Saturday, 9:00 AM - 3:00 PM</li>
                                 <li class="mb-1"><strong>Confirmation:</strong> We'll confirm your appointment within 24 hours</li>
                                 <li class="mb-0"><strong>Cancellation:</strong> Please notify us at least 24 hours in advance</li>
                             </ul>
@@ -308,27 +354,77 @@
 
 <script>
 function bookingForm() {
+    // Get blocked dates from Django template
+    const blockedDates = {{ blocked_dates|safe }};
+    
+    {% if existing_patient %}
+    // Existing patient data
+    const existingPatientData = {
+        name: "{{ existing_patient.user.get_full_name }}",
+        email: "{{ existing_patient.user.email }}",
+        phone: "{{ existing_patient.phone }}"
+    };
+    {% else %}
+    const existingPatientData = null;
+    {% endif %}
+    
     return {
         selectedService: '',
         selectedDate: '',
-        patientName: '',
-        patientEmail: '',
-        patientPhone: '',
+        patientName: existingPatientData ? existingPatientData.name : '',
+        patientEmail: existingPatientData ? existingPatientData.email : '',
+        patientPhone: existingPatientData ? existingPatientData.phone : '',
         notes: '',
+        useExistingProfile: existingPatientData ? true : false,
+        savedPatientData: existingPatientData,
         errors: {
             service: '',
             patient_name: '',
             patient_email: '',
-            patient_phone: ''
+            patient_phone: '',
+            date: ''
         },
         minDate: new Date(Date.now() + 86400000).toISOString().split('T')[0], // Tomorrow
+        blockedDates: blockedDates,
+        
+        toggleExistingProfile() {
+            if (this.useExistingProfile && this.savedPatientData) {
+                // Use saved profile
+                this.patientName = this.savedPatientData.name;
+                this.patientEmail = this.savedPatientData.email;
+                this.patientPhone = this.savedPatientData.phone;
+            } else {
+                // Clear for new patient
+                this.patientName = '';
+                this.patientEmail = '';
+                this.patientPhone = '';
+            }
+            // Clear any validation errors
+            this.errors.patient_name = '';
+            this.errors.patient_email = '';
+            this.errors.patient_phone = '';
+        },
         
         get isFormValid() {
             return this.selectedService && 
                    this.selectedDate && 
+                   !this.isDateBlocked(this.selectedDate) &&
                    this.patientName.length > 2 && 
                    this.patientEmail.includes('@') &&
                    this.patientPhone.length >= 10;
+        },
+        
+        isDateBlocked(dateString) {
+            return this.blockedDates.includes(dateString);
+        },
+        
+        validateDate() {
+            if (this.isDateBlocked(this.selectedDate)) {
+                this.errors.date = 'This date is not available. Please select another date.';
+                this.selectedDate = '';
+            } else {
+                this.errors.date = '';
+            }
         },
         
         validateField(field) {
@@ -378,13 +474,22 @@ function bookingForm() {
         },
         
         loadTimeSlots() {
+            console.log('loadTimeSlots called');
+            console.log('selectedService:', this.selectedService);
+            console.log('selectedDate:', this.selectedDate);
+            
             const selectElement = document.querySelector('#time-slots-container select');
-            if (!selectElement) return;
+            if (!selectElement) {
+                console.log('Select element not found');
+                return;
+            }
             
             if (this.selectedService && this.selectedDate) {
-                // Trigger HTMX to load time slots on the select element
-                htmx.trigger(selectElement, 'loadTimeSlots');
+                console.log('Triggering HTMX loadTimeSlots');
+                // Trigger HTMX to load time slots on the body element
+                htmx.trigger('body', 'loadTimeSlots');
             } else {
+                console.log('Missing service or date, disabling select');
                 // Reset and disable time select if date or service is cleared
                 selectElement.disabled = true;
                 selectElement.innerHTML = '<option value="">Select service and date first...</option>';
@@ -393,5 +498,88 @@ function bookingForm() {
         }
     }
 }
+
+// Add custom styling for blocked dates (visual feedback)
+document.addEventListener('DOMContentLoaded', function() {
+    const dateInput = document.querySelector('input[name="date"]');
+    const blockedDates = {{ blocked_dates|safe }};
+    
+    if (dateInput) {
+        // Initialize Flatpickr instead of native date picker
+        flatpickr(dateInput, {
+            minDate: "{{ minDate }}",
+            dateFormat: "Y-m-d",
+            disable: blockedDates,
+            onChange: function(selectedDates, dateStr, instance) {
+                // Update Alpine.js model directly first
+                dateInput.value = dateStr;
+                dateInput._x_model.set(dateStr);
+                
+                // Small delay to ensure Alpine.js state is updated
+                setTimeout(() => {
+                    // Trigger validation and time slots loading
+                    const event = new Event('change', { bubbles: true });
+                    dateInput.dispatchEvent(event);
+                }, 50);
+            },
+            onReady: function(selectedDates, dateStr, instance) {
+                // Style the flatpickr to match professional theme
+                instance.calendarContainer.classList.add('flatpickr-professional');
+            }
+        });
+    }
+});
 </script>
+
+<!-- Flatpickr JS -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+<style>
+/* Professional Flatpickr Styling */
+.flatpickr-professional .flatpickr-day.disabled {
+    color: #e0e0e0 !important;
+    background: #f5f5f5 !important;
+    cursor: not-allowed !important;
+}
+.flatpickr-professional .flatpickr-day.disabled:hover {
+    background: #f5f5f5 !important;
+    border-color: transparent !important;
+}
+.flatpickr-calendar {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
+    border: 2px solid var(--primary-color) !important;
+}
+.flatpickr-day.selected {
+    background: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+}
+.flatpickr-day:hover:not(.disabled) {
+    background: rgba(var(--primary-color-rgb), 0.1) !important;
+}
+.flatpickr-months .flatpickr-month {
+    background: var(--primary-color) !important;
+}
+.flatpickr-current-month .flatpickr-monthDropdown-months {
+    background: var(--primary-color) !important;
+    color: white !important;
+}
+.flatpickr-current-month input.cur-year {
+    color: white !important;
+}
+.flatpickr-weekdays {
+    background: var(--primary-color) !important;
+}
+.flatpickr-weekday {
+    color: white !important;
+}
+.flatpickr-months .flatpickr-prev-month svg,
+.flatpickr-months .flatpickr-next-month svg {
+    fill: white !important;
+}
+.flatpickr-months .flatpickr-prev-month:hover svg,
+.flatpickr-months .flatpickr-next-month:hover svg {
+    fill: rgba(255, 255, 255, 0.8) !important;
+}
+</style>
+
 {% endblock %}

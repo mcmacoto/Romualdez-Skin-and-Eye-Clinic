@@ -53,6 +53,7 @@ from .appointment_views import (
     htmx_appointments_list,
     htmx_mark_consultation_done,
     htmx_update_consultation_status,
+    htmx_update_appointment_doctor,
     htmx_delete_appointment,
     htmx_pending_bookings,
     htmx_accept_booking,
@@ -123,12 +124,31 @@ from .admin_management_views import (
     htmx_user_create,
     htmx_user_update,
     htmx_user_delete,
+    htmx_user_password_form,
+    htmx_user_password_reset,
     htmx_services_list,
     htmx_service_create_form,
     htmx_service_create,
     htmx_service_edit_form,
     htmx_service_update,
     htmx_service_delete,
+    htmx_service_toggle,
+    # Doctor management views
+    htmx_doctors_list,
+    htmx_doctor_create_form,
+    htmx_doctor_create,
+    htmx_doctor_edit_form,
+    htmx_doctor_update,
+    htmx_doctor_delete,
+    htmx_doctor_schedule,
+    # Calendar management views
+    htmx_calendar_view,
+    htmx_toggle_blocked_date,
+    htmx_blocked_dates_list,
+    htmx_delete_blocked_date,
+    # Clinic settings views
+    htmx_clinic_settings_form,
+    htmx_clinic_settings_update,
     # Report views
     download_appointments_pdf,
     download_patients_csv,
@@ -147,6 +167,10 @@ __all__ = [
     'logout_v2',
     'patient_dashboard_v2',
     'admin_dashboard_v2',
+    
+    # Dashboard views (modularized)
+    'htmx_dashboard_stats',
+    'htmx_financial_overview',
     
     # Public views (modularized)
     'home_v2',
@@ -173,6 +197,7 @@ __all__ = [
     'htmx_appointments_list',
     'htmx_mark_consultation_done',
     'htmx_update_consultation_status',
+    'htmx_update_appointment_doctor',
     'htmx_delete_appointment',
     'htmx_pending_bookings',
     'htmx_accept_booking',
@@ -206,6 +231,7 @@ __all__ = [
     'htmx_patient_create',
     'htmx_patient_edit_form',
     'htmx_patient_update',
+    'upload_profile_picture',
     
     # Inventory views (from legacy)
     'htmx_inventory_list',
@@ -236,12 +262,34 @@ __all__ = [
     'htmx_user_create',
     'htmx_user_update',
     'htmx_user_delete',
+    'htmx_user_password_form',
+    'htmx_user_password_reset',
     'htmx_services_list',
     'htmx_service_create_form',
     'htmx_service_create',
     'htmx_service_edit_form',
     'htmx_service_update',
     'htmx_service_delete',
+    'htmx_service_toggle',
+    
+    # Doctor management views
+    'htmx_doctors_list',
+    'htmx_doctor_create_form',
+    'htmx_doctor_create',
+    'htmx_doctor_edit_form',
+    'htmx_doctor_update',
+    'htmx_doctor_delete',
+    'htmx_doctor_schedule',
+    
+    # Calendar management views
+    'htmx_calendar_view',
+    'htmx_toggle_blocked_date',
+    'htmx_blocked_dates_list',
+    'htmx_delete_blocked_date',
+    
+    # Clinic settings views
+    'htmx_clinic_settings_form',
+    'htmx_clinic_settings_update',
     
     # Report views
     'download_appointments_pdf',

@@ -1,0 +1,136 @@
+<!-- Doctor Create/Edit Form -->
+<div class="card mb-3">
+    <div class="card-header bg-primary">
+        <h6 class="mb-0 text-white">
+            {% if is_edit %}
+                <i class="fas fa-edit"></i> Edit Doctor
+            {% else %}
+                <i class="fas fa-plus"></i> Add New Doctor
+            {% endif %}
+        </h6>
+    </div>
+    <div class="card-body">
+        <form {% if is_edit %}
+                hx-post="{% url 'bookings_v2:htmx_doctor_update' doctor.id %}"
+              {% else %}
+                hx-post="{% url 'bookings_v2:htmx_doctor_create' %}"
+              {% endif %}
+              hx-target="#doctorsModalBody"
+              hx-swap="innerHTML">
+            
+            {% csrf_token %}
+            
+            <!-- Personal Information -->
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label for="first_name" class="form-label">First Name <span class="text-danger">*</span></label>
+                    <input type="text" 
+                           class="form-control" 
+                           id="first_name" 
+                           name="first_name" 
+                           value="{% if is_edit %}{{ doctor.first_name }}{% endif %}"
+                           required>
+                </div>
+                <div class="col-md-6">
+                    <label for="last_name" class="form-label">Last Name <span class="text-danger">*</span></label>
+                    <input type="text" 
+                           class="form-control" 
+                           id="last_name" 
+                           name="last_name" 
+                           value="{% if is_edit %}{{ doctor.last_name }}{% endif %}"
+                           required>
+                </div>
+            </div>
+
+        <!-- Professional Information -->
+        <div class="row g-3 mt-2">
+            <div class="col-md-6">
+                <label for="specialization" class="form-label">Specialization <span class="text-danger">*</span></label>
+                <input type="text" 
+                       class="form-control" 
+                       id="specialization" 
+                       name="specialization" 
+                       value="{% if is_edit %}{{ doctor.specialization }}{% endif %}"
+                       placeholder="e.g., Dermatologist, Ophthalmologist"
+                       required>
+            </div>
+            <div class="col-md-6">
+                <label for="license_number" class="form-label">License Number <span class="text-danger">*</span></label>
+                <input type="text" 
+                       class="form-control" 
+                       id="license_number" 
+                       name="license_number" 
+                       value="{% if is_edit %}{{ doctor.license_number }}{% endif %}"
+                       required>
+            </div>
+        </div>
+
+        <!-- Contact Information -->
+        <div class="row g-3 mt-2">
+            <div class="col-md-6">
+                <label for="phone_number" class="form-label">Phone Number <span class="text-danger">*</span></label>
+                <input type="tel" 
+                       class="form-control" 
+                       id="phone_number" 
+                       name="phone_number" 
+                       value="{% if is_edit %}{{ doctor.phone_number }}{% endif %}"
+                       pattern="[0-9]{10,15}"
+                       required>
+            </div>
+            <div class="col-md-6">
+                <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
+                <input type="email" 
+                       class="form-control" 
+                       id="email" 
+                       name="email" 
+                       value="{% if is_edit %}{{ doctor.email }}{% endif %}"
+                       required>
+            </div>
+        </div>
+
+        <!-- Schedule and Availability -->
+        <div class="row g-3 mt-2">
+            <div class="col-md-12">
+                <label for="schedule_notes" class="form-label">Schedule Notes</label>
+                <textarea class="form-control" 
+                          id="schedule_notes" 
+                          name="schedule_notes" 
+                          rows="2"
+                          placeholder="Working hours, availability notes, etc.">{% if is_edit %}{{ doctor.schedule_notes }}{% endif %}</textarea>
+            </div>
+        </div>
+
+        <div class="row g-3 mt-2">
+            <div class="col-md-12">
+                <div class="form-check">
+                    <input class="form-check-input" 
+                           type="checkbox" 
+                           id="is_available" 
+                           name="is_available"
+                           {% if is_edit %}{% if doctor.is_available %}checked{% endif %}{% else %}checked{% endif %}>
+                    <label class="form-check-label" for="is_available">
+                        Currently accepting appointments
+                    </label>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Form Actions -->
+        <div class="d-flex justify-content-end gap-2 mt-3">
+            <button type="button" class="btn btn-secondary"
+                    hx-get="{% url 'bookings_v2:htmx_doctors_list' %}"
+                    hx-target="#doctorsModalBody"
+                    hx-swap="innerHTML">
+                <i class="fas fa-times"></i> Cancel
+            </button>
+            <button type="submit" class="btn btn-primary">
+                {% if is_edit %}
+                    <i class="fas fa-save"></i> Update Doctor
+                {% else %}
+                    <i class="fas fa-plus"></i> Add Doctor
+                {% endif %}
+            </button>
+        </div>
+        </form>
+    </div>
+</div>

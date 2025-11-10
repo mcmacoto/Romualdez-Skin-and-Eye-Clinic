@@ -1,4 +1,4 @@
-<select class="form-select" name="time" required>
+<select class="form-select form-select-lg form-control-professional" name="time" required>
     {% if available_slots %}
         <option value="">Select a time...</option>
         {% for slot in available_slots %}
@@ -9,7 +9,7 @@
     {% endif %}
 </select>
 {% if not available_slots %}
-<small class="form-text text-danger mt-2">
-    <i class="fas fa-exclamation-circle"></i> Please select a different date or service.
+<small class="form-text text-danger mt-2 d-block">
+    <i class="fas fa-exclamation-circle"></i> All time slots are booked for this date. Please select a different date.
 </small>
 {% endif %}

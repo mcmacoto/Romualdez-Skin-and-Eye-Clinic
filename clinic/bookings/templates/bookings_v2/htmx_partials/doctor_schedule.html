@@ -1,0 +1,109 @@
+<!-- Doctor Schedule View -->
+<div class="modal-header">
+    <h5 class="modal-title">
+        <i class="fas fa-calendar-alt"></i> Schedule for {{ doctor.get_full_name }}
+    </h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+</div>
+
+<div class="modal-body">
+    <!-- Doctor Info -->
+    <div class="card mb-3">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-8">
+                    <h6 class="card-title mb-1">{{ doctor.get_full_name }}</h6>
+                    <p class="text-muted mb-2">
+                        <i class="fas fa-stethoscope"></i> {{ doctor.specialization }}
+                    </p>
+                    {% if doctor.schedule_notes %}
+                    <p class="mb-0"><small><i class="fas fa-clock"></i> {{ doctor.schedule_notes }}</small></p>
+                    {% endif %}
+                </div>
+                <div class="col-md-4 text-end">
+                    <div class="mb-2">
+                        {% if doctor.is_available %}
+                            <span class="badge bg-success">Available</span>
+                        {% else %}
+                            <span class="badge bg-warning text-dark">Unavailable</span>
+                        {% endif %}
+                    </div>
+                    <p class="mb-0">
+                        <small class="text-muted">
+                            <i class="fas fa-calendar-check"></i> {{ bookings|length }} appointments
+                        </small>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Date Filter -->
+    <form hx-get="{% url 'bookings_v2:htmx_doctor_schedule' doctor.id %}"
+          hx-target="#schedule-container"
+          hx-trigger="change from:#schedule-date"
+          class="mb-3">
+        <div class="row">
+            <div class="col-md-6">
+                <label for="schedule-date" class="form-label">Filter by Date</label>
+                <input type="date" 
+                       class="form-control" 
+                       id="schedule-date"
+                       name="date" 
+                       value="{{ filter_date|date:'Y-m-d' }}">
+            </div>
+        </div>
+    </form>
+
+    <!-- Appointments List -->
+    <div id="schedule-container">
+        {% if bookings %}
+            <div class="table-responsive">
+                <table class="table table-sm table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Date</th>
+                            <th>Time</th>
+                            <th>Patient</th>
+                            <th>Service</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for booking in bookings %}
+                        <tr>
+                            <td>{{ booking.date|date:"M d, Y" }}</td>
+                            <td><strong>{{ booking.time|time:"g:i A" }}</strong></td>
+                            <td>
+                                {{ booking.patient_name }}<br>
+                                <small class="text-muted">{{ booking.patient_phone }}</small>
+                            </td>
+                            <td>{{ booking.service.name }}</td>
+                            <td>
+                                {% if booking.status == 'Pending' %}
+                                    <span class="badge bg-warning text-dark">{{ booking.status }}</span>
+                                {% elif booking.status == 'Confirmed' %}
+                                    <span class="badge bg-info">{{ booking.status }}</span>
+                                {% elif booking.status == 'Completed' %}
+                                    <span class="badge bg-success">{{ booking.status }}</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ booking.status }}</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-5 text-muted">
+                <i class="fas fa-calendar-times fa-3x mb-3"></i>
+                <p>No appointments scheduled{% if filter_date %} for {{ filter_date|date:"F d, Y" }}{% endif %}</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="modal-footer">
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+</div>

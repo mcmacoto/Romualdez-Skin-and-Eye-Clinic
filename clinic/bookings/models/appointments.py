@@ -6,6 +6,7 @@ from django.db import models
 from django.contrib.auth.models import User
 
 from .base import Service
+from .doctors import Doctor
 
 
 class Appointment(models.Model):
@@ -76,6 +77,14 @@ class Booking(models.Model):
         Service, 
         on_delete=models.PROTECT, 
         help_text="Service to be provided",
+        related_name='bookings'
+    )
+    doctor = models.ForeignKey(
+        Doctor,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        help_text="Assigned doctor for this appointment",
         related_name='bookings'
     )
     status = models.CharField(
@@ -151,6 +160,26 @@ class Booking(models.Model):
                 f"A booking already exists for {self.date} at {self.time}. "
                 f"Please choose a different time slot."
             )
+        
+        # Check if doctor is already booked at this time
+        if self.doctor:
+            doctor_bookings = Booking.objects.filter(
+                date=self.date,
+                time=self.time,
+                doctor=self.doctor
+            ).exclude(
+                status='Cancelled'
+            )
+            
+            # Exclude self if updating
+            if self.pk:
+                doctor_bookings = doctor_bookings.exclude(pk=self.pk)
+            
+            if doctor_bookings.exists():
+                raise ValidationError(
+                    f"Dr. {self.doctor.get_full_name()} is already booked for {self.date} at {self.time}. "
+                    f"Please choose a different doctor or time slot."
+                )
     
     def save(self, *args, **kwargs):
         """Override save to call clean()"""

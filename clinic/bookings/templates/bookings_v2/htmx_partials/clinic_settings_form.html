@@ -1,0 +1,101 @@
+<form hx-post="{% url 'bookings_v2:htmx_clinic_settings_update' %}" 
+      hx-target="#settings-form-container"
+      hx-swap="innerHTML">
+    {% csrf_token %}
+    
+    <div class="row">
+        <!-- Clinic Hours Section -->
+        <div class="col-md-6">
+            <h6 class="mb-3"><i class="fas fa-clock"></i> Operating Hours</h6>
+            
+            <div class="mb-3">
+                <label for="opening_time" class="form-label">Opening Time</label>
+                <input type="time" 
+                       class="form-control" 
+                       id="opening_time" 
+                       name="opening_time" 
+                       value="{{ settings.opening_time|time:'H:i' }}"
+                       required>
+            </div>
+            
+            <div class="mb-3">
+                <label for="closing_time" class="form-label">Closing Time</label>
+                <input type="time" 
+                       class="form-control" 
+                       id="closing_time" 
+                       name="closing_time" 
+                       value="{{ settings.closing_time|time:'H:i' }}"
+                       required>
+            </div>
+            
+            <div class="mb-3">
+                <label for="appointment_slot_duration" class="form-label">Appointment Slot Duration (minutes)</label>
+                <input type="number" 
+                       class="form-control" 
+                       id="appointment_slot_duration" 
+                       name="appointment_slot_duration" 
+                       value="{{ settings.appointment_slot_duration }}"
+                       min="15"
+                       max="180"
+                       step="15"
+                       required>
+                <small class="form-text text-muted">Duration of each appointment slot (15-180 minutes)</small>
+            </div>
+        </div>
+        
+        <!-- Clinic Information Section -->
+        <div class="col-md-6">
+            <h6 class="mb-3"><i class="fas fa-hospital"></i> Clinic Information</h6>
+            
+            <div class="mb-3">
+                <label for="clinic_name" class="form-label">Clinic Name</label>
+                <input type="text" 
+                       class="form-control" 
+                       id="clinic_name" 
+                       name="clinic_name" 
+                       value="{{ settings.clinic_name }}"
+                       maxlength="255">
+            </div>
+            
+            <div class="mb-3">
+                <label for="clinic_address" class="form-label">Address</label>
+                <textarea class="form-control" 
+                          id="clinic_address" 
+                          name="clinic_address" 
+                          rows="2">{{ settings.clinic_address }}</textarea>
+            </div>
+            
+            <div class="mb-3">
+                <label for="clinic_phone" class="form-label">Phone Number</label>
+                <input type="text" 
+                       class="form-control" 
+                       id="clinic_phone" 
+                       name="clinic_phone" 
+                       value="{{ settings.clinic_phone }}"
+                       maxlength="20">
+            </div>
+            
+            <div class="mb-3">
+                <label for="clinic_email" class="form-label">Email Address</label>
+                <input type="email" 
+                       class="form-control" 
+                       id="clinic_email" 
+                       name="clinic_email" 
+                       value="{{ settings.clinic_email }}"
+                       maxlength="255">
+            </div>
+        </div>
+    </div>
+    
+    <div class="text-end mt-3">
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save"></i> Save Settings
+        </button>
+    </div>
+    
+    {% if settings.updated_at %}
+    <div class="text-muted small mt-2">
+        Last updated: {{ settings.updated_at|date:"M d, Y g:i A" }}
+    </div>
+    {% endif %}
+</form>

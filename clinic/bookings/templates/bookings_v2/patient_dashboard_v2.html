@@ -526,28 +526,92 @@
         
         {% for record in medical_records|slice:":3" %}
         <div class="record-card card-hover-lift" data-aos="fade-left" data-aos-delay="{{ forloop.counter0|add:50 }}">
-            <div class="row">
-                <div class="col-md-3">
+            <!-- Header Row -->
+            <div class="row mb-3">
+                <div class="col-md-2">
                     <div class="text-muted small text-uppercase fw-semibold mb-1">
                         <i class="fas fa-calendar-check me-1"></i> Visit Date
                     </div>
                     <div class="fw-bold"><i class="fas fa-calendar text-primary me-1"></i>{{ record.visit_date|date:"M d, Y" }}</div>
                 </div>
-                <div class="col-md-9">
+                <div class="col-md-5">
                     <div class="text-muted small text-uppercase fw-semibold mb-1">
                         <i class="fas fa-stethoscope me-1"></i> Chief Complaint
                     </div>
-                    <div class="mb-2">{{ record.chief_complaint|truncatewords:20 }}</div>
-                    
+                    <div>{{ record.chief_complaint }}</div>
+                </div>
+                <div class="col-md-5">
                     {% if record.diagnosis %}
-                    <div class="mt-3 p-2 bg-light rounded">
-                        <div class="text-muted small text-uppercase fw-semibold mb-1">
-                            <i class="fas fa-diagnosis me-1"></i> Diagnosis
-                        </div>
-                        <div class="text-primary fw-bold">{{ record.diagnosis|truncatewords:15 }}</div>
+                    <div class="text-muted small text-uppercase fw-semibold mb-1">
+                        <i class="fas fa-diagnoses me-1"></i> Diagnosis
                     </div>
+                    <div class="text-primary fw-bold">{{ record.diagnosis }}</div>
                     {% endif %}
                 </div>
+            </div>
+            
+            <!-- Images and Prescriptions Row -->
+            <div class="row">
+                {% if record.images.exists %}
+                <div class="col-md-6">
+                    <div class="text-muted small text-uppercase fw-semibold mb-2">
+                        <i class="fas fa-images me-1"></i> Medical Images ({{ record.images.count }})
+                    </div>
+                    <div class="d-flex flex-wrap gap-2">
+                        {% for image in record.images.all|slice:":4" %}
+                        <div class="position-relative">
+                            <img src="{{ image.image.url }}" 
+                                 alt="{{ image.title }}" 
+                                 class="rounded"
+                                 style="width: 80px; height: 80px; object-fit: cover; cursor: pointer; border: 2px solid #dee2e6;"
+                                 onclick="window.open('{{ image.image.url }}', '_blank')"
+                                 title="{{ image.title }}">
+                            <span class="badge bg-secondary position-absolute bottom-0 start-0 m-1" style="font-size: 0.6rem;">{{ image.get_image_type_display|truncatechars:8 }}</span>
+                        </div>
+                        {% endfor %}
+                        {% if record.images.count > 4 %}
+                        <div class="d-flex align-items-center justify-content-center rounded bg-light" style="width: 80px; height: 80px; border: 2px dashed #dee2e6;">
+                            <small class="text-muted text-center">+{{ record.images.count|add:"-4" }}<br>more</small>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if record.prescriptions.exists %}
+                <div class="col-md-{% if record.images.exists %}6{% else %}12{% endif %}">
+                    <div class="text-muted small text-uppercase fw-semibold mb-2">
+                        <i class="fas fa-pills me-1"></i> Prescriptions ({{ record.prescriptions.count }})
+                    </div>
+                    <div class="row g-2">
+                        {% for prescription in record.prescriptions.all|slice:":4" %}
+                        <div class="col-md-6">
+                            <div class="p-2 bg-light rounded d-flex align-items-start">
+                                <i class="fas fa-prescription-bottle text-info me-2 mt-1"></i>
+                                <div class="flex-grow-1 small">
+                                    <div class="fw-bold">
+                                        {% if prescription.medicine %}
+                                            {{ prescription.medicine.name }}
+                                        {% else %}
+                                            {{ prescription.custom_medicine_name }}
+                                        {% endif %}
+                                    </div>
+                                    <div class="text-muted">{{ prescription.dosage }}</div>
+                                    {% if prescription.duration %}
+                                    <div class="text-muted">{{ prescription.duration }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        {% if record.prescriptions.count > 4 %}
+                        <div class="col-12">
+                            <small class="text-muted"><i class="fas fa-info-circle me-1"></i>+{{ record.prescriptions.count|add:"-4" }} more prescription(s)</small>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
             </div>
         </div>
         {% endfor %}

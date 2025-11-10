@@ -18,9 +18,13 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib.auth import views as auth_views
+from django.views.generic import RedirectView
 from bookings import views_v2
 
 urlpatterns = [
+    # === Root redirect to landing page ===
+    path('', RedirectView.as_view(url='/admin/', permanent=False), name='root'),
+    
     # === V2 Routes (PRIMARY ADMIN INTERFACE) ===
     path('admin/', include('bookings.urls_v2')),  # V2 HTMX-based admin interface
     
@@ -28,7 +32,7 @@ urlpatterns = [
     path('login/', views_v2.login_v2, name='login'),
     path('logout/', views_v2.logout_v2, name='logout'),
     path('landing/', views_v2.landing_v2, name='landing'),
-    path('', views_v2.home_v2, name='home'),
+    path('home/', views_v2.home_v2, name='home_page'),  # Moved from root to /home/
     path('booking/', views_v2.booking_v2, name='booking'),
     path('about/', views_v2.about_v2, name='about'),
     path('services/', views_v2.services_v2, name='services'),

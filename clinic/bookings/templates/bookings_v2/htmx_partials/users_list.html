@@ -25,7 +25,14 @@
                     <td>
                         <div class="d-flex align-items-center">
                             <div class="user-avatar me-2">
-                                <i class="fas fa-user-circle fa-2x {% if user.is_staff %}text-success{% else %}text-info{% endif %}"></i>
+                                {% if user.patient_profile and user.patient_profile.profile_picture %}
+                                    <img src="{{ user.patient_profile.profile_picture.url }}" 
+                                         alt="{{ user.username }}" 
+                                         class="rounded-circle" 
+                                         style="width: 40px; height: 40px; object-fit: cover; border: 2px solid {% if user.is_staff %}#28a745{% else %}#17a2b8{% endif %};">
+                                {% else %}
+                                    <i class="fas fa-user-circle fa-2x {% if user.is_staff %}text-success{% else %}text-info{% endif %}"></i>
+                                {% endif %}
                             </div>
                             <div>
                                 <strong>{{ user.username }}</strong>
@@ -82,6 +89,7 @@
                             <button type="button" class="btn btn-outline-primary" 
                                     hx-get="{% url 'bookings_v2:htmx_user_detail' user.id %}" 
                                     hx-target="#userDetailModalBody"
+                                    hx-swap="innerHTML"
                                     data-bs-toggle="modal" 
                                     data-bs-target="#userDetailModal"
                                     title="View Details">

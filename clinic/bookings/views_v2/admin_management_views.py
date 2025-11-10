@@ -11,8 +11,9 @@ from django.views.decorators.http import require_http_methods
 from django.contrib import messages
 from django.db.models import Q
 from datetime import datetime
+import json
 
-from ..models import Service
+from ..models import Service, Doctor, Calendar, ClinicSettings
 from ..utils.reports import (
     generate_appointments_pdf,
     export_patients_csv,
@@ -34,8 +35,8 @@ def htmx_users_list(request):
     role = request.GET.get('role', 'all')
     search = request.GET.get('search', '')
     
-    # Base queryset with optimized query
-    users = User.objects.prefetch_related('groups').order_by('-date_joined')
+    # Base queryset with optimized query - include patient_profile
+    users = User.objects.select_related('patient_profile').prefetch_related('groups').order_by('-date_joined')
     
     # Apply role filter
     if role == 'staff':
@@ -76,8 +77,15 @@ def htmx_user_detail(request, user_id):
             if user.is_staff and user.id != request.user.id:
                 return HttpResponse('<div class="alert alert-danger">Permission denied</div>', status=403)
         
+        # Try to get patient profile if it exists
+        try:
+            patient_profile = user.patient_profile
+        except:
+            patient_profile = None
+        
         return render(request, 'bookings_v2/htmx_partials/user_detail.html', {
-            'user': user
+            'user': user,
+            'patient_profile': patient_profile
         })
     except User.DoesNotExist:
         return HttpResponse('<div class="alert alert-danger">User not found</div>', status=404)
@@ -180,7 +188,7 @@ def htmx_user_create(request):
             user.groups.add(customer_group)
         
         # Return updated user list with optimized query
-        users = User.objects.prefetch_related('groups').order_by('-date_joined')
+        users = User.objects.select_related('patient_profile').prefetch_related('groups').order_by('-date_joined')
         if not request.user.is_superuser:
             users = users.filter(Q(is_staff=False) | Q(id=request.user.id))
         
@@ -225,8 +233,26 @@ def htmx_user_update(request, user_id):
             group, created = Group.objects.get_or_create(name=group_name)
             user.groups.add(group)
         
+        # Handle profile picture upload
+        if 'profile_picture' in request.FILES:
+            try:
+                # Get or create patient profile
+                patient_profile = user.patient_profile
+                
+                # Delete old profile picture if it exists
+                if patient_profile.profile_picture:
+                    patient_profile.profile_picture.delete(save=False)
+                
+                # Save new profile picture
+                patient_profile.profile_picture = request.FILES['profile_picture']
+                patient_profile.save()
+                
+            except Exception as e:
+                # If patient profile doesn't exist, log the error but continue
+                print(f"Could not update profile picture: {str(e)}")
+        
         # Return updated user list with optimized query
-        users = User.objects.prefetch_related('groups').order_by('-date_joined')
+        users = User.objects.select_related('patient_profile').prefetch_related('groups').order_by('-date_joined')
         if not request.user.is_superuser:
             users = users.filter(Q(is_staff=False) | Q(id=request.user.id))
         
@@ -262,6 +288,69 @@ def htmx_user_delete(request, user_id):
         user.save()
         
         return HttpResponse('')  # Return empty for swap delete
+        
+    except User.DoesNotExist:
+        return HttpResponse('<div class="alert alert-danger">User not found</div>', status=404)
+    except Exception as e:
+        return HttpResponse(f'<div class="alert alert-danger">Error: {str(e)}</div>', status=400)
+
+
+@login_required
+@staff_required
+@require_http_methods(["GET"])
+def htmx_user_password_form(request, user_id):
+    """HTMX endpoint to show password reset form"""
+    try:
+        user = User.objects.get(id=user_id)
+        
+        # Only superusers can reset passwords for staff accounts
+        if not request.user.is_superuser:
+            if user.is_staff or user.is_superuser:
+                return HttpResponse('<div class="alert alert-danger">Only superusers can reset staff passwords</div>', status=403)
+        
+        return render(request, 'bookings_v2/htmx_partials/user_password_form.html', {
+            'user': user
+        })
+    except User.DoesNotExist:
+        return HttpResponse('<div class="alert alert-danger">User not found</div>', status=404)
+
+
+@login_required
+@staff_required
+@require_http_methods(["POST"])
+def htmx_user_password_reset(request, user_id):
+    """HTMX endpoint to reset user password"""
+    try:
+        user = User.objects.get(id=user_id)
+        
+        # Only superusers can reset passwords for staff accounts
+        if not request.user.is_superuser:
+            if user.is_staff or user.is_superuser:
+                return HttpResponse('<div class="alert alert-danger">Only superusers can reset staff passwords</div>', status=403)
+        
+        new_password = request.POST.get('new_password')
+        confirm_password = request.POST.get('confirm_password')
+        
+        # Validate passwords
+        if not new_password or not confirm_password:
+            return HttpResponse('<div class="alert alert-danger">Both password fields are required</div>', status=400)
+        
+        if new_password != confirm_password:
+            return HttpResponse('<div class="alert alert-danger">Passwords do not match</div>', status=400)
+        
+        if len(new_password) < 8:
+            return HttpResponse('<div class="alert alert-danger">Password must be at least 8 characters long</div>', status=400)
+        
+        # Set new password
+        user.set_password(new_password)
+        user.save()
+        
+        # Return success message
+        return HttpResponse(
+            f'<div class="alert alert-success">'
+            f'<i class="fas fa-check-circle"></i> Password successfully reset for {user.username}'
+            f'</div>'
+        )
         
     except User.DoesNotExist:
         return HttpResponse('<div class="alert alert-danger">User not found</div>', status=404)
@@ -375,7 +464,7 @@ def htmx_service_delete(request, service_id):
         bookings_count = service.bookings.count()
         if bookings_count > 0:
             return HttpResponse(
-                f'<tr><td colspan="5" class="text-center text-warning">Cannot delete service with {bookings_count} associated bookings</td></tr>',
+                f'<tr><td colspan="6" class="text-center text-warning">Cannot delete service with {bookings_count} associated bookings</td></tr>',
                 status=400
             )
         
@@ -388,9 +477,404 @@ def htmx_service_delete(request, service_id):
         return response
         
     except Service.DoesNotExist:
-        return HttpResponse('<tr><td colspan="5" class="text-center text-danger">Service not found</td></tr>', status=404)
+        return HttpResponse('<tr><td colspan="6" class="text-center text-danger">Service not found</td></tr>', status=404)
     except Exception as e:
-        return HttpResponse(f'<tr><td colspan="5" class="text-center text-danger">Error: {str(e)}</td></tr>', status=400)
+        return HttpResponse(f'<tr><td colspan="6" class="text-center text-danger">Error: {str(e)}</td></tr>', status=400)
+
+
+@login_required
+@staff_required
+@require_http_methods(["POST"])
+def htmx_service_toggle(request, service_id):
+    """Toggle service active status"""
+    try:
+        service = Service.objects.get(id=service_id)
+        service.is_active = not service.is_active
+        service.save()
+        
+        # Return updated service row
+        return render(request, 'bookings_v2/partials/service_row.html', {
+            'service': service
+        })
+        
+    except Service.DoesNotExist:
+        return HttpResponse('<tr><td colspan="6" class="text-center text-danger">Service not found</td></tr>', status=404)
+    except Exception as e:
+        return HttpResponse(f'<tr><td colspan="6" class="text-center text-danger">Error: {str(e)}</td></tr>', status=400)
+
+
+# ========================================
+# DOCTOR MANAGEMENT
+# ========================================
+
+@login_required
+@staff_required
+@require_http_methods(["GET"])
+def htmx_doctors_list(request):
+    """List all doctors with search and filter"""
+    search_query = request.GET.get('search', '').strip()
+    availability_filter = request.GET.get('availability', '')
+    
+    doctors = Doctor.objects.all()
+    
+    # Apply search filter
+    if search_query:
+        doctors = doctors.filter(
+            Q(first_name__icontains=search_query) |
+            Q(last_name__icontains=search_query) |
+            Q(specialization__icontains=search_query) |
+            Q(license_number__icontains=search_query)
+        )
+    
+    # Apply availability filter
+    if availability_filter:
+        is_available = availability_filter.lower() == 'available'
+        doctors = doctors.filter(is_available=is_available)
+    
+    # Annotate with booking counts
+    from django.db.models import Count
+    doctors = doctors.annotate(
+        total_bookings=Count('bookings'),
+        active_bookings=Count('bookings', filter=Q(bookings__status__in=['Pending', 'Confirmed']))
+    )
+    
+    return render(request, 'bookings_v2/htmx_partials/doctors_list.html', {
+        'doctors': doctors,
+        'search_query': search_query,
+        'availability_filter': availability_filter
+    })
+
+
+@login_required
+@staff_required
+@require_http_methods(["GET"])
+def htmx_doctor_create_form(request):
+    """Display doctor creation form"""
+    return render(request, 'bookings_v2/htmx_partials/doctor_form.html', {
+        'is_edit': False
+    })
+
+
+@login_required
+@staff_required
+@require_http_methods(["POST"])
+def htmx_doctor_create(request):
+    """Create a new doctor"""
+    try:
+        # Validate required fields
+        required_fields = ['first_name', 'last_name', 'specialization', 'license_number', 'phone_number', 'email']
+        for field in required_fields:
+            if not request.POST.get(field):
+                return HttpResponse(f'<div class="alert alert-danger">Error: {field.replace("_", " ").title()} is required</div>', status=400)
+        
+        doctor = Doctor.objects.create(
+            first_name=request.POST.get('first_name'),
+            last_name=request.POST.get('last_name'),
+            specialization=request.POST.get('specialization'),
+            license_number=request.POST.get('license_number'),
+            phone_number=request.POST.get('phone_number'),
+            email=request.POST.get('email'),
+            is_available=request.POST.get('is_available') == 'on',
+            schedule_notes=request.POST.get('schedule_notes', ''),
+            created_by=request.user
+        )
+        
+        # Return updated doctors list
+        from django.db.models import Count
+        doctors = Doctor.objects.all().annotate(
+            total_bookings=Count('bookings'),
+            active_bookings=Count('bookings', filter=Q(bookings__status__in=['Pending', 'Confirmed']))
+        )
+        
+        return render(request, 'bookings_v2/htmx_partials/doctors_list.html', {
+            'doctors': doctors,
+            'search_query': '',
+            'availability_filter': ''
+        })
+        
+    except Exception as e:
+        import traceback
+        error_details = traceback.format_exc()
+        return HttpResponse(f'<div class="alert alert-danger">Error: {str(e)}<br><small>{error_details}</small></div>', status=400)
+
+
+@login_required
+@staff_required
+@require_http_methods(["GET"])
+def htmx_doctor_edit_form(request, doctor_id):
+    """Display doctor edit form"""
+    try:
+        doctor = Doctor.objects.get(id=doctor_id)
+        return render(request, 'bookings_v2/htmx_partials/doctor_form.html', {
+            'doctor': doctor,
+            'is_edit': True
+        })
+    except Doctor.DoesNotExist:
+        return HttpResponse('<div class="alert alert-danger">Doctor not found</div>', status=404)
+
+
+@login_required
+@staff_required
+@require_http_methods(["PUT", "POST"])
+def htmx_doctor_update(request, doctor_id):
+    """Update doctor information"""
+    try:
+        doctor = Doctor.objects.get(id=doctor_id)
+        
+        doctor.first_name = request.POST.get('first_name')
+        doctor.last_name = request.POST.get('last_name')
+        doctor.specialization = request.POST.get('specialization')
+        doctor.license_number = request.POST.get('license_number')
+        doctor.phone_number = request.POST.get('phone_number')
+        doctor.email = request.POST.get('email')
+        doctor.is_available = request.POST.get('is_available') == 'on'
+        doctor.schedule_notes = request.POST.get('schedule_notes', '')
+        
+        doctor.save()
+        
+        # Return updated doctors list
+        from django.db.models import Count
+        doctors = Doctor.objects.all().annotate(
+            total_bookings=Count('bookings'),
+            active_bookings=Count('bookings', filter=Q(bookings__status__in=['Pending', 'Confirmed']))
+        )
+        
+        return render(request, 'bookings_v2/htmx_partials/doctors_list.html', {
+            'doctors': doctors,
+            'search_query': '',
+            'availability_filter': ''
+        })
+        
+    except Doctor.DoesNotExist:
+        return HttpResponse('<div class="alert alert-danger">Doctor not found</div>', status=404)
+    except Exception as e:
+        return HttpResponse(f'<div class="alert alert-danger">Error: {str(e)}</div>', status=400)
+
+
+@login_required
+@staff_required
+@require_http_methods(["DELETE"])
+def htmx_doctor_delete(request, doctor_id):
+    """Delete a doctor"""
+    try:
+        doctor = Doctor.objects.get(id=doctor_id)
+        
+        # Check if doctor has any bookings
+        bookings_count = doctor.bookings.count()
+        if bookings_count > 0:
+            return HttpResponse(
+                f'<tr><td colspan="8" class="text-center text-warning">Cannot delete doctor with {bookings_count} associated bookings</td></tr>',
+                status=400
+            )
+        
+        doctor.delete()
+        
+        # Return empty response - HTMX will swap and remove the row
+        response = HttpResponse('', status=200)
+        response['HX-Trigger'] = 'showToast'
+        return response
+        
+    except Doctor.DoesNotExist:
+        return HttpResponse('<tr><td colspan="8" class="text-center text-danger">Doctor not found</td></tr>', status=404)
+    except Exception as e:
+        return HttpResponse(f'<tr><td colspan="8" class="text-center text-danger">Error: {str(e)}</td></tr>', status=400)
+
+
+@login_required
+@staff_required
+@require_http_methods(["GET"])
+def htmx_doctor_schedule(request, doctor_id):
+    """View doctor's schedule/appointments"""
+    try:
+        doctor = Doctor.objects.get(id=doctor_id)
+        
+        # Get date filter
+        date_str = request.GET.get('date')
+        if date_str:
+            filter_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+            bookings = doctor.bookings.filter(date=filter_date).exclude(status='Cancelled')
+        else:
+            from datetime import date
+            filter_date = date.today()
+            bookings = doctor.bookings.filter(date__gte=filter_date).exclude(status='Cancelled')[:20]
+        
+        bookings = bookings.select_related('service').order_by('date', 'time')
+        
+        return render(request, 'bookings_v2/htmx_partials/doctor_schedule.html', {
+            'doctor': doctor,
+            'bookings': bookings,
+            'filter_date': filter_date
+        })
+        
+    except Doctor.DoesNotExist:
+        return HttpResponse('<div class="alert alert-danger">Doctor not found</div>', status=404)
+
+
+# ========================================
+# CALENDAR MANAGEMENT (Blocked Dates)
+# ========================================
+
+@login_required
+@staff_required
+@require_http_methods(["GET"])
+def htmx_calendar_view(request):
+    """Display calendar with blocked dates"""
+    from datetime import date, timedelta
+    from calendar import monthrange, Calendar as PythonCalendar
+    import json
+    from ..models import Calendar as CalendarModel
+    
+    # Get current month/year or from request
+    year = int(request.GET.get('year', date.today().year))
+    month = int(request.GET.get('month', date.today().month))
+    
+    # Get first and last day of the month
+    first_day = date(year, month, 1)
+    last_day = date(year, month, monthrange(year, month)[1])
+    
+    # Get blocked dates for this month
+    blocked_dates = CalendarModel.objects.filter(
+        date__gte=first_day,
+        date__lte=last_day,
+        event_type='blocked'
+    )
+    
+    # Create a dict of blocked dates for easy lookup
+    blocked_dict = {bd.date.strftime('%Y-%m-%d'): bd.reason or 'Blocked' for bd in blocked_dates}
+    
+    # Generate calendar data
+    cal = PythonCalendar(6)  # 6 = Sunday as first day
+    month_days = cal.monthdayscalendar(year, month)
+    
+    # Build calendar with date objects
+    calendar_weeks = []
+    today = date.today()
+    
+    for week in month_days:
+        week_data = []
+        for day in week:
+            if day == 0:
+                week_data.append(None)  # Empty cell
+            else:
+                day_date = date(year, month, day)
+                date_str = day_date.strftime('%Y-%m-%d')
+                is_sunday = day_date.weekday() == 6  # 6 = Sunday (0=Monday, 6=Sunday)
+                week_data.append({
+                    'day': day,
+                    'date': day_date,
+                    'date_str': date_str,
+                    'is_blocked': date_str in blocked_dict,
+                    'is_sunday': is_sunday,  # Mark Sundays
+                    'reason': blocked_dict.get(date_str, 'Sunday - Clinic Closed' if is_sunday else ''),
+                    'is_past': day_date < today,
+                    'is_today': day_date == today
+                })
+        calendar_weeks.append(week_data)
+    
+    # Calculate previous and next month
+    if month == 1:
+        prev_month, prev_year = 12, year - 1
+    else:
+        prev_month, prev_year = month - 1, year
+    
+    if month == 12:
+        next_month, next_year = 1, year + 1
+    else:
+        next_month, next_year = month + 1, year
+    
+    return render(request, 'bookings_v2/htmx_partials/calendar_view.html', {
+        'year': year,
+        'month': month,
+        'month_name': first_day.strftime('%B'),
+        'calendar_weeks': calendar_weeks,
+        'prev_month': prev_month,
+        'prev_year': prev_year,
+        'next_month': next_month,
+        'next_year': next_year,
+    })
+
+
+@login_required
+@staff_required
+@require_http_methods(["POST"])
+def htmx_toggle_blocked_date(request):
+    """Toggle a date as blocked/unblocked"""
+    try:
+        date_str = request.POST.get('date')
+        reason = request.POST.get('reason', '')
+        
+        # Parse the date
+        from datetime import datetime
+        date_obj = datetime.strptime(date_str, '%Y-%m-%d').date()
+        
+        # Check if date is already blocked
+        blocked_date = Calendar.objects.filter(date=date_obj, event_type='blocked').first()
+        
+        if blocked_date:
+            # Unblock the date
+            blocked_date.delete()
+            return HttpResponse(json.dumps({
+                'status': 'unblocked',
+                'message': f'{date_obj.strftime("%B %d, %Y")} is now available for booking'
+            }), content_type='application/json')
+        else:
+            # Block the date
+            Calendar.objects.create(
+                event_type='blocked',
+                date=date_obj,
+                reason=reason if reason else 'Blocked by admin',
+                created_by=request.user
+            )
+            return HttpResponse(json.dumps({
+                'status': 'blocked',
+                'message': f'{date_obj.strftime("%B %d, %Y")} is now blocked'
+            }), content_type='application/json')
+            
+    except Exception as e:
+        return HttpResponse(
+            json.dumps({'status': 'error', 'message': str(e)}),
+            content_type='application/json',
+            status=400
+        )
+
+
+@login_required
+@staff_required
+@require_http_methods(["GET"])
+def htmx_blocked_dates_list(request):
+    """List all blocked dates"""
+    from datetime import date
+    
+    # Get future blocked dates
+    blocked_dates = Calendar.objects.filter(
+        date__gte=date.today(),
+        event_type='blocked'
+    ).order_by('date')
+    
+    return render(request, 'bookings_v2/htmx_partials/blocked_dates_list.html', {
+        'blocked_dates': blocked_dates
+    })
+
+
+@login_required
+@staff_required
+@require_http_methods(["DELETE"])
+def htmx_delete_blocked_date(request, blocked_date_id):
+    """Delete a blocked date"""
+    try:
+        blocked_date = Calendar.objects.get(id=blocked_date_id, event_type='blocked')
+        date_str = blocked_date.date.strftime('%B %d, %Y')
+        blocked_date.delete()
+        
+        response = HttpResponse('', status=200)
+        response['HX-Trigger'] = 'refreshCalendar'
+        return response
+        
+    except Calendar.DoesNotExist:
+        return HttpResponse(
+            '<tr><td colspan="4" class="text-center text-danger">Blocked date not found</td></tr>',
+            status=404
+        )
 
 
 # ========================================
@@ -442,3 +926,52 @@ def download_billing_csv(request):
 def download_services_pdf(request):
     """Download services report as PDF"""
     return generate_services_pdf()
+
+
+# ========================================
+# CLINIC SETTINGS MANAGEMENT
+# ========================================
+
+@login_required
+@staff_required
+@require_http_methods(["GET"])
+def htmx_clinic_settings_form(request):
+    """Display clinic settings form"""
+    settings = ClinicSettings.load()
+    return render(request, 'bookings_v2/htmx_partials/clinic_settings_form.html', {
+        'settings': settings
+    })
+
+
+@login_required
+@staff_required
+@require_http_methods(["POST"])
+def htmx_clinic_settings_update(request):
+    """Update clinic settings"""
+    try:
+        settings = ClinicSettings.load()
+        
+        # Update fields
+        settings.opening_time = request.POST.get('opening_time')
+        settings.closing_time = request.POST.get('closing_time')
+        settings.appointment_slot_duration = int(request.POST.get('appointment_slot_duration', 60))
+        settings.clinic_name = request.POST.get('clinic_name', '')
+        settings.clinic_address = request.POST.get('clinic_address', '')
+        settings.clinic_phone = request.POST.get('clinic_phone', '')
+        settings.clinic_email = request.POST.get('clinic_email', '')
+        
+        settings.save()
+        
+        # Return updated form with success message
+        return HttpResponse(
+            '<div class="alert alert-success"><i class="fas fa-check-circle"></i> Clinic settings updated successfully!</div>' +
+            render(request, 'bookings_v2/htmx_partials/clinic_settings_form.html', {'settings': settings}).content.decode()
+        )
+        
+    except Exception as e:
+        import traceback
+        return HttpResponse(
+            f'<div class="alert alert-danger">Error updating settings: {str(e)}<br><pre>{traceback.format_exc()}</pre></div>',
+            status=400
+        )
+

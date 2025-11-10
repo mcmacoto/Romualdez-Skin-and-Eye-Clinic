@@ -110,7 +110,7 @@
                             <table class="table table-sm table-bordered">
                                 <thead class="table-light">
                                     <tr>
-                                        <th>Medication</th>
+                                        <th>Medicine Name</th>
                                         <th>Dosage</th>
                                         <th>Frequency</th>
                                         <th>Duration</th>
@@ -119,10 +119,20 @@
                                 <tbody>
                                     {% for prescription in record.prescriptions.all %}
                                     <tr>
-                                        <td><strong>{{ prescription.medication }}</strong></td>
-                                        <td>{{ prescription.dosage }}</td>
-                                        <td>{{ prescription.frequency }}</td>
-                                        <td>{{ prescription.duration }}</td>
+                                        <td>
+                                            <strong>
+                                                {% if prescription.custom_medicine_name %}
+                                                    {{ prescription.custom_medicine_name }}
+                                                {% elif prescription.medicine %}
+                                                    {{ prescription.medicine.name }}
+                                                {% else %}
+                                                    N/A
+                                                {% endif %}
+                                            </strong>
+                                        </td>
+                                        <td>{{ prescription.dosage|default:"N/A" }}</td>
+                                        <td>{{ prescription.frequency|default:"N/A" }}</td>
+                                        <td>{{ prescription.duration|default:"N/A" }}</td>
                                     </tr>
                                     {% endfor %}
                                 </tbody>
@@ -180,7 +190,14 @@
                 <div class="row mt-3 pt-3 border-top">
                     <div class="col-md-6">
                         <small class="text-muted">
-                            <i class="fas fa-user-md"></i> Created by: <strong>{{ record.created_by.get_full_name|default:record.created_by.username }}</strong>
+                            <i class="fas fa-user-md"></i> Created by: 
+                            <strong>
+                                {% if record.created_by %}
+                                    {{ record.created_by.get_full_name|default:record.created_by.username }}
+                                {% else %}
+                                    Unknown
+                                {% endif %}
+                            </strong>
                         </small>
                     </div>
                     <div class="col-md-6 text-end">

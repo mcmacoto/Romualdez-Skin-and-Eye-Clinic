@@ -1,0 +1,61 @@
+<tr id="service-row-{{ service.id }}">
+    <td>
+        {% if service.image %}
+        <img src="{{ service.image.url }}" 
+             alt="{{ service.name }}" 
+             style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;">
+        {% else %}
+        <div style="width: 60px; height: 60px; background: #e9ecef; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+            <i class="fas fa-image text-muted"></i>
+        </div>
+        {% endif %}
+    </td>
+    <td>
+        <strong>{{ service.name }}</strong>
+    </td>
+    <td>
+        <small>{{ service.description|truncatewords:15 }}</small>
+    </td>
+    <td class="text-end">
+        <strong class="text-success">₱{{ service.price|floatformat:2 }}</strong>
+    </td>
+    <td class="text-center">
+        {% if service.is_active %}
+            <span class="badge bg-success">Active</span>
+        {% else %}
+            <span class="badge bg-secondary">Disabled</span>
+        {% endif %}
+    </td>
+    <td class="text-center">
+        <div class="btn-group btn-group-sm" role="group">
+            <button 
+                class="btn btn-outline-{% if service.is_active %}warning{% else %}success{% endif %}"
+                hx-post="{% url 'bookings_v2:htmx_service_toggle' service.id %}"
+                hx-target="#service-row-{{ service.id }}"
+                hx-swap="outerHTML"
+                title="{% if service.is_active %}Disable{% else %}Enable{% endif %} Service"
+            >
+                <i class="fas fa-{% if service.is_active %}toggle-off{% else %}toggle-on{% endif %}"></i>
+            </button>
+            <button 
+                class="btn btn-outline-primary"
+                hx-get="{% url 'bookings_v2:htmx_service_edit_form' service.id %}"
+                hx-target="#servicesModalBody"
+                hx-swap="innerHTML"
+                title="Edit Service"
+            >
+                <i class="fas fa-edit"></i>
+            </button>
+            <button 
+                class="btn btn-outline-danger"
+                hx-delete="{% url 'bookings_v2:htmx_service_delete' service.id %}"
+                hx-target="#service-row-{{ service.id }}"
+                hx-swap="outerHTML swap:1s"
+                hx-confirm="Are you sure you want to permanently delete the service '{{ service.name }}'?"
+                title="Delete Service"
+            >
+                <i class="fas fa-trash"></i>
+            </button>
+        </div>
+    </td>
+</tr>

@@ -796,6 +796,54 @@
                     <span>New Service</span>
                 </button>
                 
+                <!-- Doctor Management - GROUPED -->
+                <button type="button" class="quick-action-btn hover-scale"
+                        hx-get="{% url 'bookings_v2:htmx_doctors_list' %}" 
+                        hx-target="#doctorsModalBody"
+                        data-bs-toggle="modal" 
+                        data-bs-target="#doctorsModal">
+                    <i class="fas fa-user-md"></i>
+                    <span>Manage Doctors</span>
+                </button>
+                
+                <button type="button" class="quick-action-btn hover-scale"
+                        hx-get="{% url 'bookings_v2:htmx_doctor_create_form' %}" 
+                        hx-target="#doctorsModalBody"
+                        data-bs-toggle="modal" 
+                        data-bs-target="#doctorsModal">
+                    <i class="fas fa-user-plus"></i>
+                    <span>New Doctor</span>
+                </button>
+                
+                <!-- Calendar Management - GROUPED -->
+                <button type="button" class="quick-action-btn hover-scale"
+                        hx-get="{% url 'bookings_v2:htmx_calendar_view' %}" 
+                        hx-target="#calendarContainer"
+                        data-bs-toggle="modal" 
+                        data-bs-target="#calendarModal">
+                    <i class="fas fa-calendar-times"></i>
+                    <span>Calendar Control</span>
+                </button>
+                
+                <button type="button" class="quick-action-btn hover-scale"
+                        hx-get="{% url 'bookings_v2:htmx_blocked_dates_list' %}" 
+                        hx-target="#blockedDatesList"
+                        data-bs-toggle="modal" 
+                        data-bs-target="#blockedDatesModal">
+                    <i class="fas fa-ban"></i>
+                    <span>Blocked Dates</span>
+                </button>
+                
+                <!-- Clinic Settings - NEW -->
+                <button type="button" class="quick-action-btn hover-scale"
+                        hx-get="{% url 'bookings_v2:htmx_clinic_settings_form' %}" 
+                        hx-target="#settings-form-container"
+                        data-bs-toggle="modal" 
+                        data-bs-target="#clinicSettingsModal">
+                    <i class="fas fa-cog"></i>
+                    <span>Clinic Settings</span>
+                </button>
+                
                 <!-- Inventory Management - GROUPED -->
                 <button type="button" class="quick-action-btn"
                         hx-get="{% url 'bookings_v2:htmx_inventory_list' %}" 
@@ -866,7 +914,7 @@
 
 <!-- Appointments Modal -->
 <div class="modal fade" id="appointmentsModal" tabindex="-1" aria-labelledby="appointmentsModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl">
+    <div class="modal-dialog modal-xl" style="max-width: 80%;">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="appointmentsModalLabel">
@@ -889,7 +937,7 @@
 
 <!-- Patients Modal -->
 <div class="modal fade" id="patientsModal" tabindex="-1" aria-labelledby="patientsModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl">
+    <div class="modal-dialog modal-xl" style="max-width: 80%;">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="patientsModalLabel">
@@ -907,7 +955,7 @@
 
 <!-- Medical Records Modal -->
 <div class="modal fade" id="medicalRecordsModal" tabindex="-1" aria-labelledby="medicalRecordsModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl">
+    <div class="modal-dialog modal-xl" style="max-width: 80%;">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="medicalRecordsModalLabel">
@@ -930,7 +978,7 @@
 
 <!-- Services Modal -->
 <div class="modal fade" id="servicesModal" tabindex="-1" aria-labelledby="servicesModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl">
+    <div class="modal-dialog modal-xl" style="max-width: 80%;">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="servicesModalLabel">
@@ -960,9 +1008,126 @@
     </div>
 </div>
 
+<!-- Doctors Modal -->
+<div class="modal fade" id="doctorsModal" tabindex="-1" aria-labelledby="doctorsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl" style="max-width: 90%;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="doctorsModalLabel">
+                    <i class="fas fa-user-md"></i>
+                    Doctor Management
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="doctorsModalBody">
+                <div class="loading-state">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p>Loading doctors...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Doctor Schedule Modal -->
+<div class="modal fade" id="doctorScheduleModal" tabindex="-1" aria-labelledby="doctorScheduleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content" id="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="doctorScheduleModalLabel">
+                    <i class="fas fa-calendar-alt"></i> Doctor Schedule
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Loading schedule...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Calendar Modal -->
+<div class="modal fade" id="calendarModal" tabindex="-1" aria-labelledby="calendarModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl" style="max-width: 90%;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="calendarModalLabel">
+                    <i class="fas fa-calendar-times"></i>
+                    Calendar Control - Block/Unblock Dates
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="calendarContainer">
+                <div class="loading-state">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p>Loading calendar...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Blocked Dates List Modal -->
+<div class="modal fade" id="blockedDatesModal" tabindex="-1" aria-labelledby="blockedDatesModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="blockedDatesModalLabel">
+                    <i class="fas fa-ban"></i>
+                    Blocked Dates
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="blockedDatesList" 
+                 hx-trigger="refreshBlockedDates from:body"
+                 hx-get="{% url 'bookings_v2:htmx_blocked_dates_list' %}"
+                 hx-swap="innerHTML">
+                <div class="loading-state">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p>Loading blocked dates...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Clinic Settings Modal -->
+<div class="modal fade" id="clinicSettingsModal" tabindex="-1" aria-labelledby="clinicSettingsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="clinicSettingsModalLabel">
+                    <i class="fas fa-cog"></i>
+                    Clinic Settings
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="settings-form-container">
+                <div class="loading-state">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p>Loading settings...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Inventory Modal -->
 <div class="modal fade" id="inventoryModal" tabindex="-1" aria-labelledby="inventoryModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl">
+    <div class="modal-dialog modal-xl" style="max-width: 80%;">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="inventoryModalLabel">
@@ -1172,9 +1337,32 @@
     </div>
 </div>
 
+<!-- User Password Reset Modal -->
+<div class="modal fade" id="userPasswordModal" tabindex="-1" aria-labelledby="userPasswordModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="userPasswordModalLabel">
+                    <i class="fas fa-key"></i>
+                    Reset User Password
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="userPasswordModalBody">
+                <div class="loading-state">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p>Loading form...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Pending Bookings Modal -->
 <div class="modal fade" id="pendingBookingsModal" tabindex="-1" aria-labelledby="pendingBookingsModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl">
+    <div class="modal-dialog modal-xl" style="max-width: 80%;">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="pendingBookingsModalLabel">

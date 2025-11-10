@@ -90,6 +90,24 @@
                 {% endfor %}
             </select>
         </div>
+        
+        <!-- Doctor -->
+        <div class="col-md-6 mb-3">
+            <label for="doctor" class="form-label">
+                <i class="fas fa-user-md text-primary"></i> Doctor
+            </label>
+            <select class="form-select" id="doctor" name="doctor">
+                <option value="">Assign Doctor (Optional)</option>
+                {% for doctor in doctors %}
+                <option value="{{ doctor.id }}" 
+                        {% if appointment and appointment.doctor.id == doctor.id %}selected{% endif %}
+                        {% if not doctor.is_available %}disabled{% endif %}>
+                    {{ doctor.get_full_name }} - {{ doctor.specialization }}
+                    {% if not doctor.is_available %}(Unavailable){% endif %}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
     </div>
     
     <div class="row">

@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.humanize',  # For intcomma and other humanize filters
     'axes',  # Rate limiting and account lockout
     'bookings',
 ]

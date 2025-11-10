@@ -2,7 +2,7 @@
 Appointment and Booking Management Views for v2
 Handles appointment lists, booking confirmations, and consultation status
 """
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.views.decorators.http import require_http_methods
@@ -12,13 +12,12 @@ from django.core.paginator import Paginator
 from datetime import date
 import logging
 
-from ..models import Booking, Service
+from ..models import Booking, Service, Doctor
 from ..decorators import staff_required
 from ..utils.responses import htmx_error, htmx_success
 from ..utils.email_utils import send_booking_confirmation_email, send_booking_status_update_email
 
 logger = logging.getLogger(__name__)
-
 
 @login_required
 @staff_required
@@ -28,6 +27,7 @@ def htmx_appointments_list(request):
     
     # Get filter parameters
     filter_status = request.GET.get('status', 'all')
+    filter_consultation = request.GET.get('consultation', 'all')
     start_date = request.GET.get('start_date', '').strip()
     end_date = request.GET.get('end_date', '').strip()
     service_id = request.GET.get('service', '').strip()
@@ -80,6 +80,12 @@ def htmx_appointments_list(request):
     elif filter_status == 'today':
         appointments = appointments.filter(date=date.today())
     
+    # Apply consultation status filter
+    if filter_consultation == 'done':
+        appointments = appointments.filter(consultation_status='Done')
+    elif filter_consultation == 'not_done':
+        appointments = appointments.exclude(consultation_status='Done')
+    
     # Handle column sorting
     sort_by = request.GET.get('sort', '').strip()
     sort_order = request.GET.get('order', 'asc').strip()
@@ -106,12 +112,17 @@ def htmx_appointments_list(request):
     page_number = request.GET.get('page', 1)
     page_obj = paginator.get_page(page_number)
     
+    # Get all available doctors for the dropdown
+    available_doctors = Doctor.objects.filter(is_available=True).order_by('last_name', 'first_name')
+    
     return render(request, 'bookings_v2/partials/appointments_list.html', {
         'appointments': page_obj,
         'paginator': paginator,
         'page_obj': page_obj,
         'sort_by': sort_by,
         'sort_order': sort_order,
+        'filter_consultation': filter_consultation,
+        'available_doctors': available_doctors,
     })
 
 
@@ -129,9 +140,13 @@ def htmx_mark_consultation_done(request, booking_id):
         
         logger.info(f"Consultation marked as done for booking #{booking_id} by {request.user.username}")
         
+        # Get available doctors for the dropdown in the response
+        available_doctors = Doctor.objects.filter(is_available=True).order_by('last_name', 'first_name')
+        
         # Return just the updated row
         response = render(request, 'bookings_v2/partials/appointment_row.html', {
-            'appointment': booking
+            'appointment': booking,
+            'available_doctors': available_doctors,
         })
         # Trigger both stats and financials refresh (new billing created)
         response['HX-Trigger'] = '{"refreshStats": {}, "refreshFinancials": {}}'
@@ -173,9 +188,13 @@ def htmx_update_consultation_status(request, booking_id):
         
         logger.info(f"Consultation status updated to '{new_status}' for booking #{booking_id} by {request.user.username}")
         
+        # Get available doctors for the dropdown in the response
+        available_doctors = Doctor.objects.filter(is_available=True).order_by('last_name', 'first_name')
+        
         # Return just the updated row
         response = render(request, 'bookings_v2/partials/appointment_row.html', {
-            'appointment': booking
+            'appointment': booking,
+            'available_doctors': available_doctors,
         })
         # Trigger both stats and financials refresh (new billing created when status = Done)
         response['HX-Trigger'] = '{"refreshStats": {}, "refreshFinancials": {}}'
@@ -186,6 +205,47 @@ def htmx_update_consultation_status(request, booking_id):
     except Exception as e:
         logger.error(f"Error updating consultation status for booking #{booking_id}: {str(e)}", exc_info=True)
         return htmx_error("An error occurred while updating the status")
+
+
+@login_required
+@staff_required
+@require_http_methods(["POST"])
+def htmx_update_appointment_doctor(request, booking_id):
+    """Update appointment doctor via dropdown - returns updated row"""
+    
+    try:
+        booking = Booking.objects.select_related('service', 'doctor').get(id=booking_id)
+        doctor_id = request.POST.get('doctor')
+        
+        # If empty string, remove doctor assignment
+        if not doctor_id:
+            booking.doctor = None
+            logger.info(f"Doctor removed from booking #{booking_id} by {request.user.username}")
+        else:
+            try:
+                doctor = Doctor.objects.get(id=doctor_id, is_available=True)
+                booking.doctor = doctor
+                logger.info(f"Doctor '{doctor.get_full_name()}' assigned to booking #{booking_id} by {request.user.username}")
+            except Doctor.DoesNotExist:
+                logger.warning(f"Invalid doctor ID {doctor_id} for booking #{booking_id}")
+                return htmx_error("Doctor not found or not available", status=400)
+        
+        booking.save()
+        
+        # Get available doctors for the dropdown in the response
+        available_doctors = Doctor.objects.filter(is_available=True).order_by('last_name', 'first_name')
+        
+        # Return just the updated row
+        return render(request, 'bookings_v2/partials/appointment_row.html', {
+            'appointment': booking,
+            'available_doctors': available_doctors,
+        })
+    except Booking.DoesNotExist:
+        logger.warning(f"Attempted to update non-existent booking #{booking_id}")
+        return htmx_error("Booking not found", status=404)
+    except Exception as e:
+        logger.error(f"Error updating doctor for booking #{booking_id}: {str(e)}", exc_info=True)
+        return htmx_error("An error occurred while updating the doctor")
 
 
 @login_required
@@ -375,10 +435,13 @@ def htmx_decline_booking(request, booking_id):
 @require_http_methods(["GET"])
 def htmx_appointment_create_form(request):
     """Return HTML form for creating a new appointment"""
+    from ..models import Doctor
     services = Service.objects.all()
+    doctors = Doctor.objects.filter(is_available=True).order_by('last_name', 'first_name')
     return render(request, 'bookings_v2/htmx_partials/appointment_form.html', {
         'today': date.today().isoformat(),
-        'services': services
+        'services': services,
+        'doctors': doctors
     })
 
 
@@ -388,8 +451,15 @@ def htmx_appointment_create_form(request):
 def htmx_appointment_create(request):
     """Create a new appointment"""
     try:
+        from ..models import Doctor
         service_id = request.POST.get('service')
         service = Service.objects.get(id=service_id)
+        
+        # Get doctor if assigned
+        doctor = None
+        doctor_id = request.POST.get('doctor')
+        if doctor_id:
+            doctor = Doctor.objects.get(id=doctor_id)
         
         appointment = Booking.objects.create(
             patient_name=request.POST.get('name'),
@@ -398,6 +468,7 @@ def htmx_appointment_create(request):
             date=request.POST.get('date'),
             time=request.POST.get('time'),
             service=service,
+            doctor=doctor,
             status=request.POST.get('status', 'Pending'),
             consultation_status='Not Yet'
         )
@@ -405,7 +476,7 @@ def htmx_appointment_create(request):
         messages.success(request, f'Appointment created for {appointment.patient_name}')
         
         # Return updated appointments list
-        appointments = Booking.objects.select_related('service').order_by('-date', '-time')
+        appointments = Booking.objects.select_related('service', 'doctor').order_by('-date', '-time')
         response = render(request, 'bookings_v2/partials/appointments_list.html', {
             'appointments': appointments
         })
@@ -424,11 +495,14 @@ def htmx_appointment_create(request):
 def htmx_appointment_edit_form(request, appointment_id):
     """Return HTML form for editing an appointment"""
     try:
-        appointment = Booking.objects.select_related('service').get(id=appointment_id)
+        from ..models import Doctor
+        appointment = Booking.objects.select_related('service', 'doctor').get(id=appointment_id)
         services = Service.objects.all()
+        doctors = Doctor.objects.all().order_by('last_name', 'first_name')
         return render(request, 'bookings_v2/htmx_partials/appointment_form.html', {
             'appointment': appointment,
             'services': services,
+            'doctors': doctors,
             'today': date.today().isoformat()
         })
     except Booking.DoesNotExist:
@@ -441,12 +515,20 @@ def htmx_appointment_edit_form(request, appointment_id):
 def htmx_appointment_update(request, appointment_id):
     """Update an existing appointment"""
     try:
+        from ..models import Doctor
         appointment = Booking.objects.get(id=appointment_id)
         
         # Update service if provided
         service_id = request.POST.get('service')
         if service_id:
             appointment.service = Service.objects.get(id=service_id)
+        
+        # Update doctor if provided
+        doctor_id = request.POST.get('doctor')
+        if doctor_id:
+            appointment.doctor = Doctor.objects.get(id=doctor_id)
+        else:
+            appointment.doctor = None
         
         appointment.patient_name = request.POST.get('name')
         appointment.patient_email = request.POST.get('email')
@@ -460,7 +542,7 @@ def htmx_appointment_update(request, appointment_id):
         messages.success(request, f'Appointment updated for {appointment.patient_name}')
         
         # Return updated appointments list
-        appointments = Booking.objects.select_related('service').order_by('-date', '-time')
+        appointments = Booking.objects.select_related('service', 'doctor').order_by('-date', '-time')
         response = render(request, 'bookings_v2/partials/appointments_list.html', {
             'appointments': appointments
         })

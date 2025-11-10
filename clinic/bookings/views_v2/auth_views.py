@@ -131,10 +131,10 @@ def patient_dashboard_v2(request):
     
     # Only fetch patient-specific records if profile exists
     if has_profile and patient:
-        # Get medical records
+        # Get medical records with related images and prescriptions
         medical_records = MedicalRecord.objects.filter(
             patient=patient
-        ).order_by('-visit_date')
+        ).prefetch_related('images', 'prescriptions__medicine').order_by('-visit_date')
         
         # Get billing information from bookings
         billings = Billing.objects.filter(

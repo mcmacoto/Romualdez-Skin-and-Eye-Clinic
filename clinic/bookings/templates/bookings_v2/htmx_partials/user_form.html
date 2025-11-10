@@ -1,8 +1,10 @@
 {% load static %}
 
-<form hx-post="{% if edit_user %}{% url 'bookings_v2:htmx_user_update' edit_user.id %}{% else %}{% url 'bookings_v2:htmx_user_create' %}{% endif %}" 
+<form id="userForm" 
+      hx-post="{% if edit_user %}{% url 'bookings_v2:htmx_user_update' edit_user.id %}{% else %}{% url 'bookings_v2:htmx_user_create' %}{% endif %}" 
       hx-target="#usersListContainer"
-      hx-swap="innerHTML">
+      hx-swap="innerHTML"
+      hx-encoding="multipart/form-data">
     {% csrf_token %}
     
     <div class="row">
@@ -17,6 +19,45 @@
             </div>
         </div>
     </div>
+    
+    {% if edit_user and patient_profile %}
+    <!-- Profile Picture Section -->
+    <div class="row mb-3">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body text-center">
+                    <div class="profile-picture-wrapper position-relative d-inline-block" style="cursor: pointer;" onclick="document.getElementById('profile_picture_input').click();">
+                        <div class="profile-picture-container position-relative" style="width: 120px; height: 120px;">
+                            {% if patient_profile.profile_picture %}
+                                <img id="profilePicturePreview" src="{{ patient_profile.profile_picture.url }}" alt="Profile Picture" class="rounded-circle" style="width: 120px; height: 120px; object-fit: cover; border: 3px solid #007bff; position: absolute; top: 0; left: 0; display: block; z-index: 2;">
+                                <div id="defaultAvatar" class="rounded-circle d-flex align-items-center justify-content-center" style="width: 120px; height: 120px; background-color: #6c757d; border: 3px solid #ccc; position: absolute; top: 0; left: 0; display: none; z-index: 1;">
+                                    <i class="fas fa-user fa-3x text-white"></i>
+                                </div>
+                            {% else %}
+                                <img id="profilePicturePreview" src="" alt="Profile Picture" class="rounded-circle" style="width: 120px; height: 120px; object-fit: cover; border: 3px solid #007bff; position: absolute; top: 0; left: 0; display: none; z-index: 2;">
+                                <div id="defaultAvatar" class="rounded-circle d-flex align-items-center justify-content-center" style="width: 120px; height: 120px; background-color: #6c757d; border: 3px solid #ccc; position: absolute; top: 0; left: 0; display: block; z-index: 1;">
+                                    <i class="fas fa-user fa-3x text-white"></i>
+                                </div>
+                            {% endif %}
+                            <div class="camera-overlay position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" style="background-color: rgba(0,0,0,0.5); border-radius: 50%; opacity: 0; transition: opacity 0.3s; z-index: 10;">
+                                <i class="fas fa-camera fa-2x text-white"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <input type="file" id="profile_picture_input" name="profile_picture" accept="image/*" style="display: none;" onchange="previewProfilePicture(this)">
+                    <div class="mt-3">
+                        <label class="form-label fw-bold mb-1">
+                            <i class="fas fa-camera"></i> Profile Picture
+                        </label>
+                        <div>
+                            <small class="text-muted">Click on the image to upload a new profile picture</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
     
     <div class="row">
         <!-- Basic Information -->
@@ -191,6 +232,16 @@
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
             <i class="fas fa-times"></i> Cancel
         </button>
+        {% if edit_user %}
+        <button type="button" class="btn btn-warning" 
+                hx-get="{% url 'bookings_v2:htmx_user_password_form' edit_user.id %}" 
+                hx-target="#userPasswordModalBody"
+                data-bs-toggle="modal" 
+                data-bs-target="#userPasswordModal"
+                data-bs-dismiss="modal">
+            <i class="fas fa-key"></i> Reset Password
+        </button>
+        {% endif %}
         <button type="submit" class="btn btn-primary">
             <i class="fas fa-save"></i> {% if edit_user %}Update User{% else %}Create User{% endif %}
         </button>
@@ -198,6 +249,82 @@
 </form>
 
 <script>
+    let croppedProfilePicture = null;
+    
+    async function previewProfilePicture(input) {
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+            
+            // Use GlobalCropper to crop the image
+            if (typeof GlobalCropper !== 'undefined') {
+                try {
+                    const result = await GlobalCropper.open(file, {
+                        aspectRatio: 1 // Square aspect ratio for profile pictures
+                    });
+                    
+                    // Store the cropped file
+                    croppedProfilePicture = result.file;
+                    
+                    // Update the file input with the cropped file
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(result.file);
+                    input.files = dataTransfer.files;
+                    
+                    // Update preview with cropped image
+                    const preview = document.getElementById('profilePicturePreview');
+                    const defaultAvatar = document.getElementById('defaultAvatar');
+                    
+                    preview.src = result.dataURL;
+                    preview.style.display = 'block';
+                    preview.style.borderColor = '#28a745'; // Green border to indicate change
+                    
+                    if (defaultAvatar) {
+                        defaultAvatar.style.display = 'none';
+                    }
+                } catch (error) {
+                    console.log('Cropping cancelled or failed:', error.message);
+                    // Reset the file input if user cancelled
+                    input.value = '';
+                    croppedProfilePicture = null;
+                }
+            } else {
+                // Fallback if GlobalCropper is not available
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    const preview = document.getElementById('profilePicturePreview');
+                    const defaultAvatar = document.getElementById('defaultAvatar');
+                    
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                    preview.style.borderColor = '#28a745';
+                    
+                    if (defaultAvatar) {
+                        defaultAvatar.style.display = 'none';
+                    }
+                }
+                
+                reader.readAsDataURL(file);
+            }
+        }
+    }
+    
+    // Add hover effect to profile picture
+    document.addEventListener('DOMContentLoaded', function() {
+        const wrapper = document.querySelector('.profile-picture-wrapper');
+        const overlay = document.querySelector('.camera-overlay');
+        
+        if (wrapper && overlay) {
+            wrapper.addEventListener('mouseenter', function() {
+                overlay.style.opacity = '1';
+            });
+            
+            wrapper.addEventListener('mouseleave', function() {
+                overlay.style.opacity = '0';
+            });
+        }
+    });
+    
     function toggleStaffWarning(checkbox) {
         const warning = document.getElementById('staffWarning');
         warning.style.display = checkbox.checked ? 'block' : 'none';
@@ -235,6 +362,9 @@
     document.body.addEventListener('htmx:afterSwap', function(event) {
         // Check if the swap target is the users list container (meaning successful save)
         if (event.detail.target.id === 'usersListContainer') {
+            // Reset the cropped image
+            croppedProfilePicture = null;
+            
             // Close the user edit modal
             const modal = bootstrap.Modal.getInstance(document.getElementById('userEditModal'));
             if (modal) {

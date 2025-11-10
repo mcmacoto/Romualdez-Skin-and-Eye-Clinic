@@ -5,6 +5,18 @@ Organized by domain for better maintainability
 # Base models
 from .base import Service
 
+# Clinic Settings
+from .settings import ClinicSettings
+
+# Doctor models
+from .doctors import Doctor
+
+# Blocked dates for calendar control (deprecated - use Calendar)
+from .blocked_dates import BlockedDate
+
+# Calendar model for date management
+from .calendar import Calendar
+
 # Appointment and booking models
 from .appointments import Appointment, Booking
 
@@ -29,6 +41,18 @@ from .pos import POSSale, POSSaleItem
 __all__ = [
     # Base
     'Service',
+    
+    # Settings
+    'ClinicSettings',
+    
+    # Doctors
+    'Doctor',
+    
+    # Blocked Dates (deprecated)
+    'BlockedDate',
+    
+    # Calendar
+    'Calendar',
     
     # Appointments
     'Appointment',

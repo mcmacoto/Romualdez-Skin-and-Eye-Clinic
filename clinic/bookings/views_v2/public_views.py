@@ -6,10 +6,10 @@ Includes HTMX endpoints for booking and contact forms
 from django.shortcuts import render
 from django.http import HttpResponse
 from django.views.decorators.http import require_http_methods
-from datetime import datetime, date
+from datetime import datetime, date, time as datetime_time
 import logging
 
-from ..models import Service, Booking
+from ..models import Service, Booking, Calendar, ClinicSettings, Patient
 from ..utils.responses import htmx_error, htmx_success
 from ..utils.email_utils import send_booking_confirmation_email
 
@@ -24,8 +24,63 @@ def home_v2(request):
 def booking_v2(request):
     """Booking page - V2 with Bootstrap/HTMX/Alpine"""
     services = Service.objects.all()
+    
+    # Check if logged-in user has an existing patient profile
+    existing_patient = None
+    if request.user.is_authenticated:
+        try:
+            existing_patient = Patient.objects.get(user=request.user)
+        except Patient.DoesNotExist:
+            pass
+    
+    # Get all blocked dates (including Sundays)
+    from datetime import timedelta
+    today = date.today()
+    end_date = today + timedelta(days=180)  # Next 6 months
+    
+    # Get blocked dates from database
+    blocked_dates_db = Calendar.objects.filter(
+        date__gte=today,
+        date__lte=end_date,
+        event_type='blocked'
+    ).order_by('date')
+    
+    blocked_dates_list = list(blocked_dates_db.values_list('date', flat=True))
+    
+    # Generate all Sundays in the next 6 months
+    sundays = []
+    current_date = today
+    while current_date <= end_date:
+        if current_date.weekday() == 6:  # 6 = Sunday
+            sundays.append(current_date)
+        current_date += timedelta(days=1)
+    
+    # Combine blocked dates and Sundays
+    all_blocked_dates = set(blocked_dates_list + sundays)
+    blocked_dates_json = [d.strftime('%Y-%m-%d') for d in all_blocked_dates]
+    
+    # Min date is tomorrow
+    from datetime import timedelta
+    min_date = (today + timedelta(days=1)).strftime('%Y-%m-%d')
+    
+    # Format blocked dates for display (show first 10)
+    blocked_dates_display = []
+    for blocked_date_obj in blocked_dates_db[:10]:
+        formatted = blocked_date_obj.date.strftime('%b %d')
+        if blocked_date_obj.reason:
+            formatted += f' ({blocked_date_obj.reason})'
+        blocked_dates_display.append(formatted)
+    
+    # Add "All Sundays" to the display list
+    if sundays:
+        blocked_dates_display.append('All Sundays')
+    
     return render(request, 'bookings_v2/booking_v2.html', {
-        'services': services
+        'services': services,
+        'blocked_dates': blocked_dates_json,
+        'blocked_dates_display': blocked_dates_display,
+        'minDate': min_date,
+        'existing_patient': existing_patient
     })
 
 
@@ -84,7 +139,7 @@ def htmx_time_slots(request):
     # If no service or date selected, return empty select with instruction
     if not service_id or not booking_date:
         return HttpResponse(
-            '<select class="form-select" name="time" required disabled>'
+            '<select class="form-select form-select-lg form-control-professional" name="time" required disabled>'
             '<option value="">Select service and date first...</option>'
             '</select>'
         )
@@ -95,20 +150,49 @@ def htmx_time_slots(request):
         
         # Check if date is in the past
         if selected_date < date.today():
-            return render(request, 'bookings_v2/partials/time_slots.html', {
-                'available_slots': []
-            })
+            return HttpResponse(
+                '<select class="form-select form-select-lg form-control-professional" name="time" required disabled>'
+                '<option value="">Past dates are not available</option>'
+                '</select>'
+            )
         
-        # Define clinic hours (9 AM to 5 PM, with 1-hour slots)
-        clinic_hours = [
-            {'time': '09:00', 'display': '9:00 AM'},
-            {'time': '10:00', 'display': '10:00 AM'},
-            {'time': '11:00', 'display': '11:00 AM'},
-            {'time': '13:00', 'display': '1:00 PM'},
-            {'time': '14:00', 'display': '2:00 PM'},
-            {'time': '15:00', 'display': '3:00 PM'},
-            {'time': '16:00', 'display': '4:00 PM'},
-        ]
+        # Check if date is blocked
+        if Calendar.is_date_blocked(selected_date):
+            return HttpResponse(
+                '<select class="form-select form-select-lg form-control-professional" name="time" required disabled>'
+                '<option value="">This date is not available (clinic closed)</option>'
+                '</select>'
+            )
+        
+        # Get clinic settings for operating hours
+        settings = ClinicSettings.load()
+        opening_time = settings.opening_time or datetime_time(9, 0)
+        closing_time = settings.closing_time or datetime_time(17, 0)
+        
+        # Generate hourly time slots between opening and closing time
+        clinic_hours = []
+        current_hour = opening_time.hour
+        closing_hour = closing_time.hour
+        
+        # Skip lunch hour (12:00 PM)
+        while current_hour < closing_hour:
+            if current_hour != 12:  # Skip lunch hour
+                time_str = f"{current_hour:02d}:00"
+                # Format display time (AM/PM)
+                if current_hour == 0:
+                    display = "12:00 AM"
+                elif current_hour < 12:
+                    display = f"{current_hour}:00 AM"
+                elif current_hour == 12:
+                    display = "12:00 PM"
+                else:
+                    display = f"{current_hour - 12}:00 PM"
+                
+                clinic_hours.append({
+                    'time': time_str,
+                    'display': display
+                })
+            current_hour += 1
         
         # Get already booked time slots for this date
         booked_times = Booking.objects.filter(

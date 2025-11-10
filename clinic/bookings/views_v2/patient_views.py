@@ -123,21 +123,34 @@ def htmx_patients_list(request):
 def htmx_patient_records(request, patient_id):
     """Return HTML fragment of medical records for a specific patient"""
     try:
+        logger.info(f"Loading medical records for patient ID: {patient_id}")
         patient = Patient.objects.get(id=patient_id)
+        
+        logger.info(f"Patient found: {patient.user.get_full_name()}")
+        
         records = MedicalRecord.objects.filter(
             patient=patient
         ).select_related('created_by').prefetch_related(
-            'prescriptions', 'images'
+            'prescriptions__medicine', 'images'
         ).order_by('-visit_date')
+        
+        logger.info(f"Found {records.count()} medical records for patient {patient_id}")
         
         return render(request, 'bookings_v2/partials/patient_medical_records.html', {
             'records': records,
             'patient': patient
         })
     except Patient.DoesNotExist:
+        logger.warning(f"Patient ID {patient_id} not found")
         return HttpResponse(
             '<div class="alert alert-danger">Patient not found</div>',
             status=404
+        )
+    except Exception as e:
+        logger.error(f"Error loading medical records for patient {patient_id}: {str(e)}", exc_info=True)
+        return HttpResponse(
+            f'<div class="alert alert-danger">Error loading medical records: {str(e)}</div>',
+            status=500
         )
 
 
@@ -281,7 +294,7 @@ def htmx_delete_patient(request, patient_id):
         if unpaid_bills:
             # Return error message - don't delete patients with unpaid bills
             return HttpResponse(
-                '<tr><td colspan="7" class="text-center text-warning">Cannot delete patient with unpaid bills</td></tr>',
+                '<tr><td colspan="7" class="alert alert-warning m-2">Cannot delete patient with unpaid bills. Please settle all bills first.</td></tr>',
                 status=400
             )
         
@@ -302,8 +315,15 @@ def htmx_delete_patient(request, patient_id):
         
     except Patient.DoesNotExist:
         return HttpResponse(
-            '<tr><td colspan="7" class="text-center text-danger">Patient not found</td></tr>',
+            '<tr><td colspan="7" class="alert alert-danger m-2">Patient not found</td></tr>',
             status=404
+        )
+    except Exception as e:
+        import traceback
+        error_details = traceback.format_exc()
+        return HttpResponse(
+            f'<tr><td colspan="7" class="alert alert-danger m-2">Error deleting patient: {str(e)}<br><small class="text-muted"><pre>{error_details}</pre></small></td></tr>',
+            status=500
         )
 
 
@@ -1157,9 +1177,11 @@ def htmx_medical_record_detail(request, record_id):
     """Display detailed view of a medical record"""
     try:
         record = MedicalRecord.objects.select_related(
-            'patient__user'
+            'patient__user',
+            'created_by',
+            'updated_by'
         ).prefetch_related(
-            'prescriptions',
+            'prescriptions__medicine',
             'images'
         ).get(id=record_id)
         

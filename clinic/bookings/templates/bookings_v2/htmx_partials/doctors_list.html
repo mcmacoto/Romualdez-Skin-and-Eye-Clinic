@@ -1,0 +1,125 @@
+<!-- Doctor management table with search and filter -->
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="mb-0">Doctor Management</h5>
+    <button class="btn btn-success btn-sm"
+            hx-get="{% url 'bookings_v2:htmx_doctor_create_form' %}"
+            hx-target="#doctorFormContainer"
+            hx-swap="innerHTML">
+        <i class="fas fa-plus"></i> Add Doctor
+    </button>
+</div>
+
+<!-- Doctor Form Container -->
+<div id="doctorFormContainer"></div>
+
+<!-- Search and Filter Form -->
+<form hx-get="{% url 'bookings_v2:htmx_doctors_list' %}"
+      hx-target="#doctors-table-container"
+      hx-trigger="input delay:300ms from:#search-doctors, change from:#availability-filter"
+      class="mb-3">
+    <div class="row g-2">
+        <div class="col-md-8">
+            <input type="text" 
+                   class="form-control form-control-sm" 
+                   id="search-doctors"
+                   name="search" 
+                   placeholder="Search by name, specialization, or license number..."
+                   value="{{ search_query }}">
+        </div>
+        <div class="col-md-4">
+            <select class="form-select form-select-sm" id="availability-filter" name="availability">
+                <option value="">All Doctors</option>
+                <option value="available" {% if availability_filter == 'available' %}selected{% endif %}>Available Only</option>
+                <option value="unavailable" {% if availability_filter == 'unavailable' %}selected{% endif %}>Unavailable</option>
+            </select>
+        </div>
+    </div>
+</form>
+
+<!-- Doctors Table -->
+<div id="doctors-table-container">
+    <div class="table-responsive">
+        <table class="table table-hover table-sm align-middle">
+            <thead class="table-light sticky-top">
+                <tr>
+                    <th>Name</th>
+                    <th>Specialization</th>
+                    <th>License #</th>
+                    <th>Contact</th>
+                    <th>Bookings</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if doctors %}
+                    {% for doctor in doctors %}
+                    <tr id="doctor-row-{{ doctor.id }}">
+                        <td>
+                            <strong>{{ doctor.get_full_name }}</strong>
+                        </td>
+                        <td>{{ doctor.specialization }}</td>
+                        <td><small class="text-muted">{{ doctor.license_number }}</small></td>
+                        <td>
+                            <small>
+                                {{ doctor.phone_number }}<br>
+                                {{ doctor.email }}
+                            </small>
+                        </td>
+                        <td>
+                            <span class="badge bg-info">
+                                Active: {{ doctor.active_bookings }}
+                            </span>
+                            <span class="badge bg-secondary">
+                                Total: {{ doctor.total_bookings }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if doctor.is_available %}
+                                <span class="badge bg-success">Available</span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark">Unavailable</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm" role="group">
+                                <button class="btn btn-outline-primary btn-sm"
+                                        hx-get="{% url 'bookings_v2:htmx_doctor_schedule' doctor.id %}"
+                                        hx-target="#modal-content"
+                                        hx-swap="innerHTML"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#doctorScheduleModal"
+                                        title="View Schedule">
+                                    <i class="fas fa-calendar-alt"></i>
+                                </button>
+                                <button class="btn btn-outline-warning btn-sm"
+                                        hx-get="{% url 'bookings_v2:htmx_doctor_edit_form' doctor.id %}"
+                                        hx-target="#doctorFormContainer"
+                                        hx-swap="innerHTML"
+                                        title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-outline-danger btn-sm"
+                                        hx-delete="{% url 'bookings_v2:htmx_doctor_delete' doctor.id %}"
+                                        hx-confirm="Are you sure you want to delete Dr. {{ doctor.get_full_name }}?"
+                                        hx-target="#doctor-row-{{ doctor.id }}"
+                                        hx-swap="outerHTML swap:1s"
+                                        title="Delete">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-4">
+                            <i class="fas fa-user-md fa-3x mb-3 d-block"></i>
+                            No doctors found
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>

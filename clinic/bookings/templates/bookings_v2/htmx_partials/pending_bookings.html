@@ -68,8 +68,7 @@
                             </button>
                             <button type="button" 
                                     class="btn btn-info"
-                                    data-bs-toggle="collapse" 
-                                    data-bs-target="#notes-{{ booking.id }}"
+                                    onclick="document.getElementById('notes-{{ booking.id }}').classList.toggle('show')"
                                     title="View Notes">
                                 <i class="fas fa-sticky-note"></i>
                             </button>
@@ -77,7 +76,7 @@
                     </td>
                 </tr>
                 {% if booking.notes %}
-                <tr class="collapse" id="notes-{{ booking.id }}">
+                <tr class="collapse" id="notes-{{ booking.id }}" style="display: none;">
                     <td colspan="7" class="bg-light">
                         <div class="p-2">
                             <strong><i class="fas fa-sticky-note"></i> Patient Notes:</strong>
@@ -127,4 +126,20 @@
     .btn-group-sm > .btn {
         font-size: 0.875rem;
     }
+    
+    .collapse.show {
+        display: table-row !important;
+    }
 </style>
+
+<script>
+// Ensure notes toggle works properly
+document.addEventListener('DOMContentLoaded', function() {
+    // Re-attach after HTMX swaps
+    document.body.addEventListener('htmx:afterSwap', function(event) {
+        if (event.detail.target.id === 'pendingBookingsContainer') {
+            console.log('Pending bookings loaded');
+        }
+    });
+});
+</script>

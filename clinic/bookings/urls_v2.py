@@ -19,7 +19,7 @@ from .views_v2 import (
     htmx_payment_create_form, htmx_payment_create,
     # Appointment views
     htmx_appointments_list, htmx_mark_consultation_done,
-    htmx_update_consultation_status, htmx_delete_appointment,
+    htmx_update_consultation_status, htmx_update_appointment_doctor, htmx_delete_appointment,
     htmx_pending_bookings, htmx_accept_booking, htmx_decline_booking,
     htmx_appointment_create_form, htmx_appointment_create,
     htmx_appointment_edit_form, htmx_appointment_update,
@@ -51,8 +51,18 @@ from .views_v2 import (
     htmx_users_list, htmx_user_detail, htmx_user_edit,
     htmx_user_create_form, htmx_user_create,
     htmx_user_update, htmx_user_delete,
+    htmx_user_password_form, htmx_user_password_reset,
     htmx_services_list, htmx_service_create_form, htmx_service_create,
-    htmx_service_edit_form, htmx_service_update, htmx_service_delete,
+    htmx_service_edit_form, htmx_service_update, htmx_service_delete, htmx_service_toggle,
+    # Doctor management views
+    htmx_doctors_list, htmx_doctor_create_form, htmx_doctor_create,
+    htmx_doctor_edit_form, htmx_doctor_update, htmx_doctor_delete,
+    htmx_doctor_schedule,
+    # Calendar management views
+    htmx_calendar_view, htmx_toggle_blocked_date,
+    htmx_blocked_dates_list, htmx_delete_blocked_date,
+    # Clinic settings views
+    htmx_clinic_settings_form, htmx_clinic_settings_update,
     # Report views
     download_appointments_pdf, download_patients_csv,
     download_billing_csv, download_services_pdf,
@@ -107,6 +117,7 @@ urlpatterns = [
     path('htmx/appointments/', htmx_appointments_list, name='htmx_appointments_list'),
     path('htmx/mark-consultation-done/<int:booking_id>/', htmx_mark_consultation_done, name='htmx_mark_consultation_done'),
     path('htmx/update-consultation-status/<int:booking_id>/', htmx_update_consultation_status, name='htmx_update_consultation_status'),
+    path('htmx/update-appointment-doctor/<int:booking_id>/', htmx_update_appointment_doctor, name='htmx_update_appointment_doctor'),
     path('htmx/delete-appointment/<int:booking_id>/', htmx_delete_appointment, name='htmx_delete_appointment'),
     path('htmx/appointment/create-form/', htmx_appointment_create_form, name='htmx_appointment_create_form'),
     path('htmx/appointment/create/', htmx_appointment_create, name='htmx_appointment_create'),
@@ -177,6 +188,7 @@ urlpatterns = [
     path('htmx/service/<int:service_id>/edit/', htmx_service_edit_form, name='htmx_service_edit_form'),
     path('htmx/service/<int:service_id>/update/', htmx_service_update, name='htmx_service_update'),
     path('htmx/service/<int:service_id>/delete/', htmx_service_delete, name='htmx_service_delete'),
+    path('htmx/service/<int:service_id>/toggle/', htmx_service_toggle, name='htmx_service_toggle'),
     
     # Pending Bookings HTMX endpoints
     path('htmx/pending-bookings/', htmx_pending_bookings, name='htmx_pending_bookings'),
@@ -191,6 +203,27 @@ urlpatterns = [
     path('htmx/user/create/', htmx_user_create, name='htmx_user_create'),
     path('htmx/user/<int:user_id>/update/', htmx_user_update, name='htmx_user_update'),
     path('htmx/user/<int:user_id>/delete/', htmx_user_delete, name='htmx_user_delete'),
+    path('htmx/user/<int:user_id>/password-form/', htmx_user_password_form, name='htmx_user_password_form'),
+    path('htmx/user/<int:user_id>/password-reset/', htmx_user_password_reset, name='htmx_user_password_reset'),
+    
+    # Doctor Management HTMX endpoints
+    path('htmx/doctors/', htmx_doctors_list, name='htmx_doctors_list'),
+    path('htmx/doctor/create-form/', htmx_doctor_create_form, name='htmx_doctor_create_form'),
+    path('htmx/doctor/create/', htmx_doctor_create, name='htmx_doctor_create'),
+    path('htmx/doctor/<int:doctor_id>/edit/', htmx_doctor_edit_form, name='htmx_doctor_edit_form'),
+    path('htmx/doctor/<int:doctor_id>/update/', htmx_doctor_update, name='htmx_doctor_update'),
+    path('htmx/doctor/<int:doctor_id>/delete/', htmx_doctor_delete, name='htmx_doctor_delete'),
+    path('htmx/doctor/<int:doctor_id>/schedule/', htmx_doctor_schedule, name='htmx_doctor_schedule'),
+    
+    # Calendar Management HTMX endpoints
+    path('htmx/calendar/', htmx_calendar_view, name='htmx_calendar_view'),
+    path('htmx/calendar/toggle-date/', htmx_toggle_blocked_date, name='htmx_toggle_blocked_date'),
+    path('htmx/calendar/blocked-dates/', htmx_blocked_dates_list, name='htmx_blocked_dates_list'),
+    path('htmx/calendar/blocked-date/<int:blocked_date_id>/delete/', htmx_delete_blocked_date, name='htmx_delete_blocked_date'),
+    
+    # Clinic Settings HTMX endpoints
+    path('htmx/clinic-settings/', htmx_clinic_settings_form, name='htmx_clinic_settings_form'),
+    path('htmx/clinic-settings/update/', htmx_clinic_settings_update, name='htmx_clinic_settings_update'),
     
     # Reports - Download endpoints
     path('reports/appointments-pdf/', download_appointments_pdf, name='download_appointments_pdf'),

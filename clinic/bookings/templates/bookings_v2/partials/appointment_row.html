@@ -18,6 +18,24 @@
     </td>
     <td>{{ appointment.service.name }}</td>
     <td>
+        <select 
+            class="form-select form-select-sm"
+            name="doctor"
+            hx-post="{% url 'bookings_v2:htmx_update_appointment_doctor' appointment.id %}"
+            hx-target="#appointment-row-{{ appointment.id }}"
+            hx-swap="outerHTML"
+            hx-trigger="change"
+            style="min-width: 150px;"
+        >
+            <option value="">Not assigned</option>
+            {% for doctor in available_doctors %}
+            <option value="{{ doctor.id }}" {% if appointment.doctor and appointment.doctor.id == doctor.id %}selected{% endif %}>
+                {{ doctor.get_full_name }}
+            </option>
+            {% endfor %}
+        </select>
+    </td>
+    <td>
         {% if appointment.status == 'Confirmed' %}
             <span class="badge bg-success">
                 <i class="fas fa-check-circle"></i> Confirmed
