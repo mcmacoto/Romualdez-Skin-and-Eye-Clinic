@@ -627,51 +627,20 @@
         <!-- LEFT COLUMN: Statistics -->
         <div class="col-lg-8">
             <div class="mb-4" data-aos="fade-up">
-                <span class="badge badge-professional bg-primary text-white mb-2">Analytics</span>
                 <h3 class="section-title mb-0">
                     <i class="fas fa-chart-line me-2"></i>
                     Key Statistics
                 </h3>
             </div>
             
-            <!-- Auto-refreshable stats grid container -->
-            <div id="dashboard-stats-container" 
-                 hx-get="{% url 'bookings_v2:htmx_dashboard_stats' %}" 
-                 hx-trigger="refreshStats from:body"
-                 hx-swap="innerHTML"
-                 hx-indicator="#stats-loading"
-                 data-aos="fade-up" data-aos-delay="100">
+            <!-- Static stats grid from partial -->
+            <div data-aos="fade-up" data-aos-delay="100">
                 {% include 'bookings_v2/htmx_partials/dashboard_stats.html' %}
             </div>
             
-            <!-- Professional Loading indicator -->
-            <div id="stats-loading" class="htmx-indicator" style="display: none;">
-                <div class="loading-overlay">
-                    <div class="text-center py-5">
-                        <div class="spinner-professional mb-3"></div>
-                        <p class="text-muted fw-medium">Updating statistics...</p>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Auto-refreshable financial overview container -->
-            <div id="financial-overview-container" 
-                 hx-get="{% url 'bookings_v2:htmx_financial_overview' %}" 
-                 hx-trigger="refreshFinancials from:body"
-                 hx-swap="innerHTML"
-                 hx-indicator="#financial-loading"
-                 data-aos="fade-up" data-aos-delay="200">
+            <!-- Static financial overview from partial -->
+            <div data-aos="fade-up" data-aos-delay="200">
                 {% include 'bookings_v2/htmx_partials/financial_overview.html' %}
-            </div>
-            
-            <!-- Professional Loading indicator for financial stats -->
-            <div id="financial-loading" class="htmx-indicator" style="display: none;">
-                <div class="loading-overlay">
-                    <div class="text-center py-5">
-                        <div class="spinner-professional mb-3"></div>
-                        <p class="text-muted fw-medium">Updating financial data...</p>
-                    </div>
-                </div>
             </div>
         </div>
         
@@ -902,13 +871,6 @@
                 </button>
             </div>
         </div>
-    </div>
-</div>
-
-<!-- Analytics Charts Section -->
-<div class="row mt-4">
-    <div class="col-12">
-        {% include 'bookings_v2/partials/dashboard_charts.html' %}
     </div>
 </div>
 

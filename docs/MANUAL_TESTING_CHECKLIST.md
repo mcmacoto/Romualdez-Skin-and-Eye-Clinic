@@ -220,7 +220,6 @@ Invalid Cases:
 - ✅ "Key Statistics" grid shows 8-9 stat cards
 - ✅ All stat numbers are accurate
 - ✅ Stat cards are clickable (open modals)
-- ✅ Charts section displays 2 charts (Monthly Appointments, Services Distribution)
 - ✅ Quick Actions section visible (right sidebar)
 
 **Key Statistics to Verify:**
@@ -263,28 +262,6 @@ Invalid Cases:
 | Patient reaches low stock | Low Stock Items ↑ |
 | Delete appointment | Total Appointments ↓ |
 | Update consultation status | (No change) |
-
----
-
-### 3.3 Dashboard Charts
-**Test Steps:**
-1. Scroll to "Analytics & Insights" section
-2. View both charts
-
-**Expected Outcomes:**
-- ✅ **Monthly Appointments Bar Chart** displays last 6 months
-- ✅ Chart shows month labels (e.g., "November 2025")
-- ✅ Bar heights correspond to appointment counts
-- ✅ Hover shows exact count
-- ✅ **Services Distribution Doughnut Chart** shows top 6 services
-- ✅ Service names in legend
-- ✅ Percentages/counts visible
-- ✅ Charts are responsive (resize window to test)
-
-**Edge Cases:**
-- ✅ No data → Charts show "No data available"
-- ✅ Only 1 service → Doughnut shows 100%
-- ✅ More than 6 services → Only top 6 displayed
 
 ---
 
@@ -1058,47 +1035,7 @@ If using `EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'`:
 
 ---
 
-## 📊 Module 14: Dashboard Charts (PHASE 4)
-
-### 14.1 Monthly Appointments Bar Chart
-**Test Steps:**
-1. Open staff dashboard
-2. Scroll to "Analytics & Insights"
-3. View bar chart
-
-**Expected Outcomes:**
-- ✅ Chart displays last 6 months
-- ✅ X-axis: Month labels (e.g., "November 2025")
-- ✅ Y-axis: Appointment count
-- ✅ Bars colored with clinic theme
-- ✅ Hover tooltip shows exact count
-- ✅ Chart responsive (resize browser)
-
-**Data Verification:**
-- ✅ Chart data matches database query
-- ✅ Empty months show 0 (no bar)
-
----
-
-### 14.2 Services Distribution Doughnut Chart
-**Test Steps:**
-1. View services doughnut chart
-2. Hover over segments
-
-**Expected Outcomes:**
-- ✅ Shows top 6 services by booking count
-- ✅ Legend displays service names
-- ✅ Segments proportional to booking counts
-- ✅ Hover shows service name and count
-- ✅ Colors distinct and professional
-
-**Edge Cases:**
-- ✅ Fewer than 6 services → Shows all available
-- ✅ No bookings → Shows "No data"
-
----
-
-## 📝 Module 15: Activity Logging (PHASE 5)
+## 📝 Module 14: Activity Logging (PHASE 5)
 
 ### 15.1 Activity Log Model
 **Test Steps:**
@@ -1413,35 +1350,33 @@ Test each validator by attempting invalid data:
 - ✅ Smooth transition (no flicker)
 
 **Technical Verification:**
-- ✅ HTMX response includes `HX-Trigger: refreshStats`
-- ✅ Dashboard listens for `refreshStats` event
-- ✅ Event triggers HTMX request to refresh stats grid
-- ✅ Server returns updated statistics HTML
-- ✅ HTMX swaps content in `.stats-grid` container
+- ✅ Dashboard displays current statistics
+- ✅ Statistics load from database on page load
+- ✅ Manual page refresh updates all statistics
 
 ---
 
-### 22.2 Which Actions Should Trigger Refresh?
-**Test each action and verify refresh:**
+### 22.2 Dashboard Statistics Accuracy
+**Test that statistics reflect database changes:**
 
-| Action | Should Refresh? | Stats Affected |
-|--------|----------------|----------------|
-| ✅ Accept pending booking | YES | Pending ↓, Total ↑, Patients ↑ |
-| ✅ Decline pending booking | YES | Pending ↓ |
-| ✅ Create new appointment | YES | Total ↑ |
-| ✅ Delete appointment | YES | Total ↓ |
-| ❌ Update consultation status | NO | (No stat change) |
-| ✅ Record payment (full) | YES | Unpaid ↓ |
-| ✅ Record payment (partial) | NO | (Still unpaid) |
-| ✅ Add patient | YES | Patients ↑ |
-| ✅ Delete patient | YES | Patients ↓ |
-| ✅ Add inventory | YES | Inventory ↑ |
-| ✅ Delete inventory | YES | Inventory ↓ |
-| ✅ Adjust stock (to low) | YES | Low Stock ↑ |
-| ✅ Adjust stock (above reorder) | YES | Low Stock ↓ |
-| ✅ POS sale (creates low stock) | YES | Low Stock ↑ |
-| ✅ Create user (patient) | YES | Patients ↑ |
-| ✅ Create service | NO | (No stat tracking) |
+| Action | Stats Affected After Refresh |
+|--------|------------------------------|
+| ✅ Accept pending booking | Pending ↓, Total ↑, Patients ↑ |
+| ✅ Decline pending booking | Pending ↓ |
+| ✅ Create new appointment | Total ↑ |
+| ✅ Delete appointment | Total ↓ |
+| ✅ Update consultation status | No change expected |
+| ✅ Record payment (full) | Unpaid ↓ |
+| ✅ Record payment (partial) | Still unpaid |
+| ✅ Add patient | Patients ↑ |
+| ✅ Delete patient | Patients ↓ |
+| ✅ Add inventory | Inventory ↑ |
+| ✅ Delete inventory | Inventory ↓ |
+| ✅ Adjust stock (to low) | Low Stock ↑ |
+| ✅ Adjust stock (above reorder) | Low Stock ↓ |
+| ✅ POS sale (creates low stock) | Low Stock ↑ |
+| ✅ Create user (patient) | Patients ↑ |
+| ✅ Create service | No tracking |
 
 ---
 
@@ -1499,16 +1434,16 @@ After completing all tests, verify:
 ### New Features (Phases 2-8)
 - [ ] Email notifications send successfully
 - [ ] PDF/CSV reports download correctly
-- [ ] Dashboard charts display accurate data
+- [ ] Dashboard statistics display accurate data
 - [ ] Activity logging records created
 - [ ] Custom validators prevent invalid data
 - [ ] Error pages display when DEBUG=False
 - [ ] Advanced search filters work
 
-### Auto-Refresh (CRITICAL)
-- [ ] **Statistics auto-refresh after relevant actions**
-- [ ] Refresh triggers fire correctly
-- [ ] HTMX swap updates stats without page reload
+### Dashboard Statistics
+- [ ] **Dashboard statistics display correctly**
+- [ ] Statistics match database counts
+- [ ] Manual page refresh updates all statistics
 - [ ] No JavaScript errors in console
 
 ### Security

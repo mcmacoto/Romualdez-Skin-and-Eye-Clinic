@@ -19,11 +19,6 @@ from .auth_views import (
     admin_dashboard_v2,
 )
 
-from .dashboard_views import (
-    htmx_dashboard_stats,
-    htmx_financial_overview,
-)
-
 from .public_views import (
     home_v2,
     booking_v2,

@@ -191,7 +191,6 @@ SESSION_COOKIE_SAMESITE = 'Strict'  # Prevent session fixation attacks
 CSRF_FAILURE_VIEW = 'django.views.csrf.csrf_failure'  # Custom CSRF failure page
 
 # Content Security Policy (CSP) - Restrictive policy
-# Note: Adjust as needed for your specific requirements
 CSP_DEFAULT_SRC = ("'self'",)
 CSP_SCRIPT_SRC = ("'self'", "'unsafe-inline'")  # Consider removing unsafe-inline in production
 CSP_STYLE_SRC = ("'self'", "'unsafe-inline'")  # Consider removing unsafe-inline in production

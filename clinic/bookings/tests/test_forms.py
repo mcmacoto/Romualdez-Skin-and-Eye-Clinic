@@ -54,8 +54,6 @@ class BookingFormValidationTest(TestCase):
             time=time(10, 0),
             created_by=self.user
         )
-        # Note: Add custom validator if needed
-        # For now, just verify model saves (business logic in view)
         booking.save()
         self.assertIsNotNone(booking.id)
     
@@ -145,8 +143,6 @@ class PatientFormValidationTest(TestCase):
             phone='+639123456789',
             created_by=self.staff_user
         )
-        # Note: Add custom validator if needed
-        # Currently testing basic model validation
         patient.save()
         self.assertIsNotNone(patient.id)
 

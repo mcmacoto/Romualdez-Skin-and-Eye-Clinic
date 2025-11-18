@@ -9,8 +9,6 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from datetime import date, timedelta
 from django.db.models import Q, Sum, Count
-from django.db.models.functions import TruncMonth
-import json
 
 from ..models import Billing, Booking, Patient, MedicalRecord, Inventory, POSSale
 
@@ -220,29 +218,6 @@ def admin_dashboard_v2(request):
         total=Sum('balance')
     )['total'] or 0
     
-    # Chart Data - Monthly Appointments (Last 6 months)
-    six_months_ago = date.today() - timedelta(days=180)
-    monthly_appointments = Booking.objects.filter(
-        date__gte=six_months_ago
-    ).annotate(
-        month=TruncMonth('date')
-    ).values('month').annotate(
-        count=Count('id')
-    ).order_by('month')
-    
-    # Format for Chart.js
-    months_labels = [item['month'].strftime('%B %Y') for item in monthly_appointments]
-    months_data = [item['count'] for item in monthly_appointments]
-    
-    # Chart Data - Services Distribution
-    from ..models import Service
-    services_distribution = Service.objects.annotate(
-        booking_count=Count('bookings')  # Note: 'bookings' is the related name
-    ).order_by('-booking_count')[:6]  # Top 6 services
-    
-    services_labels = [service.name for service in services_distribution]
-    services_data = [service.booking_count for service in services_distribution]
-    
     context = {
         'total_appointments': total_appointments,
         'total_bookings': total_bookings,
@@ -263,11 +238,6 @@ def admin_dashboard_v2(request):
         'total_amount_billed': total_amount_billed,
         'total_amount_paid': total_amount_paid,
         'total_balance_outstanding': total_balance_outstanding,
-        # Chart data (JSON serialized for JavaScript)
-        'months_labels_json': json.dumps(months_labels),
-        'months_data_json': json.dumps(months_data),
-        'services_labels_json': json.dumps(services_labels),
-        'services_data_json': json.dumps(services_data),
     }
     
     return render(request, 'bookings_v2/admin_dashboard_v2.html', context)

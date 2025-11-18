@@ -4,7 +4,6 @@
 {% block title %}Home - Romualdez Skin & Eye Clinic{% endblock %}
 
 {% block content %}
-<!-- Professional Hero Section -->
 <section class="hero-section-professional text-white py-5">
     <div class="container py-5">
         <div class="row align-items-center">
@@ -26,7 +25,6 @@
                     </a>
                 </div>
                 
-                <!-- Trust Indicators -->
                 <div class="row mt-5 text-center g-3">
                     <div class="col-md-4 col-4">
                         <div class="text-white">
@@ -67,7 +65,6 @@
 }
 </style>
 
-<!-- Professional Features Section -->
 <section class="py-5 bg-light">
     <div class="container py-4">
         <div class="text-center mb-5" data-aos="fade-up">
@@ -122,7 +119,6 @@
     </div>
 </section>
 
-<!-- Professional Services Preview Section -->
 <section class="py-5">
     <div class="container py-4">
         <div class="text-center mb-5" data-aos="fade-up">
@@ -131,13 +127,11 @@
             <p class="text-muted lead">Comprehensive skin and eye care solutions tailored to your needs</p>
         </div>
         
-        <!-- HTMX: Load services dynamically -->
         <div id="services-preview" 
              hx-get="{% url 'bookings_v2:htmx_services_preview' %}"
              hx-trigger="load"
              hx-indicator="#services-loading"
              data-aos="fade-up" data-aos-delay="100">
-            <!-- Professional Loading state -->
             <div id="services-loading" class="loading-overlay">
                 <div class="text-center py-5">
                     <div class="spinner-professional mb-3"></div>
@@ -154,7 +148,6 @@
     </div>
 </section>
 
-<!-- Professional CTA Section -->
 <section class="py-5 bg-gradient" style="background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);">
     <div class="container py-4">
         <div class="row align-items-center" data-aos="fade-up">
@@ -174,7 +167,6 @@
     </div>
 </section>
 
-<!-- Professional Stats Section with Alpine.js -->
 <section class="py-5 bg-light">
     <div class="container py-4">
         <div class="row text-center g-4" x-data="{ 

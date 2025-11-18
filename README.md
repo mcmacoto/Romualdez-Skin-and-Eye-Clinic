@@ -29,7 +29,7 @@ A comprehensive clinic management system built with **Django 5.2.7**, **PostgreS
 - **User Management**: Create and manage staff and patient accounts
 - **Role-Based Access**: Permission system for different user types
 - **Service Management**: Add and edit clinic services with image upload
-- **Dashboard Analytics**: Quick overview of appointments, patients, and billing
+- **Dashboard Overview**: Quick overview of appointments, patients, and billing
 
 ## Technology Stack
 
